@@ -1,1 +1,1 @@
-Extracts all SWC, DC and TTT workshops from the AMY system that went ahead in the UK.
+Extracts all SWC, DC and TTT workshops that went ahead in the UK from the AMY system.
