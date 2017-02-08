@@ -25,7 +25,7 @@ else
 end
 
 # CSV headers
-csv_headers = ["slug", "humandate", "start", "end", "tags", "address", "url"]
+csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "url"]
 
 date = Time.now.strftime("%Y-%m-%d")
 csv_file = "SWC-DC-TTT-workshops-UK_#{date}.csv"
@@ -42,6 +42,7 @@ begin
               workshop["start"],
               workshop["end"],
               workshop["tags"].map{|x| x["name"]}.join(", "),
+              workshop["venue"],
               workshop["address"],
               workshop["url"]]
     end
