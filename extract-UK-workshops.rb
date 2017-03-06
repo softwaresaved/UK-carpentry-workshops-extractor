@@ -34,14 +34,19 @@ end
 uk_workshops.each do |workshop|
   begin
     # Replace the Cookie header info with the correct one, if you have access to AMY
-    workshop_html_page = Nokogiri::HTML(open(amy_workshop_events_url + "/" + workshop["slug"], "Cookie" => "__utma=2571...; __utmc=257105289; sessionid=cyu3...; _ga=GA1.2...; csrftoken=MrTv..."))
-    puts "Calculating the number of attendees for workshop #{workshop["slug"]}."
+    #workshop_html_page = Nokogiri::HTML(open(amy_workshop_events_url + "/" + workshop["slug"], "Cookie" => "__utma=2571...; __utmc=257105289; sessionid=cyu3...; _ga=GA1.2...; csrftoken=MrTv..."))
+
+    if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
+      puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{amy_workshop_events_url + "/" + workshop["slug"]}. You need to be authenticated to access this page."
+      next
+    end
+    puts "Calculating the number of attendees for workshop #{workshop["slug"]} by parsing #{amy_workshop_events_url + "/" + workshop["slug"]}."
     workshop['number_of_attendees'] = workshop_html_page.xpath('//table/tr/td[contains(text(), "learner")]').length
     puts "Found #{workshop["number_of_attendees"]} attendees for #{workshop["slug"]}."
   rescue Exception => ex
     # Skip to the next workshop
-    puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{workshop["url"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
-    exit
+    puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{amy_workshop_events_url + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    next
   end
 end
 
