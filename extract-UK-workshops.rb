@@ -34,15 +34,24 @@ end
 uk_workshops.each do |workshop|
   begin
     # Replace the Cookie header info with the correct one, if you have access to AMY
-    #workshop_html_page = Nokogiri::HTML(open(amy_workshop_events_url + "/" + workshop["slug"], "Cookie" => "__utma=2571...; __utmc=257105289; sessionid=cyu3...; _ga=GA1.2...; csrftoken=MrTv..."))
+    workshop_html_page = Nokogiri::HTML(open(amy_workshop_events_url + "/" + workshop["slug"], "Cookie" => "..."), nil, "utf-8")
 
     if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
       puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{amy_workshop_events_url + "/" + workshop["slug"]}. You need to be authenticated to access this page."
       next
     end
     puts "Calculating the number of attendees for workshop #{workshop["slug"]} by parsing #{amy_workshop_events_url + "/" + workshop["slug"]}."
-    workshop['number_of_attendees'] = workshop_html_page.xpath('//table/tr/td[contains(text(), "learner")]').length
+
+    # Look at the attendance row
+    # <tr class=""><td>attendance:</td><td colspan="2">   25   <a href="#" class="btn btn-primary btn-xs pull-right disabled">Ask for attendance</a></td></tr>
+    # Note at_xpath method is used as we know there will be one element only
+    attendance_number_node = workshop_html_page.at_xpath('//table/tr/td[contains(text(), "attendance:")]/../td[2]') # gets 2nd <td> child of a <tr> node that contains a <td> with text 'attendance:'
+
+    #workshop['number_of_attendees'] = workshop_html_page.xpath('//table/tr/td[contains(text(), "learner")]').length
+    workshop['number_of_attendees'] = attendance_number_node.blank? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
+
     puts "Found #{workshop["number_of_attendees"]} attendees for #{workshop["slug"]}."
+
   rescue Exception => ex
     # Skip to the next workshop
     puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{amy_workshop_events_url + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
