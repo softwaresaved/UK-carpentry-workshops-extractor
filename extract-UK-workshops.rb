@@ -63,7 +63,7 @@ uk_workshops.each_with_index do |workshop, index|
     instructors = workshop_html_page.xpath('//table/tr/td[contains(text(), "instructor")]/../td[3]')
     workshop['instructors'] = instructors.map(&:text)#.join('|') # Get text value of all instructors and then join with the '|', which seems like a good separator
     workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings as we have 6 columns for instructors and want csv file to be properly aligned
-    workshop['instructors'] = workshop['instructors'][0,9] # keep only the first 10 elements (that should be enough to cover all instructors), so we can align the csv rows properly later on
+    workshop['instructors'] = workshop['instructors'][0,10] # keep only the first 10 elements (that should be enough to cover all instructors), so we can align the csv rows properly later on
     puts "Found #{workshop["instructors"].reject(&:empty?).length} instructors for #{workshop["slug"]}."
   rescue Exception => ex
     # Skip to the next workshop
