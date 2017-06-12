@@ -62,8 +62,9 @@ uk_workshops.each_with_index do |workshop, index|
 
     instructors = workshop_html_page.xpath('//table/tr/td[contains(text(), "instructor")]/../td[3]')
     workshop['instructors'] = instructors.map(&:text)#.join('|') # Get text value of all instructors and then join with the '|', which seems like a good separator
-    workshop['instructors'] += Array.new(6 - workshop['instructors'].length, '')  # append empty strings as we have 6 columns for instructors and want csv file to be properly aligned
-    puts "Found #{workshop["instructors"].length} instructors for #{workshop["slug"]}."
+    workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings as we have 6 columns for instructors and want csv file to be properly aligned
+    workshop['instructors'] = workshop['instructors'][0,9] # keep only the first 10 elements (that should be enough to cover all instructors), so we can align the csv rows properly later on
+    puts "Found #{workshop["instructors"].reject(&:empty?).length} instructors for #{workshop["slug"]}."
   rescue Exception => ex
     # Skip to the next workshop
     puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{amy_ui_workshop_base_url + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
@@ -72,7 +73,7 @@ uk_workshops.each_with_index do |workshop, index|
 end
 
 # CSV headers
-csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6"]
+csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6", "instructor_7", "instructor_8", "instructor_9", "instructor_10"]
 
 date = Time.now.strftime("%Y-%m-%d")
 csv_file = "UK-carpentry-workshops_#{date}.csv"
