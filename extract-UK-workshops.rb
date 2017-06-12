@@ -44,7 +44,7 @@ uk_workshops.each_with_index do |workshop, index|
     print "Processing workshop no. " + (index+1).to_s + " (#{workshop["slug"]}) from #{amy_ui_workshop_base_url + "/" + workshop["slug"]}" + "\n"
 
     # Replace the Cookie header info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
-    workshop_html_page = Nokogiri::HTML(open(amy_ui_workshop_base_url + "/" + workshop["slug"], "Cookie" => "__utma=257105289.1105370294.1447683811.1447863294.1448631371.5; __utmc=257105289; sessionid=i8mnjibhua3rigaxidv4fcu1ba4p5r2c; _ga=GA1.2.1105370294.1447683811; csrftoken=CanlM4eoIY2fnzHbQPTMpUl02nbRdZyl"), nil, "utf-8")
+    workshop_html_page = Nokogiri::HTML(open(amy_ui_workshop_base_url + "/" + workshop["slug"], "Cookie" => "..."), nil, "utf-8")
 
     if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
       puts "Failed to get the HTML page for workshop #{workshop["slug"]} from #{amy_ui_workshop_base_url + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
@@ -75,7 +75,7 @@ end
 csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6"]
 
 date = Time.now.strftime("%Y-%m-%d")
-csv_file = "SWC-DC-TTT-workshops-UK_#{date}.csv"
+csv_file = "UK-carpentry-workshops_#{date}.csv"
 FileUtils.touch(csv_file) unless File.exist?(csv_file)
 
 begin
