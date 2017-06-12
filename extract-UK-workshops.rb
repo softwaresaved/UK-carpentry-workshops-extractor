@@ -44,7 +44,7 @@ uk_workshops.each_with_index do |workshop, index|
     print "Processing workshop no. " + (index+1).to_s + " (#{workshop["slug"]}) from #{amy_ui_workshop_base_url + "/" + workshop["slug"]}" + "\n"
 
     # Replace the Cookie header info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
-    workshop_html_page = Nokogiri::HTML(open(amy_ui_workshop_base_url + "/" + workshop["slug"], "Cookie" => "..."), nil, "utf-8")
+    workshop_html_page = Nokogiri::HTML(open(amy_ui_workshop_base_url + "/" + workshop["slug"], "Cookie" => "add-your-own-session-cookie"), nil, "utf-8")
 
     if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
       puts "Failed to get the HTML page for workshop #{workshop["slug"]} from #{amy_ui_workshop_base_url + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
@@ -62,8 +62,8 @@ uk_workshops.each_with_index do |workshop, index|
 
     instructors = workshop_html_page.xpath('//table/tr/td[contains(text(), "instructor")]/../td[3]')
     workshop['instructors'] = instructors.map(&:text)#.join('|') # Get text value of all instructors and then join with the '|', which seems like a good separator
-    workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings as we have 6 columns for instructors and want csv file to be properly aligned
-    workshop['instructors'] = workshop['instructors'][0,10] # keep only the first 10 elements (that should be enough to cover all instructors), so we can align the csv rows properly later on
+    workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings (if we get less then 10 instructors from AMY) as we have 10 columns for instructors and want csv file to be properly aligned
+    workshop['instructors'] = workshop['instructors'][0,10] if workshop['instructors'].length > 10 # keep only the first 10 elements (that should be enough to cover all instructors, but just in case), so we can align the csv rows properly later on
     puts "Found #{workshop["instructors"].reject(&:empty?).length} instructors for #{workshop["slug"]}."
   rescue Exception => ex
     # Skip to the next workshop
