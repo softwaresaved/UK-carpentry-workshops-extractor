@@ -1,0 +1,4 @@
+# Username and password details for logging into AMY
+amy_login:
+  username: your_amy_username
+  password: your_amy_password
