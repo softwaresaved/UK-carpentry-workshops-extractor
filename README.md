@@ -1,7 +1,7 @@
 # UK-carpentry-workshops-extractor
-This project contains a Ruby script that extracts the details of all UK Carpentry workshops recorded in Software Carpentry's AMY system and saves them to a set of CSV files (named after the date they are generated).
+This project contains a Ruby script that extracts the details of all UK Carpentry workshops recorded in Software Carpentry's AMY system and saves them to a set of CSV files (named after the date they are generated on).
 
-This includes Software Carpentry, Data Carpentry and Train The Trainer (instructor training) workshops (as well as Library Carpentry workshops when they start being recorded in AMY, any any other future workshop types).
+This includes Software Carpentry, Data Carpentry and Train The Trainer (instructor training) workshops (as well as Library Carpentry workshops when they start being recorded in AMY, and any other future workshop types).
 
 The script uses AMY's public API to extract certain information, but also accesses some private pages (to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not AMY's authentication via GitHub).
 
