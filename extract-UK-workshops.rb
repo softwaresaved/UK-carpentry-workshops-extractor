@@ -9,42 +9,71 @@ require 'csv'
 require 'fileutils'
 require 'nokogiri'
 require 'date'
-require 'httparty'
+require 'open-uri'
 
 # Public JSON API URL to all workshop events that went ahead (i.e. have country, address, start date, latitude and longitude, etc.)
-AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
+AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published"
 AMY_UI_WORKSHOP_BASE_URL = "https://amy.software-carpentry.org/workshops/event"
 
 # YML file with username/password to login to AMY
 AMY_LOGIN_CONF_FILE =  'amy_login.yml'
 
-# AMY login URL - for authenticated access, go to this URL first to authenticate and obtain sessionid and csrftoken for subsequent requests
+# AMY login URL - for authenticated access, go to this URL first to authenticate and obtain sessionid and csrf_token for subsequent requests
 AMY_LOGIN_URL = "https://amy.software-carpentry.org/account/login/"
+HEADERS = {
+    "User-Agent" => "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "Accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language" => "en-GB,en;q=0.5"
+}
 
-def authenticate_with_amy
+def authenticate_with_amy(username = nil, password = nil)
 
-  # Authentication with AMY involves mimicing the UI form authentication (i.e. mimic what is happening in the UI), since basic authN is not supported.
-  # We first need to retrieve csrftoken passed to the client by the server (so we do an initial get AMY_LOGIN_URL), then post the csrftoken back alongside username and password (and also pass the csrftoken in headers).
-  # In return we expect a session_id and the same csrftoken. We use these two for all subsequent calls to private pages and pass them in headers.
-  if File.exist?(AMY_LOGIN_CONF_FILE)
-    amy_login = YAML.load_file(AMY_LOGIN_CONF_FILE)
+  # Authentication with AMY involves mimicking the UI form authentication (i.e. mimic what is happening in the UI), since basic authN is not supported.
+  # We first need to retrieve csrf_token passed to the client by the server (so we do an initial GET AMY_LOGIN_URL), then POST the csrf_token back alongside username and password (and also pass the csrf_token in headers).
+  # In return, we get the session_id and the same csrf_token. We use these two for all subsequent calls to private pages and pass them in headers.
+  if username.nil? and password.nil?
+    if File.exist?(AMY_LOGIN_CONF_FILE)
+      amy_login = YAML.load_file(AMY_LOGIN_CONF_FILE)
+      username = amy_login['amy_login']['username']
+      password  = amy_login['amy_login']['password']
+    else
+      puts "Failed to load AMY login details from #{AMY_LOGIN_CONF_FILE}: file does not exist."
+      return nil, nil
+    end
+  end
+
+  if username.nil? or password.nil?
+    puts "Username or password are blank - cannot authenticate with AMY system."
+    return nil, nil
+  else
     begin
-      #csrftoken = HTTParty.get(amy_login_url).headers['set-cookie'].scan(/csrftoken=([^;]+)/)[0][0]
-      post = HTTParty.post(AMY_LOGIN_URL,
-                           follow_redirect: false,
-                           body: { username: amy_login.username, password: amy_login.password, csrfmiddlewaretoken: csrftoken },
-                           headers: { Referer: url, Cookie: "csrftoken=#{csrftoken}" })
-      session_id = post.headers['set-cookie'].scan(/sessionid=([^;]+)/)[0][0]
-      csrftoken = post.headers['set-cookie'].scan(/csrftoken=([^;]+)/)[0][0]
+      csrf_token = open(AMY_LOGIN_URL).meta['set-cookie'].scan(/csrftoken=([^;]+)/)[0][0]
 
-      return csrftoken, session_id
+      puts "Obtained csrf_token from AMY: #{csrf_token}"
+      sleep (rand(5))
+
+      amy_login_url = URI.parse(AMY_LOGIN_URL)
+      headers = HEADERS.merge({
+                                  "Referer" => AMY_LOGIN_URL,
+                                  "Cookie" => "csrftoken=#{csrf_token}"
+                              })
+
+      http = Net::HTTP.new(amy_login_url.host, amy_login_url.port)
+      http.use_ssl = true
+
+      request = Net::HTTP::Post.new(amy_login_url.request_uri, headers)
+      request.set_form_data("username" => username, "password" => password, "csrfmiddlewaretoken" => csrf_token)
+
+      response = http.request(request)
+
+      session_id = response['set-cookie'].scan(/sessionid=([^;]+)/)[0][0]
+
+      return session_id, csrf_token
+
     rescue Exception => ex
       puts "Failed to authenticate with AMY. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
       return nil, nil
     end
-  else
-    puts "Failed to load AMY login details from #{AMY_LOGIN_CONF_FILE}: file does not exist."
-    return nil, nil
   end
 end
 
@@ -53,32 +82,34 @@ def get_uk_workshops
   uk_workshops = []
   begin
     # Retrieve publicly available workshop details using AMY's public API
-    puts "Quering #{AMY_API_PUBLISHED_WORKSHOPS_URL}"
-
-    all_published_workshops = JSON.load(HTTParty.get(AMY_API_PUBLISHED_WORKSHOPS_URL, headers: { "Accept" => "application/json" }))
+    puts "Quering AMY's API #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops."
+    headers = HEADERS.merge({"Accept" => "application/json"})
+    all_published_workshops = JSON.load(open(AMY_API_PUBLISHED_WORKSHOPS_URL, headers))
 
   rescue Exception => ex
-    puts "Failed to get publicly available data using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    puts "Failed to get publicly available workshop info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
   else
     # Get the workshops in the UK
     uk_workshops = all_published_workshops.select{|workshop| workshop["country"] == "GB"}
+
     puts "Result stats: number of UK workshops = #{uk_workshops.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
   end
   return uk_workshops
 end
 
-def get_private_workshop_info(workshops, session_id, csrftoken)
+def get_private_workshop_info(workshops, session_id, csrf_token)
   workshops.each_with_index do |workshop, index|
     begin
       print "######################################################\n"
       print "Processing workshop no. " + (index+1).to_s + " (#{workshop["slug"]}) from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}" + "\n"
 
-      # Replace the Cookie header info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
-      #workshop_html_page = Nokogiri::HTML(open(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"], :Cookie => "sessionid=#{session_id}; token=#{csrftoken}"), nil, "utf-8")
-      response = HTTParty.get(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"],
-                              headers: { Cookie: "sessionid=#{session_id}; token=#{csrftoken}", csrftoken: csrftoken })
-      workshop_html_page = Nokogiri::HTML(response.body)
+      # Replace the Cookie headers info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
+      headers = HEADERS.merge({"Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
 
+      workshop_html_page = Nokogiri::HTML(open(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"], headers))
+      # response = HTTParty.get(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"],
+      #                         headers: { Cookie: "sessionid=#{session_id}; token=#{csrf_token}", csrf_token: csrf_token })
+      # workshop_html_page = Nokogiri::HTML(response.body)
 
       if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
         puts "Failed to get the HTML page for workshop #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
@@ -150,12 +181,10 @@ if __FILE__ == $0 then
 
   # Figure out some extra details about the workshops - e.g. the number of workshop attendees and instructors from AMY records - by accessing the UI/HTML page of each workshop - since this info is not available via the public API.
   # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
-  # Accessing these pages requires authentication and obtaining session_id and csrftoken for subsequent calls.
-  #session_id, csrftoken = authenticate_with_amy()
-  csrftoken = "kA6CYUQKA05TbcjRvR3ySHxVFLheeUKi"
-  session_id="n2khjyx35co53yrtw9o6nyp1z81u3zvb"
+  # Accessing these pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
+  session_id, csrf_token = authenticate_with_amy()
 
-  get_private_workshop_info(uk_workshops, session_id, csrftoken) unless (session_id.nil? or csrftoken.nil?)
+  get_private_workshop_info(uk_workshops, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
 
   date = Time.now.strftime("%Y-%m-%d")
   csv_file = "UK-carpentry-workshops_#{date}.csv"
