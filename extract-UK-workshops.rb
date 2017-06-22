@@ -11,12 +11,22 @@ require 'nokogiri'
 require 'date'
 require 'open-uri'
 
-# Public JSON API URL to all workshop events that went ahead (i.e. have country, address, start date, latitude and longitude, etc.)
-AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published"
+# Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country, address, start date, latitude and longitude, etc.)
+AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
+AMY_API_ALL_PERSONS_URL = "https://amy.software-carpentry.org/api/v1/persons/"
+
+AMY_API_WORKSHOP_URL = "https://amy.software-carpentry.org/api/v1/events/instructor"  # AMY_API_WORKSHOP_URL/id gets the instructor id's page in JSON
+
 AMY_UI_WORKSHOP_BASE_URL = "https://amy.software-carpentry.org/workshops/event"
+AMY_UI_PERSON_BASE_URL = "https://amy.software-carpentry.org/workshops/person"  # AMY_UI_PERSON_BASE_URL/id gets the person id's page in HTML
+
+AMY_API_ALL_AIRPORTS_URL = "https://amy.software-carpentry.org/api/v1/airports/"
 
 # YML file with username/password to login to AMY
 AMY_LOGIN_CONF_FILE =  'amy_login.yml'
+
+# All airports form AMY are serialised as JSON to this file
+AIRPORTS_FILE = 'airports.json'
 
 # AMY login URL - for authenticated access, go to this URL first to authenticate and obtain sessionid and csrf_token for subsequent requests
 AMY_LOGIN_URL = "https://amy.software-carpentry.org/account/login/"
@@ -77,24 +87,33 @@ def authenticate_with_amy(username = nil, password = nil)
   end
 end
 
-def get_uk_workshops
+# Get info on 'published' workshops recorded in AMY, by country (or for all countries if country = nil).
+# 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country, address, start date, latitude and longitude, etc.)
+def get_workshops(country = nil, session_id = nil, csrf_token = nil)
+
   all_published_workshops = []  # all workshops in AMY that are considered 'published', i.e. have a venue, location , longitude, latitude and start and end date
-  uk_workshops = []
+  workshops_by_country = []
   begin
-    # Retrieve publicly available workshop details using AMY's public API
-    puts "Quering AMY's API #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops."
+    # Retrieve publicly available instructor details using AMY's public API
+    puts "Quering AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops."
     headers = HEADERS.merge({"Accept" => "application/json"})
     all_published_workshops = JSON.load(open(AMY_API_PUBLISHED_WORKSHOPS_URL, headers))
 
-  rescue Exception => ex
-    puts "Failed to get publicly available workshop info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
-  else
-    # Get the workshops in the UK
-    uk_workshops = all_published_workshops.select{|workshop| workshop["country"] == "GB"}
+    # Get the workshops for the selected country, or all workshops if country == nil
+    workshops_by_country = all_published_workshops
+    workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country} unless country.nil?
+    puts "Result stats: number of UK workshops = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
-    puts "Result stats: number of UK workshops = #{uk_workshops.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
+    # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
+    # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
+    # Accessing these pages requires authentication passing session_id and csrf_token obtained previously.
+    get_private_workshop_info(workshops_by_country, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
+
+  rescue Exception => ex
+    puts "Failed to get publicly available instructor info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
   end
-  return uk_workshops
+
+  return workshops_by_country
 end
 
 def get_private_workshop_info(workshops, session_id, csrf_token)
@@ -107,12 +126,12 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
       headers = HEADERS.merge({"Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
 
       workshop_html_page = Nokogiri::HTML(open(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"], headers))
-      # response = HTTParty.get(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"],
+      # response = HTTParty.get(AMY_UI_WORKSHOP_BASE_URL + "/" + instructor["slug"],
       #                         headers: { Cookie: "sessionid=#{session_id}; token=#{csrf_token}", csrf_token: csrf_token })
       # workshop_html_page = Nokogiri::HTML(response.body)
 
       if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
-        puts "Failed to get the HTML page for workshop #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
+        puts "Failed to get the HTML page for instructor #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
         next
       end
 
@@ -122,23 +141,122 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
       attendance_number_node = workshop_html_page.at_xpath('//table/tr/td[contains(text(), "attendance:")]/../td[2]') # gets 2nd <td> child of a <tr> node that contains a <td> with the text 'attendance:'
 
       #workshop['number_of_attendees'] = workshop_html_page.xpath('//table/tr/td[contains(text(), "learner")]').length
-      workshop['number_of_attendees'] = attendance_number_node.blank? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
+      workshop['number_of_attendees'] = attendance_number_node.empty? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
       puts "Found #{workshop["number_of_attendees"]} attendees for #{workshop["slug"]}."
 
+      # Get instructors that taught at workshops
       instructors = workshop_html_page.xpath('//table/tr/td[contains(text(), "instructor")]/../td[3]')
       workshop['instructors'] = instructors.map(&:text) # Get text value of all instructor nodes as an array
       workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings (if we get less then 10 instructors from AMY) as we have 10 placeholders for instructors and want csv file to be properly aligned
       workshop['instructors'] = workshop['instructors'][0,10] if workshop['instructors'].length > 10 # keep only the first 10 elements (that should be enough to cover all instructors, but just in case), so we can align the csv rows properly later on
       puts "Found #{workshop["instructors"].reject(&:empty?).length} instructors for #{workshop["slug"]}."
     rescue Exception => ex
-      # Skip to the next workshop
-      puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+      # Skip to the next instructor
+      puts "Failed to get number of attendees for instructor #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
       next
     end
   end
 end
 
-def write_workshops_to_csv(uk_workshops, csv_file)
+def get_instructors(airports = nil, session_id = nil, csrf_token = nil)
+
+  print "######################################################\n"
+  puts "Getting instructors' info, filtered per country via its airports."
+
+  instructors = []
+  begin
+    # Retrieve a publicly available list of all people registered in AMY using its public API
+    puts "Quering AMY's API at #{AMY_API_ALL_PERSONS_URL} to get available info on all registered people."
+    headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+    json = JSON.load(open(AMY_API_ALL_PERSONS_URL, headers))
+    all_people = json["results"]
+    # Results are paged so we need to do a few more queries to get all the results back
+    next_page = json["next"]
+    page = 1
+    while !next_page.nil?
+      puts page.to_s
+      page = page +1
+      json = JSON.load(open(next_page, headers))
+      all_people += json["results"]
+      next_page = json["next"]
+    end
+
+    airport_iata_codes = airports.map{|airport| airport['iata']} unless airports.nil?
+    puts "airport codes " + airport_iata_codes.to_s     unless airport_iata_codes.nil?
+
+    # Filter out instructors (people with a non-empty badge field) by country (via a list of airports for a country), unless airports is nil
+    all_people.each do |person|
+      # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
+      if airports.nil?
+        instructors << person if !person['badges'].empty?
+      else
+        # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
+        airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
+        # Get the airport details based on the IATA code from person's profile
+        airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
+
+        instructors << person if !person['badges'].empty? and (airport_iata_code.nil? ? true : airport_iata_codes.include?(airport_iata_code)) # If airport code is nil then we cannot conclude where the person is from, so we have to include them
+        person["airport_iata_code"] = airport_iata_code
+        person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
+        person["country"] = airport_iata_code.nil? ? nil : airport["country"]
+      end
+    end
+  rescue Exception => ex
+    puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+  end
+
+  return instructors
+end
+
+def get_airports(country = nil, session_id = nil, csrf_token = nil)
+  print "######################################################\n"
+  puts "Getting airport info so we can filter instructors per country."
+
+  all_airports = []
+  airports_by_country = []
+
+  if session_id.nil? or csrf_token.nil?
+    puts "Failed to get airports info from AMY's API at #{AMY_API_ALL_AIRPORTS_URL}: session_id and csrf_token are required for authetication."
+  else
+    begin
+      # # Check if we already have the airports saved to a local file
+      # if File.exists?(AIRPORTS_FILE)
+      #   # Read airports from the file
+      #   puts "Loading airport info saved to file #{AIRPORTS_FILE} at an earlier run."
+      #   all_airports = JSON.parse(File.read(AIRPORTS_FILE))
+      # else
+        # Retrieve info about all airports available via AMY's API
+        puts "Quering AMY's API at #{AMY_API_ALL_AIRPORTS_URL} to get info on airports in countries."
+        headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+
+        json = JSON.load(open(AMY_API_ALL_AIRPORTS_URL, headers))
+        all_airports = json["results"]
+        # Results are paged so we need to do a few more queries to get all the results back
+        next_page = json["next"]
+        while !next_page.nil?
+          json = JSON.load(open(next_page, headers))
+          all_airports += json["results"]
+          next_page = json["next"]
+        end
+
+        airports_by_country = all_airports
+        airports_by_country = all_airports.select{|airport| airport["country"] == country} unless country.nil?
+
+        # # Save all airports to a file for future use
+        # File.open(AIRPORTS_FILE,"w") do |f|
+        #   f.write( JSON.pretty_generate(all_airports))
+        # end
+      # end
+    rescue Exception => ex
+      puts "Failed to get airports info using AMY's API at #{AMY_API_ALL_AIRPORTS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    end
+  end
+  return airports_by_country
+end
+
+def write_workshops_to_csv(workshops, csv_file)
+
+  FileUtils.touch(csv_file) unless File.exist?(csv_file)
   # CSV headers
   csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6", "instructor_7", "instructor_8", "instructor_9", "instructor_10"]
 
@@ -147,7 +265,7 @@ def write_workshops_to_csv(uk_workshops, csv_file)
              :write_headers => true,
              :headers => csv_headers #< column headers
     ) do |csv|
-      uk_workshops.each do |workshop|
+      workshops.each do |workshop|
         csv << ([workshop["slug"],
                  workshop["humandate"],
                  (workshop["start"].nil? || workshop["start"] == '') ? DateTime.now.to_date.strftime("%Y-%m-%d") : workshop["start"],
@@ -161,12 +279,11 @@ def write_workshops_to_csv(uk_workshops, csv_file)
                  workshop["contact"],
                  workshop["url"],
                  workshop["number_of_attendees"],
-                 workshop["instructors"]]).flatten  # flatten because workshop["instructors"] is an array and we want to concatenate each of its elements
+                 workshop["instructors"]]).flatten  # flatten because instructor["instructors"] is an array and we want to concatenate each of its elements
       end
     end
     puts "\n" + "#" * 80 +"\n\n"
-    puts "Finished writing workshop data into #{csv_file}."
-    puts "Wrote a total of " + uk_workshops.length.to_s + " UK workshops."
+    puts "Finished writing workshop data for a total of #{workshops.length.to_s} workshops to file #{csv_file}."
     puts "\n" + "#" * 80 +"\n\n"
   rescue Exception => ex
     puts "\n" + "#" * 80 +"\n\n"
@@ -174,21 +291,62 @@ def write_workshops_to_csv(uk_workshops, csv_file)
   end
 end
 
+def write_instructors_to_csv(instructors, csv_file)
+
+  FileUtils.touch(csv_file) unless File.exist?(csv_file)
+  # CSV headers
+  csv_headers = ["name", "surname", "email", "amy_username", "country", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains", "badges", "lessons", "number_of_workshops_taught", "workshops_taught"]
+
+  begin
+    CSV.open(csv_file, 'w',
+             :write_headers => true,
+             :headers => csv_headers #< column headers
+    ) do |csv|
+      instructors.each do |instructor|
+        csv << ([instructor["personal"],
+                 instructor["family"],
+                 instructor["email"],
+                 instructor["username"],
+                 instructor["country"],
+                 instructor['airport_iata_name'],
+                 instructor["airport_iata_code"],
+                 instructor["affiliation"],
+                 instructor["domains"],
+                 instructor["badges"],
+                 instructor["lessons"],
+                 instructor["number_of_workshops_taught"],
+                 instructor["workshops_taught"]])
+      end
+    end
+    puts "\n" + "#" * 80 +"\n\n"
+    puts "Finished writing instructor data for a total of #{instructors.length.to_s} instructors to file #{csv_file}."
+    puts "\n" + "#" * 80 +"\n\n"
+  rescue Exception => ex
+    puts "\n" + "#" * 80 +"\n\n"
+    puts "Failed to get export instructor data into #{csv_file}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+  end
+end
 
 if __FILE__ == $0 then
-  # Get all UK workshops available via AMY's public API
-  uk_workshops = get_uk_workshops()
 
-  # Figure out some extra details about the workshops - e.g. the number of workshop attendees and instructors from AMY records - by accessing the UI/HTML page of each workshop - since this info is not available via the public API.
-  # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
-  # Accessing these pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
+  country = "GB"
+
+  # Accessing certan private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
   session_id, csrf_token = authenticate_with_amy()
 
-  get_private_workshop_info(uk_workshops, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
+  # Get all workshops for the selected country recorded in AMY
+  workshops = get_workshops(country, session_id, csrf_token)
+
+  # Get all airports for the selected country recorded in AMY
+  airports = get_airports(country, session_id, csrf_token)
+
+  # Get all UK instructors recorded in AMY (we have to filter by the airport as it is the nearest airport that appears in people's profiles in AMY )
+  instructors = get_instructors(airports, session_id, csrf_token)
 
   date = Time.now.strftime("%Y-%m-%d")
-  csv_file = "UK-carpentry-workshops_#{date}.csv"
-  FileUtils.touch(csv_file) unless File.exist?(csv_file)
+  workshops_csv_file = "#{country.nil? ? 'all' : country}-carpentry-workshops_#{date}.csv"
+  instructors_csv_file = "#{country.nil? ? 'all' : country}-carpentry-instructors_#{date}.csv"
+  write_workshops_to_csv(workshops, workshops_csv_file) unless workshops.empty?
+  write_instructors_to_csv(instructors, instructors_csv_file) unless instructors.empty?
 
-  write_workshops_to_csv(uk_workshops, csv_file)
 end
