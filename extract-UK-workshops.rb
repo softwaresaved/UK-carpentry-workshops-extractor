@@ -97,14 +97,14 @@ def get_workshops(country_code, session_id, csrf_token)
   workshops_by_country = []
   begin
     # Retrieve publicly available instructor details using AMY's public API
-    puts "Quering AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops."
+    puts "Quering AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops for country: #{country_code}."
     headers = HEADERS.merge({"Accept" => "application/json"})
     all_published_workshops = JSON.load(open(AMY_API_PUBLISHED_WORKSHOPS_URL, headers))
 
     # Get the workshops for the selected country_code, or all workshops if country_code == nil
     workshops_by_country = all_published_workshops
     workshops_by_country = all_published_workshops.select{|workshop| workshop["country_code"] == country_code} unless (country_code.nil? or country_code == 'all')
-    puts "Result stats: number of UK workshops = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
+    puts "Results: number of UK workshops = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
     # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
     # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
@@ -163,9 +163,10 @@ end
 def get_instructors(airports, session_id, csrf_token)
 
   print "######################################################\n"
-  puts "Getting instructors' info, filtered per country_code via its airports."
+  puts "Getting instructors' info, filtered per country via its airports."
 
   instructors = []
+  instructor_badges = ["swc-instructor", "dc-instructor", "trainer"]
 
   if session_id.nil? or csrf_token.nil?
     puts "session_id or csrf_token are blank - cannot authenticate with AMY system to access #{AMY_API_ALL_PERSONS_URL}."
@@ -186,27 +187,32 @@ def get_instructors(airports, session_id, csrf_token)
       end
 
       airport_iata_codes = airports.map{|airport| airport['iata']} unless airports.nil?
-      puts "airport codes " + airport_iata_codes.to_s     unless airport_iata_codes.nil?
+      puts "Looking for instructors with airport codes in " + airport_iata_codes.to_s unless airport_iata_codes.nil?
+      # Filter out instructors (people with a non-empty badge field) by country (via a list of airports for a country). If airports is nil - return instructors for all airports/countries.
+      all_people.each_with_index do |person, index|
 
-      # Filter out instructors (people with a non-empty badge field) by country_code (via a list of airports for a country_code), unless airports is nil
-      all_people.each do |person|
         # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
-        if airports.nil?
-          instructors << person if !person['badges'].empty?
+        if airports.nil? # Include instructors from all airports/all countries
+          instructors << person if !(instructor_badges & person['badges']).empty?
         else
-          # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
-          airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
-          # Get the airport details based on the IATA code from person's profile
-          airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
-
-          instructors << person if !person['badges'].empty? and (airport_iata_code.nil? ? true : airport_iata_codes.include?(airport_iata_code)) # If airport code is nil then we cannot conclude where the person is from, so we have to include them
-          person["airport_iata_code"] = airport_iata_code
-          person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
-          person["country_code"] = airport_iata_code.nil? ? nil : airport["country_code"]
+          if !(instructor_badges & person['badges']).empty?  # The person has any of the instructor badges
+            # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
+            airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
+            if airport_iata_code.nil?
+              instructors << person  # If airport code is nil then we cannot conclude where the person is from, so we have to include them
+            elsif airport_iata_codes.include?(airport_iata_code)
+              # Get the airport details based on the IATA code from person's profile
+              airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
+              person["airport_iata_code"] = airport_iata_code
+              person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
+              person["country_code"] = airport_iata_code.nil? ? nil : airport["country_code"]
+              instructors << person
+            end
+          end
         end
       end
     rescue Exception => ex
-      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+     puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
     end
   end
 
@@ -334,6 +340,8 @@ def write_instructors_to_csv(instructors, csv_file)
 end
 
 
+# Parse command line parameters
+# As per http://ruby-doc.org/stdlib-2.1.3/libdoc/optparse/rdoc/OptionParser.html
 def parse(args)
   # The options specified on the command line will be collected in *options*.
   # We set the default values here.
@@ -370,7 +378,7 @@ def parse(args)
       puts opts
       exit
     end
-  end.parse!
+  end
 
   opt_parser.parse!(args)
   options
