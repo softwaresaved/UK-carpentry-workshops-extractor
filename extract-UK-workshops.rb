@@ -10,8 +10,10 @@ require 'fileutils'
 require 'nokogiri'
 require 'date'
 require 'open-uri'
+require 'optparse'
+require 'ostruct'
 
-# Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country, address, start date, latitude and longitude, etc.)
+# Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
 AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
 AMY_API_ALL_PERSONS_URL = "https://amy.software-carpentry.org/api/v1/persons/"
 
@@ -87,9 +89,9 @@ def authenticate_with_amy(username = nil, password = nil)
   end
 end
 
-# Get info on 'published' workshops recorded in AMY, by country (or for all countries if country = nil).
-# 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country, address, start date, latitude and longitude, etc.)
-def get_workshops(country = nil, session_id = nil, csrf_token = nil)
+# Get info on 'published' workshops recorded in AMY, by country_code (or for all countries if country_code == nil or country_code == 'all').
+# 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
+def get_workshops(country_code, session_id, csrf_token)
 
   all_published_workshops = []  # all workshops in AMY that are considered 'published', i.e. have a venue, location , longitude, latitude and start and end date
   workshops_by_country = []
@@ -99,9 +101,9 @@ def get_workshops(country = nil, session_id = nil, csrf_token = nil)
     headers = HEADERS.merge({"Accept" => "application/json"})
     all_published_workshops = JSON.load(open(AMY_API_PUBLISHED_WORKSHOPS_URL, headers))
 
-    # Get the workshops for the selected country, or all workshops if country == nil
+    # Get the workshops for the selected country_code, or all workshops if country_code == nil
     workshops_by_country = all_published_workshops
-    workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country} unless country.nil?
+    workshops_by_country = all_published_workshops.select{|workshop| workshop["country_code"] == country_code} unless (country_code.nil? or country_code == 'all')
     puts "Result stats: number of UK workshops = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
     # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
@@ -158,57 +160,60 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
   end
 end
 
-def get_instructors(airports = nil, session_id = nil, csrf_token = nil)
+def get_instructors(airports, session_id, csrf_token)
 
   print "######################################################\n"
-  puts "Getting instructors' info, filtered per country via its airports."
+  puts "Getting instructors' info, filtered per country_code via its airports."
 
   instructors = []
-  begin
-    # Retrieve a publicly available list of all people registered in AMY using its public API
-    puts "Quering AMY's API at #{AMY_API_ALL_PERSONS_URL} to get available info on all registered people."
-    headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
-    json = JSON.load(open(AMY_API_ALL_PERSONS_URL, headers))
-    all_people = json["results"]
-    # Results are paged so we need to do a few more queries to get all the results back
-    next_page = json["next"]
-    page = 1
-    while !next_page.nil?
-      puts page.to_s
-      page = page +1
-      json = JSON.load(open(next_page, headers))
-      all_people += json["results"]
+
+  if session_id.nil? or csrf_token.nil?
+    puts "session_id or csrf_token are blank - cannot authenticate with AMY system to access #{AMY_API_ALL_PERSONS_URL}."
+  else
+    begin
+      # Retrieve a publicly available list of all people registered in AMY using its public API
+      puts "Quering AMY's API at #{AMY_API_ALL_PERSONS_URL} to get available info on all registered people."
+      headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+      json = JSON.load(open(AMY_API_ALL_PERSONS_URL, headers))
+      all_people = json["results"]
+      # Results are paged so we need to do a few more queries to get all the results back
       next_page = json["next"]
-    end
-
-    airport_iata_codes = airports.map{|airport| airport['iata']} unless airports.nil?
-    puts "airport codes " + airport_iata_codes.to_s     unless airport_iata_codes.nil?
-
-    # Filter out instructors (people with a non-empty badge field) by country (via a list of airports for a country), unless airports is nil
-    all_people.each do |person|
-      # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
-      if airports.nil?
-        instructors << person if !person['badges'].empty?
-      else
-        # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
-        airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
-        # Get the airport details based on the IATA code from person's profile
-        airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
-
-        instructors << person if !person['badges'].empty? and (airport_iata_code.nil? ? true : airport_iata_codes.include?(airport_iata_code)) # If airport code is nil then we cannot conclude where the person is from, so we have to include them
-        person["airport_iata_code"] = airport_iata_code
-        person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
-        person["country"] = airport_iata_code.nil? ? nil : airport["country"]
+      while !next_page.nil?
+        puts "Querying " + next_page
+        json = JSON.load(open(next_page, headers))
+        all_people += json["results"]
+        next_page = json["next"]
       end
+
+      airport_iata_codes = airports.map{|airport| airport['iata']} unless airports.nil?
+      puts "airport codes " + airport_iata_codes.to_s     unless airport_iata_codes.nil?
+
+      # Filter out instructors (people with a non-empty badge field) by country_code (via a list of airports for a country_code), unless airports is nil
+      all_people.each do |person|
+        # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
+        if airports.nil?
+          instructors << person if !person['badges'].empty?
+        else
+          # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
+          airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
+          # Get the airport details based on the IATA code from person's profile
+          airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
+
+          instructors << person if !person['badges'].empty? and (airport_iata_code.nil? ? true : airport_iata_codes.include?(airport_iata_code)) # If airport code is nil then we cannot conclude where the person is from, so we have to include them
+          person["airport_iata_code"] = airport_iata_code
+          person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
+          person["country_code"] = airport_iata_code.nil? ? nil : airport["country_code"]
+        end
+      end
+    rescue Exception => ex
+      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
     end
-  rescue Exception => ex
-    puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
   end
 
   return instructors
 end
 
-def get_airports(country = nil, session_id = nil, csrf_token = nil)
+def get_airports(country_code, session_id, csrf_token)
   print "######################################################\n"
   puts "Getting airport info so we can filter instructors per country."
 
@@ -216,7 +221,7 @@ def get_airports(country = nil, session_id = nil, csrf_token = nil)
   airports_by_country = []
 
   if session_id.nil? or csrf_token.nil?
-    puts "Failed to get airports info from AMY's API at #{AMY_API_ALL_AIRPORTS_URL}: session_id and csrf_token are required for authetication."
+    puts "session_id or csrf_token are blank - cannot authenticate with AMY system to access #{AMY_API_ALL_AIRPORTS_URL}."
   else
     begin
       # # Check if we already have the airports saved to a local file
@@ -234,13 +239,14 @@ def get_airports(country = nil, session_id = nil, csrf_token = nil)
         # Results are paged so we need to do a few more queries to get all the results back
         next_page = json["next"]
         while !next_page.nil?
+          puts "Querying " + next_page
           json = JSON.load(open(next_page, headers))
           all_airports += json["results"]
           next_page = json["next"]
         end
 
         airports_by_country = all_airports
-        airports_by_country = all_airports.select{|airport| airport["country"] == country} unless country.nil?
+        airports_by_country = all_airports.select{|airport| airport["country"] == country_code} unless (country_code.nil? or country_code == 'all')
 
         # # Save all airports to a file for future use
         # File.open(AIRPORTS_FILE,"w") do |f|
@@ -295,7 +301,7 @@ def write_instructors_to_csv(instructors, csv_file)
 
   FileUtils.touch(csv_file) unless File.exist?(csv_file)
   # CSV headers
-  csv_headers = ["name", "surname", "email", "amy_username", "country", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains", "badges", "lessons", "number_of_workshops_taught", "workshops_taught"]
+  csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains", "badges", "lessons", "number_of_workshops_taught", "workshops_taught"]
 
   begin
     CSV.open(csv_file, 'w',
@@ -307,7 +313,7 @@ def write_instructors_to_csv(instructors, csv_file)
                  instructor["family"],
                  instructor["email"],
                  instructor["username"],
-                 instructor["country"],
+                 instructor["country_code"],
                  instructor['airport_iata_name'],
                  instructor["airport_iata_code"],
                  instructor["affiliation"],
@@ -327,26 +333,67 @@ def write_instructors_to_csv(instructors, csv_file)
   end
 end
 
+
+def parse(args)
+  # The options specified on the command line will be collected in *options*.
+  # We set the default values here.
+  options = OpenStruct.new
+  options.country_code = "GB"
+  date = Time.now.strftime("%Y-%m-%d")
+  options.workshops_file = "carpentry-workshops_GB_#{date}.csv"
+  options.instructors_file = "carpentry-instructors_GB_#{date}.csv"
+
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "Usage: ruby extract-UK-workshops.rb [-c COUNTRY_CODE] [-w WORKSHOPS_FILE][-i INSTRUCTORS_FILE]"
+
+    opts.separator ""
+
+    opts.on("-c", "--country_code [COUNTRY_CODE or 'all']",
+            "ISO-3166-1 two-letter country_code code or 'all' for all countries") do |country_code|
+      options.country_code = country_code
+      options.workshops_file = "carpentry-workshops_all_#{date}.csv"
+      options.instructors_file = "carpentry-instructors_all_#{date}.csv"
+    end
+
+    opts.on("-w", "--workshops_file [WORKSHOPS_FILE]",
+            "File path where to save the workshops extracted from AMY to") do |workshops_file|
+      options.workshops_file = workshops_file
+    end
+
+    opts.on("-i", "--instructors_file [INSTRUCTORS_FILE]",
+            "File path where to save the instructors extracted from AMY to") do |instructors_file|
+      options.instructors_file = instructors_file
+    end
+
+    # Shows at tail - print an options summary.
+    opts.on_tail("-h", "--help", opts.banner) do
+      puts opts
+      exit
+    end
+  end.parse!
+
+  opt_parser.parse!(args)
+  options
+end  # parse()
+
+# Main script body
 if __FILE__ == $0 then
 
-  country = "GB"
+  options = parse(ARGV)
 
-  # Accessing certan private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
+  # Accessing certain private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
   session_id, csrf_token = authenticate_with_amy()
 
-  # Get all workshops for the selected country recorded in AMY
-  workshops = get_workshops(country, session_id, csrf_token)
+  # Get all workshops for the selected country_code recorded in AMY
+  workshops = get_workshops(options.country_code, session_id, csrf_token)
 
-  # Get all airports for the selected country recorded in AMY
-  airports = get_airports(country, session_id, csrf_token)
+  # Get all airports for the selected country_code recorded in AMY
+  airports = get_airports(options.country_code, session_id, csrf_token)
 
   # Get all UK instructors recorded in AMY (we have to filter by the airport as it is the nearest airport that appears in people's profiles in AMY )
   instructors = get_instructors(airports, session_id, csrf_token)
 
-  date = Time.now.strftime("%Y-%m-%d")
-  workshops_csv_file = "#{country.nil? ? 'all' : country}-carpentry-workshops_#{date}.csv"
-  instructors_csv_file = "#{country.nil? ? 'all' : country}-carpentry-instructors_#{date}.csv"
-  write_workshops_to_csv(workshops, workshops_csv_file) unless workshops.empty?
-  write_instructors_to_csv(instructors, instructors_csv_file) unless instructors.empty?
+  write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
+  write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
 
 end
