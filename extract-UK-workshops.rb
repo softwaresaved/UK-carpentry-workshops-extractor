@@ -13,6 +13,8 @@ require 'open-uri'
 require 'optparse'
 require 'ostruct'
 
+VERSION = "1.0.0"
+
 # Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
 AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
 AMY_API_ALL_PERSONS_URL = "https://amy.software-carpentry.org/api/v1/persons/"
@@ -121,16 +123,12 @@ end
 def get_private_workshop_info(workshops, session_id, csrf_token)
   workshops.each_with_index do |workshop, index|
     begin
-      print "######################################################\n"
+      puts "\n" + "#" * 80 +"\n\n"
       print "Processing workshop no. " + (index+1).to_s + " (#{workshop["slug"]}) from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}" + "\n"
 
       # Replace the Cookie headers info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
       headers = HEADERS.merge({"Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
-
       workshop_html_page = Nokogiri::HTML(open(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"], headers))
-      # response = HTTParty.get(AMY_UI_WORKSHOP_BASE_URL + "/" + instructor["slug"],
-      #                         headers: { Cookie: "sessionid=#{session_id}; token=#{csrf_token}", csrf_token: csrf_token })
-      # workshop_html_page = Nokogiri::HTML(response.body)
 
       if !workshop_html_page.xpath('//title[contains(text(), "Log in")]').empty?
         puts "Failed to get the HTML page for instructor #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]} to parse it. You need to be authenticated to access this page."
@@ -162,7 +160,7 @@ end
 
 def get_instructors(airports, session_id, csrf_token)
 
-  print "######################################################\n"
+  puts "\n" + "#" * 80 +"\n\n"
   puts "Getting instructors' info, filtered per country via its airports."
 
   instructors = []
@@ -205,7 +203,10 @@ def get_instructors(airports, session_id, csrf_token)
               airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
               person["airport_iata_code"] = airport_iata_code
               person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
-              person["country_code"] = airport_iata_code.nil? ? nil : airport["country_code"]
+              person["country_code"] = airport_iata_code.nil? ? nil : airport["country"]
+              puts person["airport_iata_code"]
+              puts person["airport_name"]
+              puts person["country_code"]
               instructors << person
             end
           end
@@ -220,7 +221,7 @@ def get_instructors(airports, session_id, csrf_token)
 end
 
 def get_airports(country_code, session_id, csrf_token)
-  print "######################################################\n"
+  puts "\n" + "#" * 80 +"\n\n"
   puts "Getting airport info so we can filter instructors per country."
 
   all_airports = []
@@ -320,7 +321,7 @@ def write_instructors_to_csv(instructors, csv_file)
                  instructor["email"],
                  instructor["username"],
                  instructor["country_code"],
-                 instructor['airport_iata_name'],
+                 instructor['airport_name'],
                  instructor["airport_iata_code"],
                  instructor["affiliation"],
                  instructor["domains"],
@@ -356,28 +357,35 @@ def parse(args)
 
     opts.separator ""
 
-    opts.on("-c", "--country_code [COUNTRY_CODE or 'all']",
-            "ISO-3166-1 two-letter country_code code or 'all' for all countries") do |country_code|
+    opts.on("-c", "--country_code COUNTRY_CODE]",
+            "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
       options.workshops_file = "carpentry-workshops_all_#{date}.csv"
       options.instructors_file = "carpentry-instructors_all_#{date}.csv"
     end
 
-    opts.on("-w", "--workshops_file [WORKSHOPS_FILE]",
+    opts.on("-w", "--workshops_file WORKSHOPS_FILE",
             "File path where to save the workshops extracted from AMY to") do |workshops_file|
       options.workshops_file = workshops_file
     end
 
-    opts.on("-i", "--instructors_file [INSTRUCTORS_FILE]",
+    opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
             "File path where to save the instructors extracted from AMY to") do |instructors_file|
       options.instructors_file = instructors_file
     end
 
-    # Shows at tail - print an options summary.
-    opts.on_tail("-h", "--help", opts.banner) do
+    # A switch to print the version.
+    opts.on_tail("-v", "--version", "Show version") do
+      puts VERSION
+      exit
+    end
+
+    # Print an options summary.
+    opts.on_tail("-h", "--help", "Show this help message") do
       puts opts
       exit
     end
+
   end
 
   opt_parser.parse!(args)
