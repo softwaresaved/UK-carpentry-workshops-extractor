@@ -380,12 +380,12 @@ def parse(args)
     end
 
     opts.on("-w", "--workshops_file WORKSHOPS_FILE",
-            "File path where to save the workshops extracted from AMY to") do |workshops_file|
+            "File path where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
       options.workshops_file = workshops_file
     end
 
     opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
-            "File path where to save the instructors extracted from AMY to") do |instructors_file|
+            "File path where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
       options.instructors_file = instructors_file
     end
 
