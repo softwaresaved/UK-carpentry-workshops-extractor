@@ -15,13 +15,13 @@ To do the latter, create a copy of `amy_login.yml.pre` config file (located in t
 ## Running the script
 From the project root, do:
 
-```$ ruby extract-UK-workshops.rb```
+```$ ruby extract-workshops-instructors.rb```
 
 There are several command line options available, see below for details.
 
 ```
-$ ruby extract-UK-workshops.rb -h
-Usage: ruby extract-UK-workshops.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]
+$ ruby extract-workshops-instructors.rb -h
+Usage: ruby extract-workshops-instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]
 
     -u, --username USERNAME          Username to use to authenticate to AMY
     -p, --password PASSWORD          Password to use to authenticate to AMY
