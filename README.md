@@ -1,4 +1,4 @@
-# UK-carpentry-workshops-extractor
+# Carpentry workshops and instructor extractor
 This project contains a Ruby script that extracts the details of Carpentry workshops and instructors per country recorded in Software Carpentry's AMY system and saves them to a set of CSV files (named after the date they are generated on and the country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv`).
 
 This includes Software Carpentry, Data Carpentry and Train The Trainer (instructor training) workshops (as well as Library Carpentry workshops when they start being recorded in AMY, and any other future workshop types).
