@@ -358,7 +358,7 @@ def parse(args)
   options.instructors_file = "carpentry-instructors_GB_#{date}.csv"
 
   opt_parser = OptionParser.new do |opts|
-    opts.banner = "Usage: ruby extract-UK-workshops.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
+    opts.banner = "Usage: ruby extract-workshops-instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
 
     opts.separator ""
 
