@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
-# Extracts JSON from https://amy.software-carpentry.org/api/v1/events/published/ containing all SWC, DC and TTT workshops
-# that went ahead and then extracts those that were held in the UK and saves them to a CSV file.
+# Extracts information about Carpentry workshops and instructors (per country) from AMY and saves them to CSV files.
 
 require 'yaml'
 require 'json'
@@ -17,20 +16,21 @@ VERSION = "1.0.0"
 
 # Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
 AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
+
+# Private JSON API URL for all people that have a profile (but not necessarily an account) in AMY
 AMY_API_ALL_PERSONS_URL = "https://amy.software-carpentry.org/api/v1/persons/"
 
-AMY_API_WORKSHOP_URL = "https://amy.software-carpentry.org/api/v1/events/instructor"  # AMY_API_WORKSHOP_URL/id gets the instructor id's page in JSON
-
-AMY_UI_WORKSHOP_BASE_URL = "https://amy.software-carpentry.org/workshops/event"
-AMY_UI_PERSON_BASE_URL = "https://amy.software-carpentry.org/workshops/person"  # AMY_UI_PERSON_BASE_URL/id gets the person id's page in HTML
-
+# Private JSON API for getting all airports and their countries registered in AMY
 AMY_API_ALL_AIRPORTS_URL = "https://amy.software-carpentry.org/api/v1/airports/"
 
-# YML file with username/password to login to AMY
+AMY_UI_WORKSHOP_BASE_URL = "https://amy.software-carpentry.org/workshops/event"  # AMY_UI_WORKSHOP_BASE_URL/id gets the workshop id's page in HTML
+AMY_UI_PERSON_BASE_URL = "https://amy.software-carpentry.org/workshops/person"  # AMY_UI_PERSON_BASE_URL/id gets the person id's page in HTML
+
+# YAML config file with username/password to login to AMY (to be used if credentials are not passed as command line arguments)
 AMY_LOGIN_CONF_FILE =  'amy_login.yml'
 
 # All airports form AMY are serialised as JSON to this file
-AIRPORTS_FILE = 'airports.json'
+#AIRPORTS_FILE = 'airports.json'
 
 # AMY login URL - for authenticated access, go to this URL first to authenticate and obtain sessionid and csrf_token for subsequent requests
 AMY_LOGIN_URL = "https://amy.software-carpentry.org/account/login/"
@@ -39,6 +39,9 @@ HEADERS = {
     "Accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language" => "en-GB,en;q=0.5"
 }
+
+# Types of instructor badges in AMY
+INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "trainer"]
 
 def authenticate_with_amy(username = nil, password = nil)
 
@@ -57,7 +60,7 @@ def authenticate_with_amy(username = nil, password = nil)
   end
 
   if username.nil? or password.nil?
-    puts "Username or password are blank - cannot authenticate with AMY system."
+    puts "Username or password are blank - cannot authenticate with AMY."
     return nil, nil
   else
     begin
@@ -92,21 +95,21 @@ def authenticate_with_amy(username = nil, password = nil)
 end
 
 # Get info on 'published' workshops recorded in AMY, by country_code (or for all countries if country_code == nil or country_code == 'all').
-# 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
+# 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country_code, address, start date, end date, latitude and longitude, etc.)
 def get_workshops(country_code, session_id, csrf_token)
 
-  all_published_workshops = []  # all workshops in AMY that are considered 'published', i.e. have a venue, location , longitude, latitude and start and end date
+  all_published_workshops = []  # all workshops in AMY that are considered 'published', i.e. have a venue, location , longitude, latitude, start and end date, etc.
   workshops_by_country = []
   begin
-    # Retrieve publicly available instructor details using AMY's public API
+    # Retrieve publicly available workshop details using AMY's public API
     puts "Quering AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL} to get publicly available info for published workshops for country: #{country_code}."
     headers = HEADERS.merge({"Accept" => "application/json"})
     all_published_workshops = JSON.load(open(AMY_API_PUBLISHED_WORKSHOPS_URL, headers))
 
-    # Get the workshops for the selected country_code, or all workshops if country_code == nil
+    # Get the workshops for the selected country_code, or all workshops if country_code == nil or country_code == 'all'
     workshops_by_country = all_published_workshops
-    workshops_by_country = all_published_workshops.select{|workshop| workshop["country_code"] == country_code} unless (country_code.nil? or country_code == 'all')
-    puts "Results: number of UK workshops = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
+    workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country_code} unless (country_code.nil? or country_code == 'all')
+    puts "Results: number of workshops for country #{country_code} = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
     # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
     # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
@@ -114,7 +117,8 @@ def get_workshops(country_code, session_id, csrf_token)
     get_private_workshop_info(workshops_by_country, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
 
   rescue Exception => ex
-    puts "Failed to get publicly available instructor info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+   puts "Failed to get publicly available workshops info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+   puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
   end
 
   return workshops_by_country
@@ -126,7 +130,7 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
       puts "\n" + "#" * 80 +"\n\n"
       print "Processing workshop no. " + (index+1).to_s + " (#{workshop["slug"]}) from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}" + "\n"
 
-      # Replace the Cookie headers info with the correct one, if you have access to AMY, as access to these pages needs to be authenticated
+      # Add the Cookie header, as access to these pages needs to be authenticated
       headers = HEADERS.merge({"Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
       workshop_html_page = Nokogiri::HTML(open(AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"], headers))
 
@@ -141,7 +145,7 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
       attendance_number_node = workshop_html_page.at_xpath('//table/tr/td[contains(text(), "attendance:")]/../td[2]') # gets 2nd <td> child of a <tr> node that contains a <td> with the text 'attendance:'
 
       #workshop['number_of_attendees'] = workshop_html_page.xpath('//table/tr/td[contains(text(), "learner")]').length
-      workshop['number_of_attendees'] = attendance_number_node.empty? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
+      workshop['number_of_attendees'] = attendance_number_node.nil? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
       puts "Found #{workshop["number_of_attendees"]} attendees for #{workshop["slug"]}."
 
       # Get instructors that taught at workshops
@@ -150,10 +154,11 @@ def get_private_workshop_info(workshops, session_id, csrf_token)
       workshop['instructors'] += Array.new(10 - workshop['instructors'].length, '')  # append empty strings (if we get less then 10 instructors from AMY) as we have 10 placeholders for instructors and want csv file to be properly aligned
       workshop['instructors'] = workshop['instructors'][0,10] if workshop['instructors'].length > 10 # keep only the first 10 elements (that should be enough to cover all instructors, but just in case), so we can align the csv rows properly later on
       puts "Found #{workshop["instructors"].reject(&:empty?).length} instructors for #{workshop["slug"]}."
-    rescue Exception => ex
-      # Skip to the next instructor
-      puts "Failed to get number of attendees for instructor #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
-      next
+   rescue Exception => ex
+     # Skip to the next workshop
+     puts "Failed to get number of attendees for workshop #{workshop["slug"]} from #{AMY_UI_WORKSHOP_BASE_URL + "/" + workshop["slug"]}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+     puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
+     next
     end
   end
 end
@@ -164,13 +169,12 @@ def get_instructors(airports, session_id, csrf_token)
   puts "Getting instructors' info, filtered per country via its airports."
 
   instructors = []
-  instructor_badges = ["swc-instructor", "dc-instructor", "trainer"]
 
   if session_id.nil? or csrf_token.nil?
     puts "session_id or csrf_token are blank - cannot authenticate with AMY system to access #{AMY_API_ALL_PERSONS_URL}."
   else
     begin
-      # Retrieve a publicly available list of all people registered in AMY using its public API
+      # Retrieve a list of all people that have a profile in AMY
       puts "Quering AMY's API at #{AMY_API_ALL_PERSONS_URL} to get available info on all registered people."
       headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
       json = JSON.load(open(AMY_API_ALL_PERSONS_URL, headers))
@@ -191,9 +195,9 @@ def get_instructors(airports, session_id, csrf_token)
 
         # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
         if airports.nil? # Include instructors from all airports/all countries
-          instructors << person if !(instructor_badges & person['badges']).empty?
+          instructors << person if !(INSTRUCTOR_BADGES & person['badges']).empty?
         else
-          if !(instructor_badges & person['badges']).empty?  # The person has any of the instructor badges
+          if !(INSTRUCTOR_BADGES & person['badges']).empty?  # The person has any of the instructor badges
             # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
             airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
             if airport_iata_code.nil?
@@ -204,9 +208,6 @@ def get_instructors(airports, session_id, csrf_token)
               person["airport_iata_code"] = airport_iata_code
               person["airport_name"] = airport_iata_code.nil? ? nil : airport["fullname"]
               person["country_code"] = airport_iata_code.nil? ? nil : airport["country"]
-              puts person["airport_iata_code"]
-              puts person["airport_name"]
-              puts person["country_code"]
               instructors << person
             end
           end
@@ -214,6 +215,7 @@ def get_instructors(airports, session_id, csrf_token)
       end
     rescue Exception => ex
      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+     puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
     end
   end
 
@@ -262,6 +264,7 @@ def get_airports(country_code, session_id, csrf_token)
       # end
     rescue Exception => ex
       puts "Failed to get airports info using AMY's API at #{AMY_API_ALL_AIRPORTS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+      puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
     end
   end
   return airports_by_country
@@ -301,6 +304,7 @@ def write_workshops_to_csv(workshops, csv_file)
   rescue Exception => ex
     puts "\n" + "#" * 80 +"\n\n"
     puts "Failed to get export workshop data into #{csv_file}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
   end
 end
 
@@ -337,6 +341,7 @@ def write_instructors_to_csv(instructors, csv_file)
   rescue Exception => ex
     puts "\n" + "#" * 80 +"\n\n"
     puts "Failed to get export instructor data into #{csv_file}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
   end
 end
 
@@ -353,11 +358,21 @@ def parse(args)
   options.instructors_file = "carpentry-instructors_GB_#{date}.csv"
 
   opt_parser = OptionParser.new do |opts|
-    opts.banner = "Usage: ruby extract-UK-workshops.rb [-c COUNTRY_CODE] [-w WORKSHOPS_FILE][-i INSTRUCTORS_FILE]"
+    opts.banner = "Usage: ruby extract-UK-workshops.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
 
     opts.separator ""
 
-    opts.on("-c", "--country_code COUNTRY_CODE]",
+    opts.on("-u", "--username USERNAME",
+            "Username to use to authenticate to AMY") do |username|
+      options.username = username
+    end
+
+    opts.on("-p", "--password PASSWORD",
+            "Password to use to authenticate to AMY") do |password|
+      options.password = password
+    end
+
+    opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
       options.workshops_file = "carpentry-workshops_all_#{date}.csv"
@@ -398,7 +413,7 @@ if __FILE__ == $0 then
   options = parse(ARGV)
 
   # Accessing certain private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
-  session_id, csrf_token = authenticate_with_amy()
+  session_id, csrf_token = authenticate_with_amy(options.username, options.password)
 
   # Get all workshops for the selected country_code recorded in AMY
   workshops = get_workshops(options.country_code, session_id, csrf_token)
