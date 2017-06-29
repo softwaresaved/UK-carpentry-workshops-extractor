@@ -114,7 +114,7 @@ def get_workshops(country_code, session_id, csrf_token)
     # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
     # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
     # Accessing these pages requires authentication passing session_id and csrf_token obtained previously.
-    get_private_workshop_info(workshops_by_country, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
+    #get_private_workshop_info(workshops_by_country, session_id, csrf_token) unless (session_id.nil? or csrf_token.nil?)
 
   rescue Exception => ex
    puts "Failed to get publicly available workshops info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
@@ -413,18 +413,19 @@ if __FILE__ == $0 then
   options = parse(ARGV)
 
   # Accessing certain private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
-  session_id, csrf_token = authenticate_with_amy(options.username, options.password)
+  #session_id, csrf_token = authenticate_with_amy(options.username, options.password)
+  session_id, csrf_token = nil, nil
 
   # Get all workshops for the selected country_code recorded in AMY
   workshops = get_workshops(options.country_code, session_id, csrf_token)
 
   # Get all airports for the selected country_code recorded in AMY
-  airports = get_airports(options.country_code, session_id, csrf_token)
+  #airports = get_airports(options.country_code, session_id, csrf_token)
 
   # Get all UK instructors recorded in AMY (we have to filter by the airport as it is the nearest airport that appears in people's profiles in AMY )
-  instructors = get_instructors(airports, session_id, csrf_token)
+  #instructors = get_instructors(airports, session_id, csrf_token)
 
   write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
-  write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
+  #write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
 
 end
