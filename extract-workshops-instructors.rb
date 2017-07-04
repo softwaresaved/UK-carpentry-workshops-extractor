@@ -65,9 +65,7 @@ def authenticate_with_amy(username = nil, password = nil)
   else
     begin
       csrf_token = open(AMY_LOGIN_URL).meta['set-cookie'].scan(/csrftoken=([^;]+)/)[0][0]
-
-      puts "Obtained csrf_token from AMY: #{csrf_token}"
-      sleep (rand(5))
+      puts "Obtained csrf_token from AMY."
 
       amy_login_url = URI.parse(AMY_LOGIN_URL)
       headers = HEADERS.merge({
@@ -84,11 +82,13 @@ def authenticate_with_amy(username = nil, password = nil)
       response = http.request(request)
 
       session_id = response['set-cookie'].scan(/sessionid=([^;]+)/)[0][0]
+      puts "Obtained session_id from AMY."
 
       return session_id, csrf_token
 
     rescue Exception => ex
       puts "Failed to authenticate with AMY. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+      puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
       return nil, nil
     end
   end
@@ -212,6 +212,26 @@ def get_instructors(airports, session_id, csrf_token)
             end
           end
         end
+      end
+
+      sleep(3700);
+
+      # Get extra info about taught workshops for each of the filtered out instructors
+      instructors.each do |instructor|
+        tasks_url = instructor["tasks"]
+        puts "Quering AMY's persons API at #{tasks_url} to get extra information on taught workshops for instructor #{instructor["personal"]} #{instructor["family"]}."
+        headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+        tasks = JSON.load(open(tasks_url, headers))
+        # Find all ta tasks where the role was "instructor" then find that event's slug
+        workshops_taught = tasks.map do |task|
+          if task["role"] == "instructor"
+            event_url = task["event"] # Events URL in AMY's API (contains slug), e.g. "https://amy.software-carpentry.org/api/v1/events/2013-09-21-uwaterloo/"
+            event_url.scan(/([^\/]*)\//).last.first  # Find/emit event's slug - find all matching strings up to '/'
+          end
+        end.compact  # compact to eliminate nil values
+
+        instructor["workshops_taught"] = workshops_taught
+        instructor["number_of_workshops_taught"] = workshops_taught.length
       end
     rescue Exception => ex
      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
@@ -417,6 +437,7 @@ if __FILE__ == $0 then
 
   # Get all workshops for the selected country_code recorded in AMY
   workshops = get_workshops(options.country_code, session_id, csrf_token)
+  sleep(3700);
 
   # Get all airports for the selected country_code recorded in AMY
   airports = get_airports(options.country_code, session_id, csrf_token)
