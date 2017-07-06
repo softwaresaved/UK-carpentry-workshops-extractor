@@ -437,6 +437,9 @@ if __FILE__ == $0 then
 
   # Get all workshops for the selected country_code recorded in AMY
   workshops = get_workshops(options.country_code, session_id, csrf_token)
+
+  write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
+
   sleep(3700);
 
   # Get all airports for the selected country_code recorded in AMY
@@ -445,7 +448,6 @@ if __FILE__ == $0 then
   # Get all UK instructors recorded in AMY (we have to filter by the airport as it is the nearest airport that appears in people's profiles in AMY )
   instructors = get_instructors(airports, session_id, csrf_token)
 
-  write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
   write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
 
 end
