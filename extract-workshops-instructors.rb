@@ -43,6 +43,10 @@ HEADERS = {
 # Types of instructor badges in AMY
 INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "trainer"]
 
+# Data directory where we save the results
+DATA_DIR = "#{File.expand_path(File.dirname(__FILE__))}/data"
+FileUtils.mkdir_p(DATA_DIR) unless Dir.exists?(DATA_DIR)
+
 def authenticate_with_amy(username = nil, password = nil)
 
   # Authentication with AMY involves mimicking the UI form authentication (i.e. mimic what is happening in the UI), since basic authN is not supported.
@@ -374,8 +378,8 @@ def parse(args)
   options = OpenStruct.new
   options.country_code = "GB"
   date = Time.now.strftime("%Y-%m-%d")
-  options.workshops_file = "carpentry-workshops_GB_#{date}.csv"
-  options.instructors_file = "carpentry-instructors_GB_#{date}.csv"
+  options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_GB_#{date}.csv")
+  options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_GB_#{date}.csv")
 
   opt_parser = OptionParser.new do |opts|
     opts.banner = "Usage: ruby extract-workshops-instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
@@ -395,18 +399,18 @@ def parse(args)
     opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
-      options.workshops_file = "carpentry-workshops_#{country_code}_#{date}.csv"
-      options.instructors_file = "carpentry-instructors_#{country_code}_#{date}.csv"
+      options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
+      options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
     end
 
     opts.on("-w", "--workshops_file WORKSHOPS_FILE",
-            "File path where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
-      options.workshops_file = workshops_file
+            "File name within 'data' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
+      options.workshops_file = File.join(DATA_DIR, "#{workshops_file}")
     end
 
     opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
-            "File path where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
-      options.instructors_file = instructors_file
+            "File name within 'data' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
+      options.instructors_file = File.join(DATA_DIR, "#{instructors_file}")
     end
 
     # A switch to print the version.
