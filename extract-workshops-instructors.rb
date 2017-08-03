@@ -43,6 +43,10 @@ HEADERS = {
 # Types of instructor badges in AMY
 INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "trainer"]
 
+# Data directory where we save the results
+DATA_DIR = "#{File.expand_path(File.dirname(__FILE__))}/data"
+FileUtils.mkdir_p(DATA_DIR) unless Dir.exists?(DATA_DIR)
+
 def authenticate_with_amy(username = nil, password = nil)
 
   # Authentication with AMY involves mimicking the UI form authentication (i.e. mimic what is happening in the UI), since basic authN is not supported.
@@ -65,9 +69,7 @@ def authenticate_with_amy(username = nil, password = nil)
   else
     begin
       csrf_token = open(AMY_LOGIN_URL).meta['set-cookie'].scan(/csrftoken=([^;]+)/)[0][0]
-
-      puts "Obtained csrf_token from AMY: #{csrf_token}"
-      sleep (rand(5))
+      puts "Obtained csrf_token from AMY."
 
       amy_login_url = URI.parse(AMY_LOGIN_URL)
       headers = HEADERS.merge({
@@ -84,11 +86,13 @@ def authenticate_with_amy(username = nil, password = nil)
       response = http.request(request)
 
       session_id = response['set-cookie'].scan(/sessionid=([^;]+)/)[0][0]
+      puts "Obtained session_id from AMY."
 
       return session_id, csrf_token
 
     rescue Exception => ex
       puts "Failed to authenticate with AMY. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+      puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
       return nil, nil
     end
   end
@@ -213,6 +217,26 @@ def get_instructors(airports, session_id, csrf_token)
           end
         end
       end
+
+      #sleep(3700);
+
+      # Get extra info about taught workshops for each of the filtered out instructors
+      instructors.each do |instructor|
+        tasks_url = instructor["tasks"]
+        puts "Quering AMY's persons API at #{tasks_url} to get extra information on taught workshops for instructor #{instructor["personal"]} #{instructor["family"]}."
+        headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+        tasks = JSON.load(open(tasks_url, headers))
+        # Find all ta tasks where the role was "instructor" then find that event's slug
+        workshops_taught = tasks.map do |task|
+          if task["role"] == "instructor"
+            event_url = task["event"] # Events URL in AMY's API (contains slug), e.g. "https://amy.software-carpentry.org/api/v1/events/2013-09-21-uwaterloo/"
+            event_url.scan(/([^\/]*)\//).last.first  # Find/emit event's slug - find all matching strings up to '/'
+          end
+        end.compact  # compact to eliminate nil values
+
+        instructor["workshops_taught"] = workshops_taught
+        instructor["number_of_workshops_taught"] = workshops_taught.length
+      end
     rescue Exception => ex
      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
      puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
@@ -240,7 +264,7 @@ def get_airports(country_code, session_id, csrf_token)
       #   all_airports = JSON.parse(File.read(AIRPORTS_FILE))
       # else
         # Retrieve info about all airports available via AMY's API
-        puts "Quering AMY's API at #{AMY_API_ALL_AIRPORTS_URL} to get info on airports in countries."
+        puts "Quering AMY's API at #{AMY_API_ALL_AIRPORTS_URL} to get info on airports in country: #{country_code}."
         headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
 
         json = JSON.load(open(AMY_API_ALL_AIRPORTS_URL, headers))
@@ -354,8 +378,8 @@ def parse(args)
   options = OpenStruct.new
   options.country_code = "GB"
   date = Time.now.strftime("%Y-%m-%d")
-  options.workshops_file = "carpentry-workshops_GB_#{date}.csv"
-  options.instructors_file = "carpentry-instructors_GB_#{date}.csv"
+  options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_GB_#{date}.csv")
+  options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_GB_#{date}.csv")
 
   opt_parser = OptionParser.new do |opts|
     opts.banner = "Usage: ruby extract-workshops-instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
@@ -375,18 +399,18 @@ def parse(args)
     opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
-      options.workshops_file = "carpentry-workshops_all_#{date}.csv"
-      options.instructors_file = "carpentry-instructors_all_#{date}.csv"
+      options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
+      options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
     end
 
     opts.on("-w", "--workshops_file WORKSHOPS_FILE",
-            "File path where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
-      options.workshops_file = workshops_file
+            "File name within 'data' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
+      options.workshops_file = File.join(DATA_DIR, "#{workshops_file}")
     end
 
     opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
-            "File path where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
-      options.instructors_file = instructors_file
+            "File name within 'data' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
+      options.instructors_file = File.join(DATA_DIR, "#{instructors_file}")
     end
 
     # A switch to print the version.
