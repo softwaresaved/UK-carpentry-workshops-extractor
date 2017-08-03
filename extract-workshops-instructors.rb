@@ -220,22 +220,36 @@ def get_instructors(airports, session_id, csrf_token)
 
       #sleep(3700);
 
-      # Get extra info about taught workshops for each of the filtered out instructors
+      # Get extra info about taught workshops and instructor badges awarded for each of the filtered out instructors
       instructors.each do |instructor|
+
+        headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
+
+        # Workshops taught by the instructor
         tasks_url = instructor["tasks"]
         puts "Quering AMY's persons API at #{tasks_url} to get extra information on taught workshops for instructor #{instructor["personal"]} #{instructor["family"]}."
-        headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
         tasks = JSON.load(open(tasks_url, headers))
-        # Find all ta tasks where the role was "instructor" then find that event's slug
+        # Find all the tasks where the role was "instructor" then find that event's slug
         workshops_taught = tasks.map do |task|
           if task["role"] == "instructor"
             event_url = task["event"] # Events URL in AMY's API (contains slug), e.g. "https://amy.software-carpentry.org/api/v1/events/2013-09-21-uwaterloo/"
             event_url.scan(/([^\/]*)\//).last.first  # Find/emit event's slug - find all matching strings up to '/'
           end
         end.compact  # compact to eliminate nil values
-
         instructor["workshops_taught"] = workshops_taught
         instructor["number_of_workshops_taught"] = workshops_taught.length
+
+        # Instructor badges awarded
+        awards_url = instructor["awards"]
+        puts "Quering AMY's persons API at #{awards_url} to get extra information on instructor badges awarded for instructor #{instructor["personal"]} #{instructor["family"]}."
+        awards = JSON.load(open(awards_url, headers))
+        # Find all the awards for this instructor
+        awards.map do |award|
+          if INSTRUCTOR_BADGES.include? award["badge"]
+            instructor["#{award['badge']}-badge-awarded"] = award["awarded"] # date awarded
+          end
+        end
+
       end
     rescue Exception => ex
      puts "Failed to get instructors using AMY's API at #{AMY_API_ALL_PERSONS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
@@ -336,7 +350,9 @@ def write_instructors_to_csv(instructors, csv_file)
 
   FileUtils.touch(csv_file) unless File.exist?(csv_file)
   # CSV headers
-  csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains", "badges", "lessons", "number_of_workshops_taught", "workshops_taught"]
+  csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains",
+                 "instructor-badges", "swc-instructor-badge-awarded", "dc-instructor-badge-awarded", "trainer-badge-awarded", "earliest-badge-awarded",
+                 "lessons", "number_of_workshops_taught", "workshops_taught"]
 
   begin
     CSV.open(csv_file, 'w',
@@ -344,6 +360,10 @@ def write_instructors_to_csv(instructors, csv_file)
              :headers => csv_headers #< column headers
     ) do |csv|
       instructors.each do |instructor|
+
+        date_array = [instructor["swc-instructor-badge-awarded"], instructor["dc-instructor-badge-awarded"], instructor["trainer-badge-awarded"]].compact.map{ |award_date| Date.parse(award_date) }
+        earliest_badge_awarded = date_array.min
+
         csv << ([instructor["personal"],
                  instructor["family"],
                  instructor["email"],
@@ -354,6 +374,10 @@ def write_instructors_to_csv(instructors, csv_file)
                  instructor["affiliation"],
                  instructor["domains"],
                  instructor["badges"],
+                 instructor["swc-instructor-badge-awarded"],
+                 instructor["dc-instructor-badge-awarded"],
+                 instructor["trainer-badge-awarded"],
+                 earliest_badge_awarded,
                  instructor["lessons"],
                  instructor["number_of_workshops_taught"],
                  instructor["workshops_taught"]])
