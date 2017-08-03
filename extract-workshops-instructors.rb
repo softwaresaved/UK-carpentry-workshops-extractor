@@ -214,7 +214,7 @@ def get_instructors(airports, session_id, csrf_token)
         end
       end
 
-      sleep(3700);
+      #sleep(3700);
 
       # Get extra info about taught workshops for each of the filtered out instructors
       instructors.each do |instructor|
@@ -260,7 +260,7 @@ def get_airports(country_code, session_id, csrf_token)
       #   all_airports = JSON.parse(File.read(AIRPORTS_FILE))
       # else
         # Retrieve info about all airports available via AMY's API
-        puts "Quering AMY's API at #{AMY_API_ALL_AIRPORTS_URL} to get info on airports in countries."
+        puts "Quering AMY's API at #{AMY_API_ALL_AIRPORTS_URL} to get info on airports in country: #{country_code}."
         headers = HEADERS.merge({"Accept" => "application/json", "Cookie" => "sessionid=#{session_id}; token=#{csrf_token}"})
 
         json = JSON.load(open(AMY_API_ALL_AIRPORTS_URL, headers))
@@ -395,8 +395,8 @@ def parse(args)
     opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
-      options.workshops_file = "carpentry-workshops_all_#{date}.csv"
-      options.instructors_file = "carpentry-instructors_all_#{date}.csv"
+      options.workshops_file = "carpentry-workshops_#{country_code}_#{date}.csv"
+      options.instructors_file = "carpentry-instructors_#{country_code}_#{date}.csv"
     end
 
     opts.on("-w", "--workshops_file WORKSHOPS_FILE",
@@ -440,7 +440,7 @@ if __FILE__ == $0 then
 
   write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
 
-  sleep(3700);
+  #sleep(3700);
 
   # Get all airports for the selected country_code recorded in AMY
   airports = get_airports(options.country_code, session_id, csrf_token)
