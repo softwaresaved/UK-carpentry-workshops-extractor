@@ -6,7 +6,7 @@ require 'ostruct'
 require 'date'
 
 # Data directory where we save the results
-DATA_DIR = "#{File.expand_path(File.dirname(__FILE__))}/../data"
+DATA_DIR = File.expand_path("../data", File.expand_path(File.dirname(__FILE__)))
 FileUtils.mkdir_p(DATA_DIR) unless Dir.exists?(DATA_DIR)
 WORKSHOPS_DIR = "#{DATA_DIR}/workshops"
 FileUtils.mkdir_p(WORKSHOPS_DIR) unless Dir.exists?(WORKSHOPS_DIR)
