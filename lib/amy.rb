@@ -1,3 +1,5 @@
+# Interaction with Carpentries system AMY
+
 require 'yaml'
 require 'open-uri'
 

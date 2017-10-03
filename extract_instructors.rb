@@ -158,6 +158,7 @@ end
 # Main script body
 if __FILE__ == $0 then
 
+  # parse command line parameters
   options = parse(ARGV)
 
   # Accessing certain private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.

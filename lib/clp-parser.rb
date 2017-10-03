@@ -1,3 +1,6 @@
+# Parse command line parameters
+# As per http://ruby-doc.org/stdlib-2.1.3/libdoc/optparse/rdoc/OptionParser.html
+
 require 'optparse'
 require 'ostruct'
 require 'date'
@@ -10,8 +13,6 @@ FileUtils.mkdir_p(WORKSHOPS_DIR) unless Dir.exists?(WORKSHOPS_DIR)
 INSTRUCTORS_DIR = "#{DATA_DIR}/instructors"
 FileUtils.mkdir_p(INSTRUCTORS_DIR) unless Dir.exists?(INSTRUCTORS_DIR)
 
-# Parse command line parameters
-# As per http://ruby-doc.org/stdlib-2.1.3/libdoc/optparse/rdoc/OptionParser.html
 def parse(args)
   # The options specified on the command line will be collected in *options*.
   # We set the default values here.
