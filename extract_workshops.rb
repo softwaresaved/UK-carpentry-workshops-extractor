@@ -28,7 +28,7 @@ module Workshops
 
       # Get the workshops for the selected country_code, or all workshops if country_code == nil or country_code == 'all'
       workshops_by_country = all_published_workshops
-      workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country_code} unless (country_code.nil? or country_code == 'all')
+      workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country_code} unless (country_code.nil? or country_code.downcase == 'all')
       puts "Results: number of workshops for country #{country_code} = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
       # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.

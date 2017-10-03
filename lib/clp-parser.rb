@@ -9,9 +9,7 @@ require 'date'
 DATA_DIR = File.expand_path("../data", File.expand_path(File.dirname(__FILE__)))
 FileUtils.mkdir_p(DATA_DIR) unless Dir.exists?(DATA_DIR)
 WORKSHOPS_DIR = "#{DATA_DIR}/workshops"
-FileUtils.mkdir_p(WORKSHOPS_DIR) unless Dir.exists?(WORKSHOPS_DIR)
 INSTRUCTORS_DIR = "#{DATA_DIR}/instructors"
-FileUtils.mkdir_p(INSTRUCTORS_DIR) unless Dir.exists?(INSTRUCTORS_DIR)
 
 def parse(args)
   # The options specified on the command line will be collected in *options*.
@@ -19,11 +17,23 @@ def parse(args)
   options = OpenStruct.new
   options.country_code = "GB"
   date = Time.now.strftime("%Y-%m-%d")
-  options.workshops_file = File.join(WORKSHOPS_DIR, "carpentry-workshops_GB_#{date}.csv")
-  options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_GB_#{date}.csv")
+  if ($0.downcase.include?('workshops'))
+    FileUtils.mkdir_p(WORKSHOPS_DIR) unless Dir.exists?(WORKSHOPS_DIR)
+    options.workshops_file = File.join(WORKSHOPS_DIR, "carpentry-workshops_GB_#{date}.csv")
+  elsif ($0.downcase.include?('instructors'))
+    FileUtils.mkdir_p(INSTRUCTORS_DIR) unless Dir.exists?(INSTRUCTORS_DIR)
+    options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_GB_#{date}.csv")
+  else
+    puts "You are possibly not invoking the correct Ruby script - extract_workshops.rb or extract_instructors.rb."
+    exit
+  end
 
   opt_parser = OptionParser.new do |opts|
-    opts.banner = "Usage: ruby extract-workshops-instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]"
+    if ($0.downcase.include?('workshops'))
+      opts.banner = "Usage: ruby #{$0} [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-w WORKSHOPS_FILE]"
+    elsif ($0.downcase.include?('instructors'))
+      opts.banner = "Usage: ruby #{$0} [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [-i INSTRUCTORS_FILE]"
+    end
 
     opts.separator ""
 
@@ -40,18 +50,25 @@ def parse(args)
     opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
-      options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
-      options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
+      if ($0.downcase.include?('workshops'))
+        options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
+      elsif ($0.downcase.include?('instructors'))
+        options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
+      end
     end
 
-    opts.on("-w", "--workshops_file WORKSHOPS_FILE",
-            "File name within 'data/workshops' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
-      options.workshops_file = File.join(WORKSHOPS_DIR, "#{workshops_file}")
+    if ($0.downcase.include?('workshops'))
+      opts.on("-w", "--workshops_file WORKSHOPS_FILE",
+              "File within 'data/workshops' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
+        options.workshops_file = File.join(WORKSHOPS_DIR, "#{workshops_file}")
+      end
     end
 
-    opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
-            "File name within 'data/instructors' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
-      options.instructors_file = File.join(INSTRUCTORS_DIR, "#{instructors_file}")
+    if ($0.downcase.include?('instructors'))
+      opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
+              "File within 'data/instructors' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
+        options.instructors_file = File.join(INSTRUCTORS_DIR, "#{instructors_file}")
+      end
     end
 
     # A switch to print the version.
