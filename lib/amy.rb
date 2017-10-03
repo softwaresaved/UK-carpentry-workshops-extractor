@@ -2,6 +2,7 @@
 
 require 'yaml'
 require 'open-uri'
+require 'json'
 
 # Public JSON API URL to all 'published' instructor events that went or will go ahead (i.e. have country_code, address, start date, latitude and longitude, etc.)
 AMY_API_PUBLISHED_WORKSHOPS_URL = "https://amy.software-carpentry.org/api/v1/events/published/"
@@ -32,9 +33,13 @@ HEADERS = {
 # Types of instructor badges in AMY
 INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "trainer"]
 
+COUNTRIES_FILE = File.dirname(__FILE__) + "/countries.json"
+
 # Additional US top-level domains
 ADDITIONAL_US_DOMAINS = [".edu", ".gov"]
 
+# Authenticate with AMY using username and password.
+# Returns (session_id, csrf_token) that can be reused for the duration of session.
 def authenticate_with_amy(username = nil, password = nil)
 
   # Authentication with AMY involves mimicking the UI form authentication (i.e. mimic what is happening in the UI), since basic authN is not supported.
@@ -86,6 +91,7 @@ def authenticate_with_amy(username = nil, password = nil)
   end
 end
 
+# Get airports for country registered in AMY using AMY's API
 def get_airports(country_code, session_id, csrf_token)
   puts "\n" + "#" * 80 +"\n\n"
   puts "Getting airport info so we can filter instructors per country."
@@ -132,4 +138,19 @@ def get_airports(country_code, session_id, csrf_token)
     end
   end
   return airports_by_country
+end
+
+# Read top level domains for countries into an array of hashes which keys are 2-letter country codes and values are arrays of TLDs,
+# e.g. [{"GB" => [".uk"]}, {"US" => [".gov", ".edu", ".us"]}, ...].
+def get_top_level_domains
+  tlds = []
+  begin
+    countries_file = File.read(COUNTRIES_FILE)
+    countries = JSON.parse(countries_file)
+    tlds = countries.map{ |country| country['cca2'] == "US" ? {country['cca2'] => country['tld'].concat(ADDITIONAL_US_DOMAINS)} : {country['cca2'] => country['tld']} }
+  rescue Exception => ex
+    puts "Failed to read countries and their top level domains from #{File.absolute_path(COUNTRIES_FILE)}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+    puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
+  end
+  return tlds
 end
