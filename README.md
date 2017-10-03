@@ -1,11 +1,11 @@
 # Carpentry workshops and instructor extractor
-This project contains a Ruby script that extracts the details of Carpentry workshops and instructors per country recorded in Software Carpentry's AMY system and saves them to a set of CSV files (named after the date they are generated on and the country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv`).
+This project contains a Ruby script that extracts the details of Carpentry workshops and instructors per country recorded in Software Carpentry's AMY system and saves them to a set of CSV files (named after the date they are generated on and the country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv`) within the 'data' folder.
 
 This includes Software Carpentry, Data Carpentry and Train The Trainer (instructor training) workshops (as well as Library Carpentry workshops when they start being recorded in AMY, and any other future workshop types).
 
 The script uses AMY's public API to extract certain information, but also accesses some private pages (to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not AMY's authentication via GitHub).
 
-Tested with `ruby 2.2.1`.
+Tested with Mac OS Sierra (10.12) and `ruby 2.2.1`.
 
 ## Setup
 You can pass various command line options to the script (see the section below). There are defaults set for all the options but your AMY username and password. You have to either pass them as command line arguments, or configure them in  special config file `amy_login.yml`.
@@ -13,7 +13,11 @@ You can pass various command line options to the script (see the section below).
 To do the latter, create a copy of `amy_login.yml.pre` config file (located in the project root), rename it to `amy_login.yml` and configure your AMY username and password there accordingly. Make sure you do not share this file with the others as it contains sensitive information.
 
 ## Running the script
-From the project root, do:
+There is a command line script ```run_ingest.sh``` that you can use to run the code, which calls the Ruby script ```extract-workshops-instructors.rb``` with some parameters pre-filled. You can tweak it to suit your requirements, see below for the available paramaters.
+
+```$ sh run_ingest.sh```
+
+Alternatively, to run the code directly, from the project root do:
 
 ```$ ruby extract-workshops-instructors.rb```
 
