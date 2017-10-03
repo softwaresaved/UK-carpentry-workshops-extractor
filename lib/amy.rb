@@ -56,6 +56,7 @@ def authenticate_with_amy(username = nil, password = nil)
     end
   end
 
+  puts "\n" + "#" * 80 +"\n\n"
   if username.nil? or password.nil?
     puts "Username or password are blank - cannot authenticate with AMY."
     return nil, nil
@@ -94,7 +95,7 @@ end
 # Get airports for country registered in AMY using AMY's API
 def get_airports(country_code, session_id, csrf_token)
   puts "\n" + "#" * 80 +"\n\n"
-  puts "Getting airport info so we can filter instructors per country."
+  puts "Getting airport info from AMY."
 
   all_airports = []
   airports_by_country = []
@@ -125,13 +126,8 @@ def get_airports(country_code, session_id, csrf_token)
       end
 
       airports_by_country = all_airports
-      airports_by_country = all_airports.select{|airport| airport["country"] == country_code} unless (country_code.nil? or country_code == 'all')
+      airports_by_country = all_airports.select{|airport| airport["country"] == country_code} unless (country_code.nil? or country_code.downcase == 'all')
 
-        # # Save all airports to a file for future use
-        # File.open(AIRPORTS_FILE,"w") do |f|
-        #   f.write( JSON.pretty_generate(all_airports))
-        # end
-        # end
     rescue Exception => ex
       puts "Failed to get airports info using AMY's API at #{AMY_API_ALL_AIRPORTS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
       puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
@@ -142,15 +138,21 @@ end
 
 # Read top level domains for countries into an array of hashes which keys are 2-letter country codes and values are arrays of TLDs,
 # e.g. [{"GB" => [".uk"]}, {"US" => [".gov", ".edu", ".us"]}, ...].
-def get_top_level_domains
-  tlds = []
+def get_top_level_domains_for_countries
+  tlds_for_countries = []
+
+  puts "\n" + "#" * 80 +"\n\n"
+  puts "Getting top level domains for countries."
+
   begin
     countries_file = File.read(COUNTRIES_FILE)
     countries = JSON.parse(countries_file)
-    tlds = countries.map{ |country| country['cca2'] == "US" ? {country['cca2'] => country['tld'].concat(ADDITIONAL_US_DOMAINS)} : {country['cca2'] => country['tld']} }
+    tlds_for_countries = countries.map{ |country| country['cca2'] == "US" ?
+        {"country_code" => country["cca2"], "tld" => country['tld'].concat(ADDITIONAL_US_DOMAINS)} :
+        {"country_code" => country['cca2'], "tld" => country['tld']} }
   rescue Exception => ex
     puts "Failed to read countries and their top level domains from #{File.absolute_path(COUNTRIES_FILE)}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
     puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
   end
-  return tlds
+  return tlds_for_countries
 end

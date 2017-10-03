@@ -13,10 +13,11 @@ VERSION = "1.0.1"
 
 module Instructors
 
-  def self.get_instructors(airports, session_id, csrf_token)
+  def self.get_instructors(country_code, session_id, csrf_token)
 
     puts "\n" + "#" * 80 +"\n\n"
-    puts "Getting instructors' info, filtered per country via its airports."
+    puts "Getting instructors' info from AMY, filtered per country via its airports. Country we are looking for: #{country_code}. \n"
+    puts "\n" + "#" * 80 +"\n\n"
 
     instructors = []
 
@@ -38,20 +39,62 @@ module Instructors
           next_page = json["next"]
         end
 
-        airport_iata_codes = airports.map{|airport| airport['iata']} unless airports.nil?
-        puts "Looking for instructors with airport codes in " + airport_iata_codes.to_s unless airport_iata_codes.nil?
-        # Filter out instructors (people with a non-empty badge field) by country (via a list of airports for a country). If airports is nil - return instructors for all airports/countries.
+        # Unless we are looking for instructors in all countries -
+        # - get all airports for the selected country_code recorded in AMY, and
+        # - get all top level domains for that country.
+        begin
+
+          airports = get_airports(country_code, session_id, csrf_token)
+          airport_iata_codes = airports.map{|airport| airport['iata']}
+          puts "Airport codes for #{country_code}: " + airport_iata_codes.to_s
+
+          # Get top level domains for the country
+          tlds_for_countries = get_top_level_domains_for_countries
+          country_tlds = tlds_for_countries.map{ |country| country["tld"] if country["country_code"] == country_code}.compact.flatten
+          all_other_tlds = tlds_for_countries.map{ |country| country["tld"] if country["country_code"] != country_code}.compact.flatten
+          puts "Top level domains for #{country_code}: " + country_tlds.to_s
+          puts "All other top level domains: " + all_other_tlds.to_s
+          puts "\n" + "#" * 80 +"\n\n"
+
+        end unless country_code.downcase == "all"
+
+        # Filter out instructors (people with a non-empty badge field) by country (via a list of airports for a country).
         all_people.each_with_index do |person, index|
 
-          # To determine people from the UK, check the nearest_airport info, and, failing that, if email address ends in '.ac.uk' - that is our best bet.
-          if airports.nil? # Include instructors from all airports/all countries
+          if country_code.downcase == "all" # Include instructors from all countries
+
             instructors << person if !(INSTRUCTOR_BADGES & person['badges']).empty?
-          else
-            if !(INSTRUCTOR_BADGES & person['badges']).empty?  # The person has any of the instructor badges
+
+          else # Look for instructors from a specific country
+
+            if !(INSTRUCTOR_BADGES & person['badges']).empty?  # Has the person got any of the instructor badges?
+
               # Get the person airport's IATA code - the 3 characters before the last '/' in the airport field URI
               airport_iata_code = person['airport'].nil? ? nil : person['airport'][person['airport'].length - 4 , 3]
+
+              # If airport code is nil then we cannot conclude where the person is from,
+              # so we look up their email address to see if we can determine the country from top level domain name
               if airport_iata_code.nil?
-                instructors << person  # If airport code is nil then we cannot conclude where the person is from, so we have to include them
+                if (person["email"].nil? or person["email"] == "") # We cannot conclude anything, the person does not have an email address recorded so we include this person
+                  instructors << person
+                else
+                  email_tld = ".#{person["email"].split('.').last}" # Everything after the last ".", including the "."
+
+                  # If instructors email address domain belongs to the country we are searching for then include them.
+                  # If they belong to any other country other than the one we are looking for - then exclude them.
+                  # If we cannot conclude anything from the email domain (e.g. .com) - we have to include this person as we
+                  # simply cannot know if the person belongs to a country or not.
+                  if (country_tlds.include?(email_tld)) # We know for sure the person is from the country we are looking for
+                    # Include this person
+                    person["country_code"] = country_code # At least record the country
+                    instructors << person
+                  elsif (all_other_tlds.include?(email_tld)) # We know for sure the person is from a different country
+                    # Exclude this person
+                  else # We cannot conclude anything
+                    # Include this person
+                    instructors << person
+                  end
+                end
               elsif airport_iata_codes.include?(airport_iata_code)
                 # Get the airport details based on the IATA code from person's profile
                 airport = airport_iata_code.nil? ? nil : airports.select{|airport| airport["iata"] == airport_iata_code}[0]
@@ -164,11 +207,10 @@ if __FILE__ == $0 then
   # Accessing certain private pages requires authentication and obtaining session_id and csrf_token for subsequent calls.
   session_id, csrf_token = authenticate_with_amy(options.username, options.password)
 
-   # Get all airports for the selected country_code recorded in AMY
-  airports = get_airports(options.country_code, session_id, csrf_token)
-
-  # Get all UK instructors recorded in AMY (we have to filter by the airport as it is the nearest airport that appears in people's profiles in AMY)
-  instructors = Instructors.get_instructors(airports, session_id, csrf_token)
+  # Get all instructors for a country (or all countries) recorded in AMY.
+  # To do so, we have get all airports for a country and then look up if the nearest airport field in a person's AMY profile falls in that list - that is how we can determine
+  # if someone is from a certain country (AMY just does not record the country of origin on its own but it can be determined via the nearest airport).
+  instructors = Instructors.get_instructors(options.country_code, session_id, csrf_token)
 
   Instructors.write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
 
