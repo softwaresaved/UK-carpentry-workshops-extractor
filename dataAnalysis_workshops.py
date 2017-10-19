@@ -12,7 +12,7 @@ from pydrive.drive import GoogleDrive
 ## Find the file to be loaded and check if exists
 dirP = os.path.dirname(os.path.realpath(__file__))
 findFile = [filename for filename in os.listdir(dirP + '/data/workshops')
-            if filename.startswith("carpentry-workshops_")]
+            if filename.startswith("carpentry-workshops_") and filename.endswith('.csv')]
 try:
     len(findFile)!=0
 except FileNotFoundError:
@@ -22,12 +22,16 @@ except FileNotFoundError:
 name_file = re.sub('\.csv$', '', findFile[-1])
 excel_file = 'analysis_' + name_file + '.xlsx'
 writer = pd.ExcelWriter(dirP + '/data/workshops/' + excel_file , engine='xlsxwriter')
+writerClear = pd.ExcelWriter(dirP + '/data/workshops/' + name_file + '.xlsx', engine='xlsxwriter')
 
 ## Load and upload non anonymized data to Google Drive
-data_all = pd.read_csv(dirP + '/data/workshops/' + findFile[-1])
-##print("Uploading to Google Drive")
-##upload_data = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}]})
-##upload_data.SetContentFile(data_all)
+##data_all = pd.read_csv(dirP + '/data/workshops/' + findFile[-1])
+##data_all.to_excel(writerClear, sheet_name='Workshops_Data')
+##writerClear.save()
+##upload_data = drive.CreateFile({"parents": [{"kind": "drive#fileLink",
+##                                             "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}],
+##                                'title': findFile[-1]})
+##upload_data.SetContentFile(dirP + '/data/workshops/' + name_file + '.xlsx')
 ##upload_data.Upload({'convert': True})
 ##print("Document Uploaded to Google Drive.")
 
@@ -277,8 +281,9 @@ writer.save()
 print("Spreadsheet Saved")
 
 ## Put the excel into Google drive
-##print("Uploading to Google Drive")
-##test_file = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}]})
-##test_file.SetContentFile(excel_file)
+##test_file = drive.CreateFile({"parents": [{"kind": "drive#fileLink",
+##                                           "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}],
+##                              'title': excel_file})
+##test_file.SetContentFile(dirP + '/data/workshops/' + excel_file)
 ##test_file.Upload({'convert': True})
 ##print("Document Uploaded to Google Drive.")

@@ -12,22 +12,26 @@ from pydrive.drive import GoogleDrive
 ## Find the file to be loaded and check if exists
 dirP = os.path.dirname(os.path.realpath(__file__))
 findFile = [filename for filename in os.listdir(dirP + '/data/instructors')
-            if filename.startswith("carpentry-instructors_")]
+            if filename.startswith("carpentry-instructors_") and filename.endswith('.csv')]
 try:
     len(findFile)!=0
 except FileNotFoundError:
     print("The file you were looking for is not found.")
 
 ## Create a spreadsheet
-name_file = re.sub('\.csv$', '', findFile[-1])
+name_file = re.sub('\.csv$', '', findFile[-1]).strip()
 excel_file = 'analysis_' + name_file + '.xlsx'
 writer = pd.ExcelWriter(dirP + '/data/instructors/' + excel_file , engine='xlsxwriter')
+writerClear = pd.ExcelWriter(dirP + '/data/instructors/' + name_file + '.xlsx', engine='xlsxwriter')
 
 ## Load and upload non anonymized data to Google Drive
-data_all = pd.read_csv(dirP + '/data/instructors/' + findFile[-1])
-##print("Uploading to Google Drive")
-##upload_data = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}]})
-##upload_data.SetContentFile(data_all)
+##data_all = pd.read_csv(dirP + '/data/instructors/' + findFile[-1])
+##data_all.to_excel(writerClear, sheet_name='Instructors_Data')
+##writerClear.save()
+##upload_data = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
+##                                             'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+##                                'title': findFile[-1]})
+##upload_data.SetContentFile(dirP + '/data/instructors/' + name_file + '.xlsx')
 ##upload_data.Upload({'convert': True})
 ##print("Document Uploaded to Google Drive.")
 
@@ -154,7 +158,9 @@ writer.save()
 print("Spreadsheet Saved.")
 
 ## Upload the spreadsheet into Google Drive
-##upload_excel = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}]})
-##upload_excel.SetContentFile(excel_file)
+##upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
+##                                              'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+##                                 'title': excel_file})
+##upload_excel.SetContentFile(dirP + '/data/instructors/' + excel_file)
 ##upload_excel.Upload({'convert': True})
 ##print("Document Uploaded to Google Drive.")
