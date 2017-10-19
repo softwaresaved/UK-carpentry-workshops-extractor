@@ -9,20 +9,22 @@ from pydrive.drive import GoogleDrive
 ##gauth.LocalWebserverAuth()
 ##drive = GoogleDrive(gauth)
 
-## Find the file to be loaded
-try:
-    findFile = [filename for filename in os.listdir('./data')
+## Find the file to be loaded and check if exists
+dirP = os.path.dirname(os.path.realpath(__file__))
+findFile = [filename for filename in os.listdir(dirP + '/data/workshops')
             if filename.startswith("carpentry-workshops_")]
+try:
+    len(findFile)!=0
 except FileNotFoundError:
-        print("The file you were looking for is not found.")
-
+    print("The file you were looking for is not found.")
+        
 ## Create a spreadsheet
 name_file = re.sub('\.csv$', '', findFile[-1])
 excel_file = 'analysis_' + name_file + '.xlsx'
-writer = pd.ExcelWriter('./data/' + excel_file , engine='xlsxwriter')
+writer = pd.ExcelWriter(dirP + '/data/workshops/' + excel_file , engine='xlsxwriter')
 
 ## Load and upload non anonymized data to Google Drive
-data_all = pd.read_csv('./data/' + findFile[-1])
+data_all = pd.read_csv(dirP + '/data/workshops/' + findFile[-1])
 ##print("Uploading to Google Drive")
 ##upload_data = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": "0B6P79ipNuR8EdDFraGgxMFJaaVE"}]})
 ##upload_data.SetContentFile(data_all)
@@ -30,7 +32,7 @@ data_all = pd.read_csv('./data/' + findFile[-1])
 ##print("Document Uploaded to Google Drive.")
 
 ## Loads data without personal information
-data_workshops = pd.read_csv('./data/' + findFile[-1],
+data_workshops = pd.read_csv(dirP + '/data/workshops/' + findFile[-1],
                              usecols=['start', 'tags', 'venue',
                                       'number_of_attendees'])
 data_workshops = pd.DataFrame(data_workshops)
