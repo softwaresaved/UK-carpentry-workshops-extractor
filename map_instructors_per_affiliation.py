@@ -18,7 +18,7 @@ data_instructors = pd.read_csv(dirP + '/data/instructors/' + findFile[-1],
 data_instructors = data_instructors.dropna(subset=['affiliation'])
 
 ## Change Imperial College for the name in UK institutions
-data_instructors['affiliation'] = data_instructors['affiliation'].map({'Imperial College London': 'Imperial College of Science, Technology and Medicine'})
+data_instructors.loc[data_instructors.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
 
 ## Upload coordinates isntitution data
 data_coords = pd.read_csv(dirP + '/lib/UK-academic-insitutions-geodata.csv',
