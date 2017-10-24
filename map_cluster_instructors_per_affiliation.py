@@ -3,7 +3,13 @@ import folium
 import json
 import pandas as pd
 from folium.plugins import MarkerCluster
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
+## Gogle Drive Authentication
+##gauth = GoogleAuth()
+##gauth.LocalWebserverAuth()
+##drive = GoogleDrive(gauth)
 
 ## Upload both instructors data to be mapped
 dirP = os.path.dirname(os.path.realpath(__file__))
@@ -51,33 +57,55 @@ other_dic = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.039
 
 other_coords = pd.DataFrame(other_dic)
 
+## Merge both dataframes to include all coordinates
 all_coords = data_coords.append(other_coords)
 
-## Transform into List
+## Transform affiliation column into List
 affiliation_list = data_instructors['affiliation'].tolist()
 
 ## Generate Map
 m = folium.Map(
     location=[54.00366, -2.547855],
     zoom_start=6,
-    tiles='Mapbox Bright')
+    tiles='Mapbox Bright') # for a darker map tiles='cartodbpositron'
 
 marker_cluster = MarkerCluster(name = 'instructors').add_to(m)
 
 for aff in affiliation_list:
         long_coords = all_coords[all_coords['VIEW_NAME'] == aff]['LONGITUDE']
         lat_coords = all_coords[all_coords['VIEW_NAME'] == aff]['LATITUDE']
+        popup = folium.Popup(aff, parse_html=True)
         if long_coords.empty == False:
                 folium.Marker(
-                        location=[lat_coords.iloc[0], long_coords.iloc[0]]
+                        location=[lat_coords.iloc[0], long_coords.iloc[0]],
+                        popup=popup
                 ).add_to(marker_cluster)
 
 ## Region information json
 regions = json.load(open(dirP + '/lib/regions.json'))
 
 ## Add to a layer
-folium.GeoJson(regions, name='regions').add_to(m)
+folium.GeoJson(regions,
+               name='regions',
+               style_function=lambda feature: {
+                       'fillColor': '#99ffcc',
+                       'color': '#00cc99'
+                       }).add_to(m)
 folium.LayerControl().add_to(m)
 
+## Find main file date
+date = findFile[-1].split('_')[2].replace('.csv','')
+
 ## Save mapp to html
-m.save(dirP + '/data/instructors/Intructors_per_Affiliation_cluster.html')
+path_html = dirP + '/data/instructors/map_cluster_intructors_per_affiliation_' + date + '.html'
+m.save(path_html)
+
+## Upload to google drive
+##upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
+##                                            'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+##                               'title':'map_cluster_intructors_per_affiliation_' + date })
+##upload_map.SetContentFile(path_html)
+##upload_map.Upload({'convert': False})
+##
+##print("Document Uploaded to Google Drive.")
+
