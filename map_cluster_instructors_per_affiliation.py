@@ -1,5 +1,6 @@
 import os
 import folium
+import json
 import pandas as pd
 from folium.plugins import MarkerCluster
 
@@ -58,9 +59,10 @@ affiliation_list = data_instructors['affiliation'].tolist()
 ## Generate Map
 m = folium.Map(
     location=[54.00366, -2.547855],
-    zoom_start=6)
+    zoom_start=6,
+    tiles='Mapbox Bright')
 
-marker_cluster = MarkerCluster().add_to(m)
+marker_cluster = MarkerCluster(name = 'instructors').add_to(m)
 
 for aff in affiliation_list:
         long_coords = all_coords[all_coords['VIEW_NAME'] == aff]['LONGITUDE']
@@ -70,4 +72,12 @@ for aff in affiliation_list:
                         location=[lat_coords.iloc[0], long_coords.iloc[0]]
                 ).add_to(marker_cluster)
 
+## Region information json
+regions = json.load(open(dirP + '/lib/regions.json'))
+
+## Add to a layer
+folium.GeoJson(regions, name='regions').add_to(m)
+folium.LayerControl().add_to(m)
+
+## Save mapp to html
 m.save(dirP + '/data/instructors/Intructors_per_Affiliation_cluster.html')
