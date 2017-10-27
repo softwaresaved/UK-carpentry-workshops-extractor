@@ -21,7 +21,7 @@ data_instructors = data_instructors.dropna(subset=['affiliation'])
 data_instructors.loc[data_instructors.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
 
 ## Upload coordinates isntitution data
-data_coords = pd.read_csv(dirP + '/lib/UK-academic-insitutions-geodata.csv',
+data_coords = pd.read_csv(dirP + '/lib/UK-academic-institutions-geodata.csv',
                                usecols = ['VIEW_NAME','LONGITUDE','LATITUDE'])
 
 ## Add Missing coordinates
