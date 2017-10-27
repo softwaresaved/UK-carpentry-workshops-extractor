@@ -1,6 +1,13 @@
 import os
 import folium
 import pandas as pd
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+## Gogle Drive Authentication
+##gauth = GoogleAuth()
+##gauth.LocalWebserverAuth()
+##drive = GoogleDrive(gauth)
 
 ## Upload both instructors data to be mapped and corresponding coordinates
 dirP = os.path.dirname(os.path.realpath(__file__))
@@ -20,9 +27,16 @@ data_instructors = data_instructors.dropna(subset=['affiliation'])
 ## Change Imperial College for the name in UK institutions
 data_instructors.loc[data_instructors.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
 
-## Upload coordinates isntitution data
-data_coords = pd.read_csv(dirP + '/lib/UK-academic-institutions-geodata.csv',
-                               usecols = ['VIEW_NAME','LONGITUDE','LATITUDE'])
+## Upload coordinates institution data
+try:
+    findFile_excel = dirP + '/lib/UK-academic-institutions-geodata.xlsx'
+except FileNotFoundError:
+    print("The file you were looking for is not found.")
+
+## Transform excel into dataframe
+excel_file = pd.ExcelFile(findFile_excel)
+df_excel = excel_file.parse('UK-academic-institutions')
+data_coords = df_excel[['VIEW_NAME','LONGITUDE','LATITUDE']]
 
 ## Add Missing coordinates
 other_dic = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.03999799999996867, 'LATITUDE':51.5229832},
@@ -46,6 +60,7 @@ other_dic = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.039
 
 other_coords = pd.DataFrame(other_dic)
 
+## Merge both dataframes to include all coordinates
 all_coords = data_coords.append(other_coords)
 
 ## Number of People per affiliation
@@ -55,14 +70,32 @@ instructors = table.to_dict()
 ## Generate Map
 m = folium.Map(
     location=[54.00366, -2.547855],
-    zoom_start=6)
+    zoom_start=6,
+    tiles='Mapbox Bright') # for a darker map tiles='cartodbpositron'
 
 for key, value in instructors.items():
             long_coords = all_coords[all_coords['VIEW_NAME'] == key]['LONGITUDE']
             lat_coords = all_coords[all_coords['VIEW_NAME'] == key]['LATITUDE']
+            label = folium.Popup(key+ ': ' + str(value), parse_html=True)
             if long_coords.empty == False:
                 folium.Marker([lat_coords.iloc[0],
                                long_coords.iloc[0]],
-                              popup=str(value)).add_to(m)
+                              popup=label).add_to(m)
 
-m.save(dirP + '/data/instructors/Intructors_per_Affiliation.html')
+## Find main file date
+date = findFile[-1].split('_')[2].replace('.csv','')
+
+## Save mapp to html
+path_html = dirP + '/data/instructors/map_instructors_per_affiliation_' + date + '.html'
+m.save(path_html)
+
+print('HTML file created and ready to be visualized.')
+
+## Upload to google drive
+##upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
+##                                            'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+##                               'title':'map_intructors_per_region_' + date })
+##upload_map.SetContentFile(path_html)
+##upload_map.Upload({'convert': False})
+##
+##print("Document Uploaded to Google Drive.")

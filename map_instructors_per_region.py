@@ -65,6 +65,8 @@ other_dic = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.039
 other_coords = pd.DataFrame(other_dic)
 ## Merge both dataframes to include all coordinates
 all_coords = data_coords.append(other_coords)
+
+## Create latitude and longitude list to create columns
 latitude = []
 longitude = []
 
@@ -132,7 +134,7 @@ date = findFile[-1].split('_')[2].replace('.csv','')
 path_html = dirP + '/data/instructors/map_instructors_per_region_' + date + '.html'
 m.save(path_html)
 
-print('HTML file created and ready to be visualized')
+print('HTML file created and ready to be visualized.')
 
 ## Upload to google drive
 ##upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",

@@ -31,9 +31,15 @@ data_instructors = data_instructors.dropna(subset=['affiliation'])
 data_instructors.loc[data_instructors.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
 
 ## Upload coordinates isntitution data
-data_coords = pd.read_csv(dirP + '/lib/UK-academic-institutions-geodata.csv',
-                               usecols = ['VIEW_NAME','LONGITUDE','LATITUDE'])
-data_coords = pd.DataFrame(data_coords)
+try:
+    findFile_excel = dirP + '/lib/UK-academic-institutions-geodata.xlsx'
+except FileNotFoundError:
+    print("The file you were looking for is not found.")
+    
+## Transform excel into dataframe
+excel_file = pd.ExcelFile(findFile_excel)
+df_excel = excel_file.parse('UK-academic-institutions')
+data_coords = df_excel[['VIEW_NAME','LONGITUDE','LATITUDE']]
 
 ## Add Missing coordinates
 other_dic = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.03999799999996867, 'LATITUDE':51.5229832},
@@ -99,6 +105,8 @@ date = findFile[-1].split('_')[2].replace('.csv','')
 ## Save mapp to html
 path_html = dirP + '/data/instructors/map_cluster_intructors_per_affiliation_' + date + '.html'
 m.save(path_html)
+
+print('HTML file created and ready to be visualized.')
 
 ## Upload to google drive
 ##upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",

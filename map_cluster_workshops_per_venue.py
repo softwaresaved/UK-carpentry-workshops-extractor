@@ -58,6 +58,8 @@ date = findFile[-1].split('_')[2].replace('.csv','')
 path_html = dirP + '/data/workshops/map_cluster_workshops_per_location_' + date + '.html'
 m.save(path_html)
 
+print('HTML file created and ready to be visualized.')
+
 ## Upload to google drive
 ##upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
 ##                                            'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
