@@ -1,8 +1,19 @@
+## If problems installing basemap manually use
+## http://www.lfd.uci.edu/~gohlke/pythonlibs/#basemap
 import os
-import folium
 import pandas as pd
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm
+import warnings
+import json
+ 
+from mpl_toolkits.basemap import Basemap
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+from matplotlib.colors import Normalize
+
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -15,13 +26,13 @@ else:
   DATA = findFile[-1]
   EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
 
-  
+
 def load_instructors_data(filename,dirP):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/instructors/' + findFile[-1],
-                     usecols=['affiliation'])
+    df = pd.read_csv(dirP + '/data/instructors/' + filename,
+                     usecols=['affiliation','nearest_airport_code'])
     return pd.DataFrame(df)
 
 def transform_data(df):
@@ -30,7 +41,9 @@ def transform_data(df):
     Change Imperial College for the name in UK institutions.
     """
     df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
-    return df.dropna(subset=['affiliation'])
+    df = df.dropna(subset=['affiliation'])
+    df = df.dropna(subset=['nearest_airport_code'])
+    return df
 
 def add_missing_institutions(filename):
     """
@@ -69,41 +82,63 @@ def add_missing_institutions(filename):
     ## Merge both dataframes to include all coordinates
     return data_coords.append(other_coords)
 
-def instructors_per_affiliation(df):
-    """
-    Creates a dictionary with the values of the number of instructors
-    per affiliation.
-    """
-    table = df.groupby(['affiliation']).size()
-    return table.to_dict()
 
-def generate_map(dictionary,df_all,dirP,filename):
+def create_coordinates_columns(df,df_all):
+    """
+    Find coordinates and create the respective columns.
+    """
+    ## Create latitude and longitude list to create columns
+    latitude = []
+    longitude = []
+
+    ## Transform affiliation column into List and find respective coords
+    affiliation_list = df['affiliation'].tolist()
+    for aff in affiliation_list:
+            long_coords = df_all[df_all['VIEW_NAME'] == aff]['LONGITUDE']
+            lat_coords = df_all[df_all['VIEW_NAME'] == aff]['LATITUDE']
+            latitude.append(lat_coords.iloc[0])
+            longitude.append(long_coords.iloc[0])
+
+    ## Add coords to the DataFrame
+    df["LATITUDE"] = latitude
+    df["LONGITUDE"] = longitude
+    return df
+
+def generate_map(df,dirP,filename):
     """
     Generates Map to be visualized.
     """
-    m = folium.Map(
-            location=[54.00366, -2.547855],
-            zoom_start=6,
-            tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
+    ax = plt.subplots(figsize=(10,20))
 
-    for key, value in dictionary.items():
-            long_coords = df_all[df_all['VIEW_NAME'] == key]['LONGITUDE']
-            lat_coords = df_all[df_all['VIEW_NAME'] == key]['LATITUDE']
-            label = folium.Popup(key+ ': ' + str(value), parse_html=True)
-            if long_coords.empty == False:
-                    folium.Marker([lat_coords.iloc[0],
-                                   long_coords.iloc[0]],
-                                  popup=label).add_to(m)
+    m = Basemap(resolution='i', # c, l, i, h, f or None
+                projection='merc',
+                lat_0=58.44, lon_0=-9.26,
+                llcrnrlon=-10.9, llcrnrlat= 49.68, urcrnrlon=2.29, urcrnrlat=59.14)
+
+    m.drawmapboundary(fill_color='#46bcec')
+    m.fillcontinents(color='grey',lake_color='#46bcec')
+    m.drawcoastlines()
+
+    ##Add Markers to the Map
+    count = 1
+    for row in df.itertuples():
+            print('Plotting marker ' + str(count) + ' out of ' +
+                  str(len(df.index)))
+            x,y = m(row[4].item(),row[3].item())
+            m.plot(x, y, 'ro', markersize = 5, marker = 'o')
+            count+=1
+
+    plt.title('Map of Instructors per affiliation')
 
     ## Find main file date
     date = filename.split('_')[2].replace('.csv','')
 
-    ## Save mapp to html
-    path_html = dirP + '/data/instructors/map_instructors_per_affiliation_' + date + '.html'
-    m.save(path_html)
-    return path_html
+    #Save file to png
+    img_path = dirP + '/data/instructors/map_instructors_per_affiliation_'
+    plt.savefig(img_path + date,pad_inches=0.0, bbox_inches='tight')
+    return img_path + '.png'
 
-
+    
 def google_drive_authentication():
     """
     Authentication to the google drive account
@@ -112,17 +147,17 @@ def google_drive_authentication():
     gauth.LocalWebserverAuth()
     drive = GoogleDrive(gauth)
     return drive
-    
-def google_drive_upload(html_file,drive):
+
+## CHANGE THIS   
+def google_drive_upload(filename,drive):
     """
     Upload map to google drive
     """
-    upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
-                                                'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':'map_intructors_per_region_' + date })
-    upload_map.SetContentFile(html_file)
+    upload_map = drive.CreateFile({'parents': [{'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+                                   'title':'map_intructors_per_affiliation_' + date })
+    upload_map.SetContentFile(filename)
     upload_map.Upload({'convert': False})
-
+    
 
 def main():
     """
@@ -131,17 +166,18 @@ def main():
     df = load_instructors_data(DATA,DIR_PATH)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
-    instructors_dic = instructors_per_affiliation(df)
-    print('Generating map...')    
-    html_file = generate_map(instructors_dic,df_all,DIR_PATH,DATA)
-    print('HTML file created.')
+    df = create_coordinates_columns(df,df_all)
 
+    print('Generating map...')    
+    image_file = generate_map(df,DIR_PATH,DATA)
+    print('Image created.')
+
+    
 ##    drive = google_drive_authentication()
-##    google_drive_upload(html_file,drive)
+##    google_drive_upload(image_file,drive)
 ##    print('Analysis spreadsheet uploaded to Google Drive.')
 
 
 
 if __name__ == '__main__':
     main()
-
