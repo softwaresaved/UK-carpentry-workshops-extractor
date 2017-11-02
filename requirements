@@ -1,0 +1,8 @@
+basemap
+folium
+json
+matplotlib
+numpy
+pandas
+pydrive
+shapefile
