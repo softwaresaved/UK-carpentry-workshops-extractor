@@ -23,11 +23,11 @@ else:
           print("Wrong file or file path")
 
   
-def load_instructors_data(filename,dirP):
+def load_instructors_data(filename):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/instructors/' + filename,
+    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
                      usecols=['affiliation','nearest_airport_code'])
     return pd.DataFrame(df)
 
@@ -126,7 +126,7 @@ def instructors_per_region(df):
     region_table = DataFrame({'count' : df.groupby(['region']).size()}).reset_index()
     return region_table
 
-def generate_map(df_region,regions,dirP,filename):
+def generate_map(df_region,regions,filename):
     """
     Generates Map to be visualized.
     """
@@ -150,7 +150,7 @@ def generate_map(df_region,regions,dirP,filename):
     date = filename.split('_')[2].replace('.csv','')
 
     ## Save mapp to html
-    path_html = dirP + '/data/instructors/map_instructors_per_region_' + date + '.html'
+    path_html = DIR_PATH + '/data/instructors/map_instructors_per_region_' + date + '.html'
     m.save(path_html)
     return path_html
 
@@ -179,13 +179,13 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA,DIR_PATH)
+    df = load_instructors_data(DATA)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     df = create_regions_column(df,df_all,REGIONS)
     df_region = instructors_per_region(df)
     print('Generating map...')    
-    html_file = generate_map(df_region,REGIONS,DIR_PATH,DATA)
+    html_file = generate_map(df_region,REGIONS,DATA)
     print('HTML file created.')
 
 ##    drive = google_drive_authentication()

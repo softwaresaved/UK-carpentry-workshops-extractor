@@ -14,11 +14,11 @@ else:
     DATA = findFile[-1]
     NAME_FILE = re.sub('\.csv$', '', DATA.strip())
 
-def load_data_without_personal_info(filename,dirP):
+def load_data_without_personal_info(filename):
     """
     Loads data without personal information into a dataframe
     """                
-    df = pd.read_csv(dirP + '/data/instructors/' + filename,
+    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
                                usecols=['country_code','nearest_airport_name',
                                         'nearest_airport_code', 'affiliation',
                                         'instructor-badges',
@@ -45,13 +45,13 @@ def transform_earliest_badge_year(df):
     df['earliest-badge-awarded'] = df['earliest-badge-awarded'].dt.year
     return df    
 
-def create_spreadsheet(name_file,dirP,df):
+def create_spreadsheet(name_file,df):
     """
     Create the spreadsheet to input resulting data analysis
     and put anonymized data in a spreadsheet tab
     """
     excel_file = 'analysis_' + name_file + '.xlsx'
-    writer = pd.ExcelWriter(dirP + '/data/instructors/' + excel_file , engine='xlsxwriter')
+    writer = pd.ExcelWriter(DIR_PATH + '/data/instructors/' + excel_file , engine='xlsxwriter')
     df.to_excel(writer, sheet_name='Anonymized_Data')
     return excel_file, writer
 
@@ -82,12 +82,12 @@ def number_people_per_nearest_airport(df,writer):
 
     worksheet.insert_chart('D2', chart1)
 
-def transform_airports_regions(dirP,df):
+def transform_airports_regions(df):
     """
     Transform the corresponding airport into their respective uk region
     in a new dataframe
     """
-    regions_excel = pd.ExcelFile(dirP + './lib/UK-regions-airports.xlsx')
+    regions_excel = pd.ExcelFile(DIR_PATH + './lib/UK-regions-airports.xlsx')
     regions = regions_excel.parse('UK-regions-airports')
     dict_Regions = area_dict = dict(zip(regions['Airport_code'],
                                     regions['UK_region']))
@@ -181,10 +181,10 @@ def google_drive_upload(excel_file,drive):
     upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
                                                   'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
                                      'title': excel_file})
-    upload_excel.SetContentFile(dirP + '/data/instructors/' + excel_file)
+    upload_excel.SetContentFile(DIR_PATH + '/data/instructors/' + excel_file)
     upload_excel.Upload({'convert': True})
 
-def google_drive_upload_non_anonymized(filename,dirP,name_file):
+def google_drive_upload_non_anonymized(filename,name_file):
     """
     Upload non anonymized data to google drive
     """
@@ -195,23 +195,24 @@ def google_drive_upload_non_anonymized(filename,dirP,name_file):
     upload_data = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
                                                  'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
                                     'title': filename})
-    upload_data.SetContentFile(dirP + '/data/instructors/' + name_file + '.xlsx')
+    upload_data.SetContentFile(DIR_PATH + '/data/instructors/' + name_file + '.xlsx')
     upload_data.Upload({'convert': True})
 
 def main():
     """
     Main function
     """
-    data_instructors = load_data_without_personal_info(DATA,DIR_PATH)
+    print("Analysing instructors data...")
+    data_instructors = load_data_without_personal_info(DATA)
     data_instructors = remove_null_values(data_instructors)
     data_instructors = transform_earliest_badge_year(data_instructors)
 
-    excel_file = create_spreadsheet(NAME_FILE,DIR_PATH,data_instructors)[0]
-    writer = create_spreadsheet(NAME_FILE,DIR_PATH,data_instructors)[1]
+    excel_file = create_spreadsheet(NAME_FILE,data_instructors)[0]
+    writer = create_spreadsheet(NAME_FILE,data_instructors)[1]
 
     number_people_per_nearest_airport(data_instructors,writer)
 
-    data_instructors_region = transform_airports_regions(DIR_PATH,data_instructors)
+    data_instructors_region = transform_airports_regions(data_instructors)
     number_people_per_region(data_instructors_region,writer)
 
     number_people_per_year(data_instructors_region,writer)
@@ -227,7 +228,7 @@ def main():
 ##    drive = google_drive_authentication()
 ##    google_drive_upload(excel_file,drive)
 ##    print('Analysis spreadsheet uploaded to Google Drive.')
-##    google_drive_upload_non_anonymized(DATA,DIR_PATH,NAME_FILE)
+##    google_drive_upload_non_anonymized(DATA,NAME_FILE)
 ##    print('Non anonymized data uploaded to Google Drive.')
 
 

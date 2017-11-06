@@ -50,11 +50,11 @@ def add_missing_coordinates(df):
                     
     return df, list_institutions, list_institutions_included
 
-def create_spreadsheet(dirP,df):
+def create_spreadsheet(df):
     """
     Create a new excel file with the missing known coordinates added.
     """
-    new_excel_file = dirP + '/lib/UK-academic-institutions-geodata_missing.xlsx'
+    new_excel_file = DIR_PATH + '/lib/UK-academic-institutions-geodata_missing.xlsx'
     writer = pd.ExcelWriter(new_excel_file , engine='xlsxwriter')
 
     df.to_excel(writer, sheet_name='UK-academic-institutions')
@@ -68,7 +68,7 @@ def main():
     df = transform_missing_values(df)
     df = add_missing_coordinates(df)[0]
 
-    create_spreadsheet(DIR_PATH,df)
+    create_spreadsheet(df)
     
     print('The institutions missing are: ' + str(add_missing_coordinates(df)[1]))
     print('The coordinates for the following institutions were added to the spreadsheet: '

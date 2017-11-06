@@ -17,15 +17,15 @@ else:
   DATA = findFile[-1]
 
 
-def load_workshops_data(filename,dirP):
+def load_workshops_data(filename):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/workshops/' + findFile[-1],
+    df = pd.read_csv(DIR_PATH + '/data/workshops/' + findFile[-1],
                      usecols=['venue','latitude','longitude'])
     return pd.DataFrame(df)
 
-def generate_map(df,dirP,filename):
+def generate_map(df,filename):
     """
     Generates Map to be visualized.
     """
@@ -43,7 +43,7 @@ def generate_map(df,dirP,filename):
                     ).add_to(marker_cluster)
 
     ## Region information json
-    regions = json.load(open(dirP + '/lib/regions.json',encoding = 'utf-8-sig'))
+    regions = json.load(open(DIR_PATH + '/lib/regions.json',encoding = 'utf-8-sig'))
 
     ## Add to a layer
     folium.GeoJson(regions,
@@ -58,7 +58,7 @@ def generate_map(df,dirP,filename):
     date = filename.split('_')[2].replace('.csv','')
 
     ## Save mapp to html
-    path_html = dirP + '/data/workshops/map_cluster_workshops_per_location_' + date + '.html'
+    path_html = DIR_PATH + '/data/workshops/map_cluster_workshops_per_venue_' + date + '.html'
     m.save(path_html)
     return path_html
 
@@ -77,7 +77,7 @@ def google_drive_upload(html_file,drive):
     """
     upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
                                                 'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':'map_cluster_workshops_per_location_' + date })
+                                   'title':'map_cluster_workshops_per_venue_' + date })
     upload_map.SetContentFile(html_file)
     upload_map.Upload({'convert': False})
 
@@ -86,9 +86,9 @@ def main():
     """
     Main function
     """
-    df = load_workshops_data(DATA,DIR_PATH)
+    df = load_workshops_data(DATA)
     print('Generating map...')
-    html_file = generate_map(df,DIR_PATH,DATA)
+    html_file = generate_map(df,DATA)
     print('HTML file created.')
 
 ##    drive = google_drive_authentication()

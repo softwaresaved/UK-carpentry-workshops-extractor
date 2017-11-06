@@ -27,11 +27,11 @@ else:
   EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def load_instructors_data(filename,dirP):
+def load_instructors_data(filename):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/instructors/' + filename,
+    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
                      usecols=['affiliation','nearest_airport_code'])
     return pd.DataFrame(df)
 
@@ -104,7 +104,7 @@ def create_coordinates_columns(df,df_all):
     df["LONGITUDE"] = longitude
     return df
 
-def generate_map(df,dirP,filename):
+def generate_map(df,filename):
     """
     Generates Map to be visualized.
     """
@@ -134,7 +134,7 @@ def generate_map(df,dirP,filename):
     date = filename.split('_')[2].replace('.csv','')
 
     #Save file to png
-    img_path = dirP + '/data/instructors/map_instructors_per_affiliation_'
+    img_path = DIR_PATH + '/data/instructors/map_instructors_per_affiliation_'
     plt.savefig(img_path + date,pad_inches=0.0, bbox_inches='tight')
     return img_path + '.png'
 
@@ -163,13 +163,13 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA,DIR_PATH)
+    df = load_instructors_data(DATA)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     df = create_coordinates_columns(df,df_all)
 
     print('Generating map...')    
-    image_file = generate_map(df,DIR_PATH,DATA)
+    image_file = generate_map(df,DATA)
     print('Image created.')
 
     

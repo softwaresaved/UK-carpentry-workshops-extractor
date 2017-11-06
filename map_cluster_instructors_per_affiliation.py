@@ -18,11 +18,11 @@ else:
   EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def load_instructors_data(filename,dirP):
+def load_instructors_data(filename):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/instructors/' + filename,
+    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
                      usecols=['affiliation'])
     return pd.DataFrame(df)
 
@@ -71,7 +71,7 @@ def add_missing_institutions(filename):
     ## Merge both dataframes to include all coordinates
     return data_coords.append(other_coords)
 
-def generate_map(df,df_all,dirP,filename):
+def generate_map(df,df_all,filename):
     """
     Generates Map to be visualized.
     """
@@ -96,7 +96,7 @@ def generate_map(df,df_all,dirP,filename):
                             ).add_to(marker_cluster)
 
     ## Region information json
-    regions = json.load(open(dirP + '/lib/regions.json'))
+    regions = json.load(open(DIR_PATH + '/lib/regions.json'))
 
     ## Add to a layer
     folium.GeoJson(regions,
@@ -111,7 +111,7 @@ def generate_map(df,df_all,dirP,filename):
     date = filename.split('_')[2].replace('.csv','')
 
     ## Save mapp to html
-    path_html = dirP + '/data/instructors/map_cluster_intructors_per_affiliation_' + date + '.html'
+    path_html = DIR_PATH + '/data/instructors/map_cluster_intructors_per_affiliation_' + date + '.html'
     m.save(path_html)
     return path_html
 
@@ -139,11 +139,11 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA,DIR_PATH)
+    df = load_instructors_data(DATA)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     print('Generating map...')    
-    html_file = generate_map(df,df_all,DIR_PATH,DATA)
+    html_file = generate_map(df,df_all,DATA)
     print('HTML file created.')
 
 ##    drive = google_drive_authentication()

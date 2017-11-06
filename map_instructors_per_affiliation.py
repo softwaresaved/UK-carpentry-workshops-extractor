@@ -16,11 +16,11 @@ else:
   EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
 
   
-def load_instructors_data(filename,dirP):
+def load_instructors_data(filename):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(dirP + '/data/instructors/' + findFile[-1],
+    df = pd.read_csv(DIR_PATH + '/data/instructors/' + findFile[-1],
                      usecols=['affiliation'])
     return pd.DataFrame(df)
 
@@ -77,7 +77,7 @@ def instructors_per_affiliation(df):
     table = df.groupby(['affiliation']).size()
     return table.to_dict()
 
-def generate_map(dictionary,df_all,dirP,filename):
+def generate_map(dictionary,df_all,filename):
     """
     Generates Map to be visualized.
     """
@@ -99,7 +99,7 @@ def generate_map(dictionary,df_all,dirP,filename):
     date = filename.split('_')[2].replace('.csv','')
 
     ## Save mapp to html
-    path_html = dirP + '/data/instructors/map_instructors_per_affiliation_' + date + '.html'
+    path_html = DIR_PATH + '/data/instructors/map_instructors_per_affiliation_' + date + '.html'
     m.save(path_html)
     return path_html
 
@@ -128,12 +128,12 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA,DIR_PATH)
+    df = load_instructors_data(DATA)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     instructors_dic = instructors_per_affiliation(df)
     print('Generating map...')    
-    html_file = generate_map(instructors_dic,df_all,DIR_PATH,DATA)
+    html_file = generate_map(instructors_dic,df_all,DATA)
     print('HTML file created.')
 
 ##    drive = google_drive_authentication()
