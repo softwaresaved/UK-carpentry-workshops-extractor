@@ -91,9 +91,13 @@ def generate_map(dictionary,df_all,filename):
             lat_coords = df_all[df_all['VIEW_NAME'] == key]['LATITUDE']
             label = folium.Popup(key+ ': ' + str(value), parse_html=True)
             if long_coords.empty == False:
-                    folium.Marker([lat_coords.iloc[0],
-                                   long_coords.iloc[0]],
-                                  popup=label).add_to(m)
+                    folium.CircleMarker(
+                      radius = 5,
+                      location = [lat_coords.iloc[0], long_coords.iloc[0]],
+                      popup = label,
+                      color = '#ff6600',
+                      fill = True,
+                      fill_color = '#ff6600').add_to(m)
 
     ## Find main file date
     date = filename.split('_')[2].replace('.csv','')

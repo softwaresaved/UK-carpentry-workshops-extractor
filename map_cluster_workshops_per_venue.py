@@ -37,10 +37,13 @@ def generate_map(df,filename):
     marker_cluster = MarkerCluster(name = 'workshops').add_to(m)
     for index, row in df.iterrows():
             popup = folium.Popup(row['venue'], parse_html=True)
-            folium.Marker(
-                    location=[row['latitude'], row['longitude']],
-                    popup=popup
-                    ).add_to(marker_cluster)
+            folium.CircleMarker(
+              radius = 5,
+              location=[row['latitude'], row['longitude']],
+              popup = popup,
+              color = '#ff6600',
+              fill = True,
+              fill_color = '#ff6600').add_to(marker_cluster)
 
     ## Region information json
     regions = json.load(open(DIR_PATH + '/lib/regions.json',encoding = 'utf-8-sig'))

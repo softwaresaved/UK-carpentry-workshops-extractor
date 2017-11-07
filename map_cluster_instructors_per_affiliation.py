@@ -90,10 +90,13 @@ def generate_map(df,df_all,filename):
             lat_coords = df_all[df_all['VIEW_NAME'] == aff]['LATITUDE']
             popup = folium.Popup(aff, parse_html=True)
             if long_coords.empty == False:
-                    folium.Marker(
-                            location=[lat_coords.iloc[0], long_coords.iloc[0]],
-                            popup=popup
-                            ).add_to(marker_cluster)
+                    folium.CircleMarker(
+                      radius = 5,
+                      location = [lat_coords.iloc[0], long_coords.iloc[0]],
+                      popup = popup,
+                      color = '#ff6600',
+                      fill = True,
+                      fill_color = '#ff6600').add_to(marker_cluster)
 
     ## Region information json
     regions = json.load(open(DIR_PATH + '/lib/regions.json'))
