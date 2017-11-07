@@ -29,7 +29,7 @@ def insert_start_year(df):
 
 def insert_workshop_type(df):
     """
-    Transform start to just year
+    Extract workshop type from tags.
     """
     # index of column 'tags' which contains a list tags for a workshop (we are just looking to detect one of SWC, DC or TTT)
     idx = df.columns.get_loc("tags")
@@ -333,30 +333,15 @@ def google_drive_authentication():
     return drive
 
 
-def google_drive_upload(excel_file, drive):
+def google_drive_upload(file, drive):
     """
-    Upload spreadsheet resulting analysis spreadsheet to google drive
+    Upload a file to Google drive
     """
     upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
                                                   'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                     'title': excel_file})
-    upload_excel.SetContentFile(dirP + '/data/workshops/' + excel_file)
+                                     'title': os.path.basename(file)})
+    upload_excel.SetContentFile(file)
     upload_excel.Upload({'convert': True})
-
-
-def google_drive_upload_non_anonymized(filename, dirP, name_file):
-    """
-    Upload non anonymized data to google drive
-    """
-    writerClear = pd.ExcelWriter(dirP + '/data/workshops/' + name_file + '.xlsx', engine='xlsxwriter')
-    data_all = pd.read_csv(dirP + '/data/workshops/' + filename)
-    data_all.to_excel(writerClear, sheet_name='Workshops_Data')
-    writerClear.save()
-    upload_data = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
-                                                 'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                    'title': filename})
-    upload_data.SetContentFile(dirP + '/data/workshops/' + name_file + '.xlsx')
-    upload_data.Upload({'convert': True})
 
 
 def main():
@@ -373,18 +358,19 @@ def main():
         print('Exiting...')
         exit(-1)
     else:
-        workshops_file = workshops_files[-1]  # Get the latest file available in the directory
-        workshops_file_name = re.sub('\.csv$', '', workshops_file.strip())
+        workshops_file_name = workshops_files[-1]  # Get the latest file available in the directory
+        workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    workshops_df = load_workshop_data(WORKSHOP_DATA_DIR + workshops_file)
+    workshops_file = WORKSHOP_DATA_DIR + workshops_file_name
+    workshops_df = load_workshop_data(workshops_file)
     workshops_df = insert_start_year(workshops_df)
     workshops_df = insert_workshop_type(workshops_df)
 
     print('Creating the analyses Excel spreadsheet ...')
-    workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name + '.xlsx'
+    workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
     excel_writer = create_workshop_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df)
 
-    create_readme_tab(workshops_file_name, excel_writer)
+    create_readme_tab(workshops_file_name_without_extension, excel_writer)
 
     workshops_per_year_analysis(workshops_df, excel_writer)
     workshops_per_institution_analysis(workshops_df, excel_writer)
@@ -400,13 +386,12 @@ def main():
 
     print("Analyses of Carpentry workshops complete - see results in " + workshop_analyses_excel_file + ".")
 
-    #print("Uploading workshops analyses to Google Drive ...")
-    # drive = google_drive_authentication()
-    # google_drive_upload(workshops_excel_file, drive)
-    # print('Workshops analysis Excel spreadsheet uploaded to Google Drive.')
-    # google_drive_upload_non_anonymized(DATA, DIR_PATH, NAME_FILE)
-    # print('Original workshop CSV spreadsheet uploaded to Google Drive.')
-
+    print("Uploading workshops analyses to Google Drive ...")
+    drive = google_drive_authentication()
+    google_drive_upload(workshops_file, drive)
+    print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
+    google_drive_upload(workshop_analyses_excel_file, drive)
+    print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
 
 if __name__ == '__main__':
     main()
