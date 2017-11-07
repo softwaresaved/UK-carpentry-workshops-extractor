@@ -273,16 +273,15 @@ def attendees_per_workshop_type(df, writer):
 
 def attendees_per_workshop_type_over_years(df, writer):
     """
-    Create corresponding tables and graphs and write to the spreadsheet
-    Number of attendees per type and year
+    Number of attendees per type over years - create corresponding tables and graphs and write to the spreadsheet.
     """
     type_year_attend_table = df.groupby(['workshop_type', 'start_year'])['number_of_attendees'].sum().to_frame()
     type_year_attend_table = type_year_attend_table.pivot_table(index='workshop_type', columns='start_year')
 
-    type_year_attend_table.to_excel(writer, sheet_name='Attend_per_TypeYear')
+    type_year_attend_table.to_excel(writer, sheet_name='attendees_workshop_type_years')
 
     workbook = writer.book
-    worksheet = writer.sheets['Attend_per_TypeYear']
+    worksheet = writer.sheets['attendees_workshop_type_years']
 
     chart8 = workbook.add_chart({'type': 'column'})
 
@@ -290,31 +289,32 @@ def attendees_per_workshop_type_over_years(df, writer):
 
     for number in ranged:
         chart8.add_series({
-            'name': ['Attend_per_TypeYear', 1, number],
-            'categories': ['Attend_per_TypeYear', 3, 0, len(type_year_attend_table.index) + 2, 0],
-            'values': ['Attend_per_TypeYear', 3, number, len(type_year_attend_table.index) + 2, number],
+            'name': ['attendees_workshop_type_years', 1, number],
+            'categories': ['attendees_workshop_type_years', 3, 0, len(type_year_attend_table.index) + 2, 0],
+            'values': ['attendees_workshop_type_years', 3, number, len(type_year_attend_table.index) + 2, number],
             'gap': 2,
         })
 
     chart8.set_y_axis({'major_gridlines': {'visible': False}})
-    chart8.set_x_axis({'name': 'Type of Workshop'})
-    chart8.set_y_axis({'name': 'Number of Attendees', 'major_gridlines': {'visible': False}})
-    chart8.set_title({'name': 'Number of Attendees per Type per Year'})
+    chart8.set_x_axis({'name': 'Workshop type'})
+    chart8.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
+    chart8.set_title({'name': 'Number of attendees per type over years'})
 
     worksheet.insert_chart('I2', chart8)
 
 
-def create_readme_tab(name_file, filename, writer):
+def create_readme_tab(file_name, writer):
     """
-    Create the ReadMe tab in the spreadsheet
+    Create the README tab in the spreadsheet.
     """
-    date = name_file.split("_")  # Extract date from the workshops file name in YYYY-MM-DD format
-    readme_text = "Data in sheet " + filename + " was extracted on " + date[
+    date = file_name.split("_")  # Extract date from the workshops file name in YYYY-MM-DD format
+    readme_text = "Data in sheet 'carpentry_workshops' was extracted on " + date[
         2] + " using Ruby script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor"
-    readme_text2 = "It contains info on all UK Carpentry workshops recorded in the Carpentry's record keeping system AMY until the date it was extracted."
+    readme_text2 = "It contains info on all UK Carpentry workshops recorded in the Carpentry's record keeping system AMY until the date it was extracted on. " \
+                   "Added columns include 'start_year', extracted from column 'start', and 'workshop_type', extracted from column 'tags'."
 
     workbook = writer.book
-    worksheet = workbook.add_worksheet('ReadMe')
+    worksheet = workbook.add_worksheet('README')
     worksheet.write(0, 0, readme_text)
     worksheet.write(2, 0, readme_text2)
 
@@ -384,6 +384,8 @@ def main():
     workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name + '.xlsx'
     excel_writer = create_workshop_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df)
 
+    create_readme_tab(workshops_file_name, excel_writer)
+
     workshops_per_year_analysis(workshops_df, excel_writer)
     workshops_per_institution_analysis(workshops_df, excel_writer)
     workshops_type_analysis(workshops_df, excel_writer)
@@ -392,15 +394,13 @@ def main():
     #
     attendees_per_year_analysis(workshops_df, excel_writer)
     attendees_per_workshop_type(workshops_df, excel_writer)
-    #attendees_per_workshop_type_over_years(workshops_df, excel_writer)
-    #
-    # create_readme_tab(workshops_file_name, workshops_file, workshops_excel_file)
-    #
+    attendees_per_workshop_type_over_years(workshops_df, excel_writer)
+
     excel_writer.save()
-    #
+
     print("Analyses of Carpentry workshops complete - see results in " + workshop_analyses_excel_file + ".")
-    #
-    # print("Uploading workshops analyses to Google Drive...")
+
+    #print("Uploading workshops analyses to Google Drive ...")
     # drive = google_drive_authentication()
     # google_drive_upload(workshops_excel_file, drive)
     # print('Workshops analysis Excel spreadsheet uploaded to Google Drive.')
