@@ -1,28 +1,26 @@
 import os
+import argparse
 import folium
 import json
 import pandas as pd
+import pycountry
 from folium.plugins import MarkerCluster
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-findFile = [filename for filename in os.listdir(DIR_PATH + '/data/workshops')
-            if filename.startswith("carpentry-workshops_")
-            and filename.endswith('.csv')]
-if not findFile:
-  print('No file was found.')  
-else:
-  DATA = findFile[-1]
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 
 
-def load_workshops_data(filename):
+def load_workshops_data(csv_file):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(DIR_PATH + '/data/workshops/' + findFile[-1],
-                     usecols=['venue','latitude','longitude'])
+    try:
+        df = pd.read_csv(csv_file, usecols=['venue','latitude','longitude'])
+    except:
+      raise
     return pd.DataFrame(df)
 
 def generate_map(df,filename):
@@ -46,7 +44,7 @@ def generate_map(df,filename):
               fill_color = '#ff6600').add_to(marker_cluster)
 
     ## Region information json
-    regions = json.load(open(DIR_PATH + '/lib/regions.json',encoding = 'utf-8-sig'))
+    regions = json.load(open(CURRENT_DIR + '/lib/regions.json',encoding = 'utf-8-sig'))
 
     ## Add to a layer
     folium.GeoJson(regions,
@@ -57,11 +55,11 @@ def generate_map(df,filename):
                            }).add_to(m)
     folium.LayerControl().add_to(m)
 
-    ## Find main file date
-    date = filename.split('_')[2].replace('.csv','')
+    ## Find suffix
+    suffix = filename.split('_',1)[1].replace('.csv','')
 
     ## Save mapp to html
-    path_html = DIR_PATH + '/data/workshops/map_cluster_workshops_per_venue_' + date + '.html'
+    path_html = WORKSHOP_DATA_DIR + 'map_cluster_workshops_per_venue_' + suffix + '.html'
     m.save(path_html)
     return path_html
 
@@ -89,15 +87,39 @@ def main():
     """
     Main function
     """
-    df = load_workshops_data(DATA)
-    print('Generating map...')
-    html_file = generate_map(df,DATA)
-    print('HTML file created.')
+    country_code = ''
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--country_code', default='GB', type=str)
+    args = parser.parse_args()
+
+    try:
+        pycountry.countries.get(alpha_2=args.country_code)
+    except:
+        print('The country code submitted does not exist.')
+        raise
+        
+    print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in directory " + WORKSHOP_DATA_DIR + ".")
+    workshops_files = [os.path.join(WORKSHOP_DATA_DIR,filename) for filename in os.listdir(WORKSHOP_DATA_DIR)
+                       if filename.startswith("carpentry-workshops_" + str(args.country_code)) and filename.endswith('.csv')]
+
+    if not workshops_files:
+        print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ".")
+        print('Exiting...')
+        exit(-1)
+    else:
+        workshops_file = max(workshops_files, key=os.path.getctime)## if want most recent modification date use getmtime
+
+    df = load_workshops_data(workshops_file)
+    print('Generating map...')
+    html_file = generate_map(df,workshops_file)
+    print('Cluster Map of workshops per venue created - see results in ' +
+          html_file + '.')
+
+##    print("Uploading Map of workshops per venue to Google Drive ...")
 ##    drive = google_drive_authentication()
 ##    google_drive_upload(html_file,drive)
-##    print('Analysis spreadsheet uploaded to Google Drive.')
-
+##    print('Cluster Map uploaded to Google Drive.')
 
 
 if __name__ == '__main__':

@@ -1,12 +1,14 @@
 ## If problems installing basemap manually use
 ## http://www.lfd.uci.edu/~gohlke/pythonlibs/#basemap
 import os
+import argparse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm
 import warnings
 import json
+import pycountry
  
 from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
@@ -16,23 +18,19 @@ from matplotlib.colors import Normalize
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-findFile = [filename for filename in os.listdir(DIR_PATH + '/data/instructors')
-            if filename.startswith("carpentry-instructors_")
-            and filename.endswith('.csv')]
-if not findFile:
-  print('No file was found.')  
-else:
-  DATA = findFile[-1]
-  EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
+EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def load_instructors_data(filename):
+def load_instructors_data(csv_file):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
-                     usecols=['affiliation','nearest_airport_code'])
+    try:
+      df = pd.read_csv(csv_file, usecols=['affiliation','nearest_airport_code'])
+    except:
+      raise
     return pd.DataFrame(df)
 
 def transform_data(df):
@@ -45,12 +43,12 @@ def transform_data(df):
     df = df.dropna(subset=['nearest_airport_code'])
     return df
 
-def add_missing_institutions(filename):
+def add_missing_institutions(excel_file):
     """
     Add coordinates for missing institutions in excel file.
     """
     try:
-        excel_file = pd.ExcelFile(filename)
+        excel_file = pd.ExcelFile(excel_file)
         df_excel = excel_file.parse('UK-academic-institutions')
     except FileNotFoundError:
         print('The file you were looking for is not found.')
@@ -75,7 +73,9 @@ def add_missing_institutions(filename):
                  {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE':-1.520078900000044, 'LATITUDE':52.28519050000001},
                  {'VIEW_NAME': 'Public Health England', 'LONGITUDE':-0.10871080000003985, 'LATITUDE':51.50153030000001},
                  {'VIEW_NAME': 'IBM', 'LONGITUDE':-0.1124157000000423, 'LATITUDE':51.5071586},
-                 {'VIEW_NAME': 'Media Molecule', 'LONGITUDE':-0.5756398999999419, 'LATITUDE':51.2355975}]
+                 {'VIEW_NAME': 'Media Molecule', 'LONGITUDE':-0.5756398999999419, 'LATITUDE':51.2355975},
+                 {'VIEW_NAME': 'BBC', 'LONGITUDE':-0.226846, 'LATITUDE':51.510025}]
+
 
     other_coords = pd.DataFrame(other_dic)
 
@@ -130,12 +130,12 @@ def generate_map(df,filename):
 
     plt.title('Map of Instructors per affiliation')
 
-    ## Find main file date
-    date = filename.split('_')[2].replace('.csv','')
+    ## Find suffix
+    suffix = filename.split('_',1)[1].replace('.csv','')
 
     #Save file to png
-    img_path = DIR_PATH + '/data/instructors/map_instructors_per_affiliation_'
-    plt.savefig(img_path + date,pad_inches=0.0, bbox_inches='tight')
+    img_path = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_'
+    plt.savefig(img_path + suffix,pad_inches=0.0, bbox_inches='tight')
     return img_path + '.png'
 
     
@@ -163,19 +163,44 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA)
+
+    country_code = ''
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--country_code', default='GB', type=str)
+    args = parser.parse_args()
+
+    try:
+        pycountry.countries.get(alpha_2=args.country_code)
+    except:
+        print('The country code submitted does not exist.')
+        raise
+        
+    print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in directory " + INSTRUCTORS_DATA_DIR + ".")
+    instructors_files = [os.path.join(INSTRUCTORS_DATA_DIR,filename) for filename in os.listdir(INSTRUCTORS_DATA_DIR)
+                       if filename.startswith("carpentry-instructors_" + str(args.country_code)) and filename.endswith('.csv')]
+
+    if not instructors_files:
+        print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ".")
+        print('Exiting...')
+        exit(-1)
+    else:
+        instructors_file = max(instructors_files, key=os.path.getctime)## if want most recent modification date use getmtime
+    
+    df = load_instructors_data(instructors_file)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     df = create_coordinates_columns(df,df_all)
 
     print('Generating map...')    
-    image_file = generate_map(df,DATA)
-    print('Image created.')
+    image_file = generate_map(df,instructors_file)
+    print('Image of instructors per region created - see results in ' +
+          image_file + '.')
 
-    
+##    print("Uploading Image of instructors per region to Google Drive ...")    
 ##    drive = google_drive_authentication()
 ##    google_drive_upload(image_file,drive)
-##    print('Analysis spreadsheet uploaded to Google Drive.')
+##    print('Image uploaded to Google Drive.')
 
 
 

@@ -1,29 +1,26 @@
 import os
+import argparse
 import folium
 import json
 import pandas as pd
+import pycountry
 from folium.plugins import MarkerCluster
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-findFile = [filename for filename in os.listdir(DIR_PATH + '/data/instructors')
-            if filename.startswith("carpentry-instructors_")
-            and filename.endswith('.csv')]
-if not findFile:
-  print('No file was found.')  
-else:
-  DATA = findFile[-1]
-  EXCEL_FILE = DIR_PATH + '/lib/UK-academic-institutions-geodata.xlsx'
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
+EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
-
-def load_instructors_data(filename):
+def load_instructors_data(csv_file):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(DIR_PATH + '/data/instructors/' + filename,
-                     usecols=['affiliation'])
+    try:
+      df = pd.read_csv(csv_file, usecols=['affiliation'])
+    except:
+      raise
     return pd.DataFrame(df)
 
 def transform_data(df):
@@ -34,12 +31,12 @@ def transform_data(df):
     df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
     return df.dropna(subset=['affiliation'])
 
-def add_missing_institutions(filename):
+def add_missing_institutions(excel_file):
     """
     Add coordinates for missing institutions in excel file.
     """
     try:
-        excel_file = pd.ExcelFile(filename)
+        excel_file = pd.ExcelFile(excel_file)
         df_excel = excel_file.parse('UK-academic-institutions')
     except FileNotFoundError:
         print('The file you were looking for is not found.')
@@ -64,7 +61,8 @@ def add_missing_institutions(filename):
                  {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE':-1.520078900000044, 'LATITUDE':52.28519050000001},
                  {'VIEW_NAME': 'Public Health England', 'LONGITUDE':-0.10871080000003985, 'LATITUDE':51.50153030000001},
                  {'VIEW_NAME': 'IBM', 'LONGITUDE':-0.1124157000000423, 'LATITUDE':51.5071586},
-                 {'VIEW_NAME': 'Media Molecule', 'LONGITUDE':-0.5756398999999419, 'LATITUDE':51.2355975}]
+                 {'VIEW_NAME': 'Media Molecule', 'LONGITUDE':-0.5756398999999419, 'LATITUDE':51.2355975},
+                 {'VIEW_NAME': 'BBC', 'LONGITUDE':-0.226846, 'LATITUDE':51.510025}]
 
     other_coords = pd.DataFrame(other_dic)
 
@@ -99,7 +97,7 @@ def generate_map(df,df_all,filename):
                       fill_color = '#ff6600').add_to(marker_cluster)
 
     ## Region information json
-    regions = json.load(open(DIR_PATH + '/lib/regions.json'))
+    regions = json.load(open(CURRENT_DIR + '/lib/regions.json'))
 
     ## Add to a layer
     folium.GeoJson(regions,
@@ -110,11 +108,11 @@ def generate_map(df,df_all,filename):
                            }).add_to(m)
     folium.LayerControl().add_to(m)
 
-    ## Find main file date
-    date = filename.split('_')[2].replace('.csv','')
+    ## Find suffix
+    suffix = filename.split('_',1)[1].replace('.csv','')
 
     ## Save mapp to html
-    path_html = DIR_PATH + '/data/instructors/map_cluster_intructors_per_affiliation_' + date + '.html'
+    path_html = INSTRUCTORS_DATA_DIR + 'map_cluster_intructors_per_affiliation_' + suffix + '.html'
     m.save(path_html)
     return path_html
 
@@ -142,16 +140,41 @@ def main():
     """
     Main function
     """
-    df = load_instructors_data(DATA)
+    country_code = ''
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--country_code', default='GB', type=str)
+    args = parser.parse_args()
+
+    try:
+        pycountry.countries.get(alpha_2=args.country_code)
+    except:
+        print('The country code submitted does not exist.')
+        raise
+        
+    print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in directory " + INSTRUCTORS_DATA_DIR + ".")
+    instructors_files = [os.path.join(INSTRUCTORS_DATA_DIR,filename) for filename in os.listdir(INSTRUCTORS_DATA_DIR)
+                       if filename.startswith("carpentry-instructors_" + str(args.country_code)) and filename.endswith('.csv')]
+
+    if not instructors_files:
+        print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ".")
+        print('Exiting...')
+        exit(-1)
+    else:
+        instructors_file = max(instructors_files, key=os.path.getctime)## if want most recent modification date use getmtime
+    
+    df = load_instructors_data(instructors_file)
     df = transform_data(df)
     df_all = add_missing_institutions(EXCEL_FILE)
     print('Generating map...')    
-    html_file = generate_map(df,df_all,DATA)
-    print('HTML file created.')
+    html_file = generate_map(df,df_all,instructors_file)
+    print('Cluster Map of instructors per affiliation created - see results in ' +
+          html_file + '.')
 
+##    print("Uploading Cluster Map of instructors per affiliation to Google Drive ...")
 ##    drive = google_drive_authentication()
 ##    google_drive_upload(html_file,drive)
-##    print('Analysis spreadsheet uploaded to Google Drive.')
+##    print('Cluster Map uploaded to Google Drive.')
 
 
 

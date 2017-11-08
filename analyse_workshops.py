@@ -1,5 +1,5 @@
 import os
-import sys, argparse
+import argparse
 import re
 import pandas as pd
 import numpy
@@ -15,7 +15,10 @@ def load_workshop_data(csv_file):
     """
     Loads data from the CSV file with workshops into a dataframe
     """
-    df = pd.read_csv(csv_file, error_bad_lines=False)
+    try:
+      df = pd.read_csv(csv_file, usecols=['affiliation'])
+    except:
+      raise
     return pd.DataFrame(df)
 
 
@@ -374,7 +377,6 @@ def main():
         exit(-1)
     else:
         workshops_file = max(workshops_files, key=os.path.getctime)## if want most recent modification date use getmtime
-        print(workshops_file)
         workshops_file_name = os.path.basename(workshops_file)
         workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
@@ -391,9 +393,8 @@ def main():
     workshops_per_year_analysis(workshops_df, excel_writer)
     workshops_per_institution_analysis(workshops_df, excel_writer)
     workshops_type_analysis(workshops_df, excel_writer)
-    # #number_workshops_per_venue_year(workshops_df, excel_writer)
-    # #number_workshops_per_type_year(workshops_df, excel_writer)
-    #
+    ##number_workshops_per_venue_year(workshops_df, excel_writer)
+    ##number_workshops_per_type_year(workshops_df, excel_writer)
     attendees_per_year_analysis(workshops_df, excel_writer)
     attendees_per_workshop_type(workshops_df, excel_writer)
     attendees_per_workshop_type_over_years(workshops_df, excel_writer)
