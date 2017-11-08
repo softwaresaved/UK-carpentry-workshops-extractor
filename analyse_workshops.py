@@ -1,19 +1,21 @@
 import os
+import sys, argparse
 import re
 import pandas as pd
 import numpy
+import pycountry
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
-WORKSHOP_TYPES = ["SWC", "DC", "TTT"]
+WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]   
 
 def load_workshop_data(csv_file):
     """
     Loads data from the CSV file with workshops into a dataframe
     """
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(csv_file, error_bad_lines=False)
     return pd.DataFrame(df)
 
 
@@ -21,7 +23,7 @@ def insert_start_year(df):
     """
     Insert the start year column using the date in the 'start' column in YYYY-MM-DD format
     """
-    idx = df.columns.get_loc("start") # index of column 'start'
+    idx = df.columns.get_loc('start') # index of column 'start'
     start_years = pd.to_datetime(df['start']).dt.year # get the year from the date in YYYY-MM-DD format
     df.insert(loc=idx + 1, column='start_year', value=start_years) # insert to the right of the column 'start'
     return df
@@ -43,6 +45,8 @@ def insert_workshop_type(df):
             workshop_types.append(WORKSHOP_TYPES[1])
         elif WORKSHOP_TYPES[2] in tag:
             workshop_types.append(WORKSHOP_TYPES[2])
+        elif WORKSHOP_TYPES[3] in tag:
+            workshop_types.append(WORKSHOP_TYPES[3])
         else:
             workshop_types.append('unknown')
 
@@ -348,20 +352,32 @@ def main():
     """
     Main function
     """
-    print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in directory " + WORKSHOP_DATA_DIR + ".")
+    country_code = ''
 
-    workshops_files = [filename for filename in os.listdir(WORKSHOP_DATA_DIR)
-                       if filename.startswith("carpentry-workshops_") and filename.endswith('.csv')]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--country_code', default='GB', type=str)
+    args = parser.parse_args()
+
+    try:
+        pycountry.countries.get(alpha_2=args.country_code)
+    except:
+        print('The country code submitted does not exist.')
+        raise
+        
+    print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in directory " + WORKSHOP_DATA_DIR + ".")
+    workshops_files = [os.path.join(WORKSHOP_DATA_DIR,filename) for filename in os.listdir(WORKSHOP_DATA_DIR)
+                       if filename.startswith("carpentry-workshops_" + str(args.country_code)) and filename.endswith('.csv')]
 
     if not workshops_files:
         print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ".")
         print('Exiting...')
         exit(-1)
     else:
-        workshops_file_name = workshops_files[-1]  # Get the latest file available in the directory
+        workshops_file = max(workshops_files, key=os.path.getctime)## if want most recent modification date use getmtime
+        print(workshops_file)
+        workshops_file_name = os.path.basename(workshops_file)
         workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    workshops_file = WORKSHOP_DATA_DIR + workshops_file_name
     workshops_df = load_workshop_data(workshops_file)
     workshops_df = insert_start_year(workshops_df)
     workshops_df = insert_workshop_type(workshops_df)
@@ -386,12 +402,12 @@ def main():
 
     print("Analyses of Carpentry workshops complete - see results in " + workshop_analyses_excel_file + ".")
 
-    print("Uploading workshops analyses to Google Drive ...")
-    drive = google_drive_authentication()
-    google_drive_upload(workshops_file, drive)
-    print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
-    google_drive_upload(workshop_analyses_excel_file, drive)
-    print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
+##    print("Uploading workshops analyses to Google Drive ...")
+##    drive = google_drive_authentication()
+##    google_drive_upload(workshops_file, drive)
+##    print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
+##    google_drive_upload(workshop_analyses_excel_file, drive)
+##    print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
 
 if __name__ == '__main__':
     main()
