@@ -16,7 +16,8 @@ def load_workshop_data(csv_file):
     Loads data from the CSV file with workshops into a dataframe
     """
     try:
-      df = pd.read_csv(csv_file, usecols=['affiliation'])
+      df = pd.read_csv(csv_file, usecols=['start', 'tags', 'venue',
+                                      'number_of_attendees'])
     except:
       raise
     return pd.DataFrame(df)

@@ -4,5 +4,6 @@ json
 matplotlib
 numpy
 pandas
+pycountry
 pydrive
 shapefile
