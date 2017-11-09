@@ -123,7 +123,19 @@ def instructors_per_region(df):
     region_table = DataFrame({'count' : df.groupby(['region']).size()}).reset_index()
     return region_table
 
-def generate_map(df_region,regions,filename):
+def define_threshold_scale(df_region):
+    """
+    Creates the threshold scale to be visualized in the map
+    """
+    scale_list = df_region['count'].tolist()
+    max_scale = max(scale_list)
+    scale = int(max_scale / 5)
+    threshold_scale = []
+    for each in range(0,max_scale+1,scale):
+      threshold_scale.append(each)
+    return threshold_scale
+
+def generate_map(df_region,regions,filename,threshold_scale):
     """
     Generates Map to be visualized.
     """
@@ -141,7 +153,7 @@ def generate_map(df_region,regions,filename):
             fill_opacity=0.7,
             line_opacity=0.2,
             legend_name='Number of Instructors per region',
-            threshold_scale = [0,6,13,20,27])
+            threshold_scale = threshold_scale)
 
     ## Find suffix
     suffix = filename.split('_',1)[1].replace('.csv','')
@@ -161,16 +173,15 @@ def google_drive_authentication():
     drive = GoogleDrive(gauth)
     return drive
     
-def google_drive_upload(html_file,drive):
+def google_drive_upload(file,drive):
     """
     Upload map to google drive
     """
     upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
                                                 'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':'map_intructors_per_region_' + date })
+                                   'title':os.path.basename(file)})
     upload_map.SetContentFile(html_file)
     upload_map.Upload({'convert': False})
-
 
 def main():
     """
@@ -205,8 +216,9 @@ def main():
     df_all = add_missing_institutions(EXCEL_FILE)
     df = create_regions_column(df,df_all,REGIONS)
     df_region = instructors_per_region(df)
-    print('Generating map...')    
-    html_file = generate_map(df_region,REGIONS,instructors_file)
+    print('Generating map...')
+    threshold_scale = define_threshold_scale(df_region)
+    html_file = generate_map(df_region,REGIONS,instructors_file,threshold_scale)
     print('Map of instructors per region created - see results in ' +
           html_file + '.')
     

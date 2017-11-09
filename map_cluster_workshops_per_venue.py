@@ -72,13 +72,13 @@ def google_drive_authentication():
     drive = GoogleDrive(gauth)
     return drive
     
-def google_drive_upload(html_file,drive):
+def google_drive_upload(file,drive):
     """
     Upload map to google drive
     """
     upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
                                                 'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':'map_cluster_workshops_per_venue_' + date })
+                                   'title':os.path.basename(file)})
     upload_map.SetContentFile(html_file)
     upload_map.Upload({'convert': False})
 
