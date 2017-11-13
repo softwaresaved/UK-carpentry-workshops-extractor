@@ -9,15 +9,15 @@ from pydrive.drive import GoogleDrive
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
-WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]   
+WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
+DATAFRAME = pd.core.frame.DataFrame 
 
 def load_workshop_data(csv_file):
     """
     Loads data from the CSV file with workshops into a dataframe
     """
     try:
-      df = pd.read_csv(csv_file, usecols=['start', 'tags', 'venue',
-                                      'number_of_attendees'])
+      df = pd.read_csv(csv_file)
     except:
       raise
     return pd.DataFrame(df)
@@ -71,7 +71,7 @@ def workshops_per_year_analysis(df, writer):
     """
     Number of workshops per year - create corresponding tables and graphs and write to the spreadsheet.
     """
-    workshops_per_year_table = df.groupby(['start_year']).size()
+    workshops_per_year_table = DATAFRAME({'count' : df.groupby(['start_year']).size()}).reset_index()
 
     workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year')
 
@@ -94,12 +94,13 @@ def workshops_per_year_analysis(df, writer):
 
     worksheet.insert_chart('D2', chart1)
 
+    return workshops_per_year_table
 
 def workshops_per_institution_analysis(df, writer):
     """
     Number of Workshops per institution - create corresponding tables and graphs and write to the spreadsheet
     """
-    venue_table = df.groupby(['venue']).size()
+    venue_table = DATAFRAME({'count' : df.groupby(['venue']).size()}).reset_index()
 
     venue_table.to_excel(writer, sheet_name='workshops_per_institution')
 
@@ -109,8 +110,8 @@ def workshops_per_institution_analysis(df, writer):
     chart2 = workbook.add_chart({'type': 'column'})
 
     chart2.add_series({
-        'categories': ['workshops_per_institution', 1, 0, len(venue_table.index), 0],
-        'values': ['workshops_per_institution', 1, 1, len(venue_table.index), 1],
+        'categories': ['workshops_per_institution', 1, 1, len(venue_table.index), 1],
+        'values': ['workshops_per_institution', 1, 2, len(venue_table.index), 2],
         'gap': 2,
     })
 
@@ -121,6 +122,8 @@ def workshops_per_institution_analysis(df, writer):
     chart2.set_title({'name': 'Number of workshops per institution'})
 
     worksheet.insert_chart('D2', chart2)
+
+    return venue_table
 
 
 def workshops_type_analysis(df, writer):
@@ -149,6 +152,8 @@ def workshops_type_analysis(df, writer):
     chart3.set_title({'name': 'Workshops types'})
 
     worksheet.insert_chart('D2', chart3)
+
+    return type_table
 
 
 def number_workshops_per_venue_year(df, writer):
@@ -183,6 +188,7 @@ def number_workshops_per_venue_year(df, writer):
 
     worksheet.insert_chart('I2', chart4)
 
+    return venue_year_table
 
 def number_workshops_per_type_year(df, writer):
     """
@@ -216,6 +222,8 @@ def number_workshops_per_type_year(df, writer):
 
     worksheet.insert_chart('I2', chart5)
 
+    return type_year_table
+
 
 def attendees_per_year_analysis(df, writer):
     """
@@ -246,6 +254,8 @@ def attendees_per_year_analysis(df, writer):
     chart6.set_title({'name': 'Number of attendees per year'})
 
     worksheet.insert_chart('I2', chart6)
+
+    return attendees_year_table
 
 
 def attendees_per_workshop_type(df, writer):
@@ -278,6 +288,7 @@ def attendees_per_workshop_type(df, writer):
 
     worksheet.insert_chart('I2', chart7)
 
+    return attendees_type_table
 
 def attendees_per_workshop_type_over_years(df, writer):
     """
@@ -310,6 +321,7 @@ def attendees_per_workshop_type_over_years(df, writer):
 
     worksheet.insert_chart('I2', chart8)
 
+    return type_year_attend_table
 
 def create_readme_tab(file_name, writer):
     """
@@ -375,7 +387,7 @@ def main():
     if not workshops_files:
         print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ".")
         print('Exiting...')
-        exit(-1)
+        raise SystemExit
     else:
         workshops_file = max(workshops_files, key=os.path.getctime)## if want most recent modification date use getmtime
         workshops_file_name = os.path.basename(workshops_file)

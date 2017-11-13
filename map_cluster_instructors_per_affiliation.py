@@ -159,7 +159,7 @@ def main():
     if not instructors_files:
         print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ".")
         print('Exiting...')
-        exit(-1)
+        raise SystemExit
     else:
         instructors_file = max(instructors_files, key=os.path.getctime)## if want most recent modification date use getmtime
     
