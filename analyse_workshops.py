@@ -3,23 +3,23 @@ import argparse
 import re
 import pandas as pd
 import numpy
-import pycountry
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import traceback
+import glob
+
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
-DATAFRAME = pd.core.frame.DataFrame 
+DATAFRAME = pd.core.frame.DataFrame
+GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def load_workshop_data(csv_file):
     """
     Loads data from the CSV file with workshops into a dataframe
     """
-    try:
-      df = pd.read_csv(csv_file)
-    except:
-      raise
+    df = pd.read_csv(csv_file)
     return pd.DataFrame(df)
 
 
@@ -353,12 +353,12 @@ def google_drive_authentication():
     return drive
 
 
-def google_drive_upload(file, drive):
+def google_drive_upload(file, drive, dir_id):
     """
     Upload a file to Google drive
     """
     upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
-                                                  'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
+                                                  'id': dir_id }], #'0B6P79ipNuR8EdDFraGgxMFJaaVE'
                                      'title': os.path.basename(file)})
     upload_excel.SetContentFile(file)
     upload_excel.Upload({'convert': True})
@@ -368,60 +368,65 @@ def main():
     """
     Main function
     """
-    country_code = ''
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--country_code', default='GB', type=str)
+    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse') # absolute path to a workshops file to analyse
+    parser.add_argument('-g', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload results to') # absolute path to a workshops file to analyse
     args = parser.parse_args()
 
-    try:
-        pycountry.countries.get(alpha_2=args.country_code)
-    except:
-        print('The country code submitted does not exist.')
-        raise
-        
-    print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in directory " + WORKSHOP_DATA_DIR + ".")
-    workshops_files = [os.path.join(WORKSHOP_DATA_DIR,filename) for filename in os.listdir(WORKSHOP_DATA_DIR)
-                       if filename.startswith("carpentry-workshops_" + str(args.country_code)) and filename.endswith('.csv')]
-
-    if not workshops_files:
-        print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ".")
-        print('Exiting...')
-        raise SystemExit
+    if args.workshops_file:
+        workshops_file = args.workshops_file
+        print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
     else:
-        workshops_file = max(workshops_files, key=os.path.getctime)## if want most recent modification date use getmtime
-        workshops_file_name = os.path.basename(workshops_file)
-        workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR +"\n")
+        workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_*.csv")
+        workshops_files.sort(key=os.path.getctime) # order by creation date
 
-    workshops_df = load_workshop_data(workshops_file)
-    workshops_df = insert_start_year(workshops_df)
-    workshops_df = insert_workshop_type(workshops_df)
+        if not workshops_files[-1]: # get the last element
+            print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
+            sys.exit(1)
+        else:
+            workshops_file = workshops_files[-1]
+            workshops_file_name = os.path.basename(workshops_file)
+            workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    print('Creating the analyses Excel spreadsheet ...')
-    workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
-    excel_writer = create_workshop_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df)
+    try:
+        workshops_df = load_workshop_data(workshops_file)
+        workshops_df = insert_start_year(workshops_df)
+        workshops_df = insert_workshop_type(workshops_df)
 
-    create_readme_tab(workshops_file_name_without_extension, excel_writer)
+        print('Creating the analyses Excel spreadsheet ...')
+        workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
+        excel_writer = create_workshop_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df)
 
-    workshops_per_year_analysis(workshops_df, excel_writer)
-    workshops_per_institution_analysis(workshops_df, excel_writer)
-    workshops_type_analysis(workshops_df, excel_writer)
-    ##number_workshops_per_venue_year(workshops_df, excel_writer)
-    ##number_workshops_per_type_year(workshops_df, excel_writer)
-    attendees_per_year_analysis(workshops_df, excel_writer)
-    attendees_per_workshop_type(workshops_df, excel_writer)
-    attendees_per_workshop_type_over_years(workshops_df, excel_writer)
+        create_readme_tab(workshops_file_name_without_extension, excel_writer)
 
-    excel_writer.save()
+        workshops_per_year_analysis(workshops_df, excel_writer)
+        workshops_per_institution_analysis(workshops_df, excel_writer)
+        workshops_type_analysis(workshops_df, excel_writer)
+        ##number_workshops_per_venue_year(workshops_df, excel_writer)
+        ##number_workshops_per_type_year(workshops_df, excel_writer)
+        attendees_per_year_analysis(workshops_df, excel_writer)
+        attendees_per_workshop_type(workshops_df, excel_writer)
+        attendees_per_workshop_type_over_years(workshops_df, excel_writer)
 
-    print("Analyses of Carpentry workshops complete - see results in " + workshop_analyses_excel_file + ".")
+        excel_writer.save()
+        print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
+    except Exception:
+        print ("An error occurred while creating the analyses Excel spreadsheet ...")
+        print(traceback.format_exc())
+    else:
+        if args.google_drive_dir_id:
+            try:
+                print("Uploading workshops analyses to Google Drive ...")
+                drive = google_drive_authentication()
+                google_drive_upload(workshops_file, drive, args.google_drive_dir_id)
+                print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
+                google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id)
+                print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
+            except Exception:
+                print ("An error occurred while uploading workshops analyses to Google Drive ...")
+                print(traceback.format_exc())
 
-##    print("Uploading workshops analyses to Google Drive ...")
-##    drive = google_drive_authentication()
-##    google_drive_upload(workshops_file, drive)
-##    print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
-##    google_drive_upload(workshop_analyses_excel_file, drive)
-##    print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
 
 if __name__ == '__main__':
     main()

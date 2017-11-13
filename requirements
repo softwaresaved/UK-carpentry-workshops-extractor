@@ -7,3 +7,5 @@ pandas
 pycountry
 pydrive
 shapefile
+traceback
+glob
