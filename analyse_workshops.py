@@ -386,8 +386,9 @@ def main():
             sys.exit(1)
         else:
             workshops_file = workshops_files[-1]
-            workshops_file_name = os.path.basename(workshops_file)
-            workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+
+    workshops_file_name = os.path.basename(workshops_file)
+    workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
     try:
         workshops_df = load_workshop_data(workshops_file)
