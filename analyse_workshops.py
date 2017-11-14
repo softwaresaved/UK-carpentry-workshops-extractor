@@ -3,25 +3,16 @@ import argparse
 import re
 import pandas as pd
 import numpy
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import traceback
 import glob
-
+import sys
+sys.path.append('/lib')
+import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
 DATAFRAME = pd.core.frame.DataFrame
-GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
-
-def load_workshop_data(csv_file):
-    """
-    Loads data from the CSV file with workshops into a dataframe
-    """
-    df = pd.read_csv(csv_file)
-    return pd.DataFrame(df)
-
 
 def insert_start_year(df):
     """
@@ -337,38 +328,13 @@ def create_readme_tab(file_name, writer):
     worksheet.write(2, 0, readme_text2)
 
 
-def save_spreadsheet(writer):
-    writer.save()
-
-
-def google_drive_authentication():
-    """
-    Authentication to the google drive account
-    """
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-    return drive
-
-
-def google_drive_upload(file, drive, dir_id):
-    """
-    Upload a file to Google drive
-    """
-    upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
-                                                  'id': dir_id }], #'0B6P79ipNuR8EdDFraGgxMFJaaVE'
-                                     'title': os.path.basename(file)})
-    upload_excel.SetContentFile(file)
-    upload_excel.Upload({'convert': True})
-
-
 def main():
     """
     Main function
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse') # absolute path to a workshops file to analyse
-    parser.add_argument('-g', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload results to') # absolute path to a workshops file to analyse
+    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse')
+    parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
     args = parser.parse_args()
 
     if args.workshops_file:
@@ -389,7 +355,7 @@ def main():
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
     try:
-        workshops_df = load_workshop_data(workshops_file)
+        workshops_df = helper.load_workshop_data(workshops_file)
         workshops_df = insert_start_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
 
@@ -417,10 +383,10 @@ def main():
         if args.google_drive_dir_id:
             try:
                 print("Uploading workshops analyses to Google Drive ...")
-                drive = google_drive_authentication()
-                google_drive_upload(workshops_file, drive, args.google_drive_dir_id)
+                drive = helper.google_drive_authentication()
+                helper.google_drive_upload(workshops_file, drive, args.google_drive_dir_id)
                 print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-                google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id)
+                helper.google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id)
                 print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
             except Exception:
                 print ("An error occurred while uploading workshops analyses to Google Drive ...")
