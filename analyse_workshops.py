@@ -67,7 +67,7 @@ def create_workshop_analyses_spreadsheet(file, df):
     return writer
 
 
-def workshops_per_year_analysis(df, writer):
+def workshop_years_analysis(df, writer):
     """
     Number of workshops per year - create corresponding tables and graphs and write to the spreadsheet.
     """
@@ -96,16 +96,17 @@ def workshops_per_year_analysis(df, writer):
 
     return workshops_per_year_table
 
-def workshops_per_institution_analysis(df, writer):
+def workshops_venue_analysis(df, writer):
     """
-    Number of Workshops per institution - create corresponding tables and graphs and write to the spreadsheet
+    Number of workshops per venue - create corresponding tables and graphs and write to the spreadsheet.
+    Unfortunately, this is analysis does not give the true per institution analysis as venues are different for the same institution.
     """
     venue_table = DATAFRAME({'count' : df.groupby(['venue']).size()}).reset_index()
 
-    venue_table.to_excel(writer, sheet_name='workshops_per_institution')
+    venue_table.to_excel(writer, sheet_name='workshop_venues')
 
     workbook = writer.book
-    worksheet = writer.sheets['workshops_per_institution']
+    worksheet = writer.sheets['workshop_venues']
 
     chart2 = workbook.add_chart({'type': 'column'})
 
@@ -117,9 +118,9 @@ def workshops_per_institution_analysis(df, writer):
 
     chart2.set_y_axis({'major_gridlines': {'visible': False}})
     chart2.set_legend({'position': 'none'})
-    chart2.set_x_axis({'name': 'Institution'})
+    chart2.set_x_axis({'name': 'Venue'})
     chart2.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart2.set_title({'name': 'Number of workshops per institution'})
+    chart2.set_title({'name': 'Number of workshops per venue'})
 
     worksheet.insert_chart('D2', chart2)
 
@@ -401,8 +402,8 @@ def main():
 
         create_readme_tab(workshops_file_name_without_extension, excel_writer)
 
-        workshops_per_year_analysis(workshops_df, excel_writer)
-        workshops_per_institution_analysis(workshops_df, excel_writer)
+        workshop_years_analysis(workshops_df, excel_writer)
+        workshops_venue_analysis(workshops_df, excel_writer)
         workshops_type_analysis(workshops_df, excel_writer)
         ##number_workshops_per_venue_year(workshops_df, excel_writer)
         ##number_workshops_per_type_year(workshops_df, excel_writer)
@@ -421,9 +422,9 @@ def main():
                 print("Uploading workshops analyses to Google Drive ...")
                 drive = google_drive_authentication()
                 google_drive_upload(workshops_file, drive, args.google_drive_dir_id)
-                print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive.')
+                print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
                 google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id)
-                print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive.')
+                print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
             except Exception:
                 print ("An error occurred while uploading workshops analyses to Google Drive ...")
                 print(traceback.format_exc())
