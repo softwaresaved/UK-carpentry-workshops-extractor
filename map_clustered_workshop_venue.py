@@ -1,99 +1,64 @@
 import os
 import argparse
-import json
 import folium
+import json
 import pandas as pd
-import shapefile
-import pycountry
-from shapely.geometry import shape, Point
 import traceback
 import glob
 import re
+from folium.plugins import MarkerCluster
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 import sys
 sys.path.append('/lib')
 import lib.helper as helper
+
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
 GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
+
 def load_workshops_data(csv_file):
     """
     Uploads instructors data to a dataframe.
     """
-    df = pd.read_csv(csv_file, usecols=['venue', 'latitude', 'longitude'])
+    df = pd.read_csv(csv_file, usecols=['venue','latitude','longitude'])
     return pd.DataFrame(df)
 
-
-def create_regions_column(df, regions):
+def generate_map(df,filename):
     """
-    Find coordinates and see in which region they fall and create
-    the respective columns.
-    """
-
-    ## List corresponding to the region collumn
-    list_regions = []
-
-    ## Find the region for each point and add in a new column
-    count = 1
-    for row in df.itertuples():
-        print('Finding region for marker ' + str(count) + ' out of ' +
-              str(len(df.index)))
-        point = Point(row[3].item(), row[2].item())
-        for feature in regions['features']:
-            polygon = shape(feature['geometry'])
-            if polygon.contains(point):
-                list_regions.append(feature['properties']['NAME'])
-        count += 1
-
-    ## Add regions
-    df["region"] = list_regions
-    return df
-
-
-def workshops_per_region(df):
-    """
-    Creates a dataframe with the number of workshops per region.
-    """
-    DataFrame = pd.core.frame.DataFrame
-    region_table = DataFrame({'count': df.groupby(['region']).size()}).reset_index()
-
-    return region_table
-
-
-def define_threshold_scale(df_region):
-    """
-    Creates the threshold scale to be visualized in the map
-    """
-    scale_list = df_region['count'].tolist()
-    max_scale = max(scale_list)
-    scale = int(max_scale / 5)
-    threshold_scale = []
-    for each in range(0, max_scale + 1, scale):
-        threshold_scale.append(each)
-    return threshold_scale
-
-
-def generate_map(df, regions, threshold_scale):
-    """
-    Generates a map from the dataframe to be visualised.
+    Generates Map to be visualized.
     """
     maps = folium.Map(
-        location=[54.00366, -2.547855],
-        zoom_start=6,
-        tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+            location=[54.00366, -2.547855],
+            zoom_start=6,
+            tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
 
-    maps.choropleth(
-        geo_data=regions,
-        data=df,
-        columns=['region', 'count'],
-        key_on='feature.properties.NAME',
-        fill_color='YlGn',
-        fill_opacity=0.7,
-        line_opacity=0.2,
-        legend_name='Number of Workshops per region',
-        threshold_scale=threshold_scale)
+    marker_cluster = MarkerCluster(name = 'workshops').add_to(maps)
+    for index, row in df.iterrows():
+            popup = folium.Popup(row['venue'], parse_html=True)
+            folium.CircleMarker(
+              radius = 5,
+              location=[row['latitude'], row['longitude']],
+              popup = popup,
+              color = '#ff6600',
+              fill = True,
+              fill_color = '#ff6600').add_to(marker_cluster)
+
+    ## Region information json
+    regions = json.load(open(CURRENT_DIR + '/lib/regions.json',encoding = 'utf-8-sig'))
+
+    ## Add to a layer
+    folium.GeoJson(regions,
+                   name='regions',
+                   style_function=lambda feature: {
+                           'fillColor': '#99ffcc',
+                           'color': '#00cc99'
+                           }).add_to(maps)
+    folium.LayerControl().add_to(maps)
+
     return maps
 
 def main():
@@ -131,14 +96,11 @@ def main():
     else:
         try:
             df = load_workshops_data(workshops_file)
-            df = create_regions_column(df, regions)
-            workshops_per_region_df = workshops_per_region(df)
             print('Generating map of workshops per UK regions ...')
-            threshold_scale = define_threshold_scale(workshops_per_region_df)
-            maps = generate_map(workshops_per_region_df, regions, threshold_scale)
+            maps = generate_map(df, workshops_file_name_without_extension)
 
             ## Save map to a HTML file
-            html_map_file = WORKSHOP_DATA_DIR + 'map_per_region_' + workshops_file_name_without_extension + '.html'
+            html_map_file = WORKSHOP_DATA_DIR + 'map_clustered_workshop_venue_' + workshops_file_name_without_extension + '.html'
             maps.save(html_map_file)
             print('Map of workshops per region saved to HTML file ' + html_map_file)
         except:

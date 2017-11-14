@@ -23,13 +23,13 @@ def google_drive_authentication():
     return drive
 
 
-def google_drive_upload(file, drive, dir_id):
+def google_drive_upload(file, drive, dir_id, parameter,variable,boolean):
     """
     Upload a file to Google drive
     """
-    upload_excel = drive.CreateFile({'parents': [{'kind': 'drive#fileLink',
+    upload_excel = drive.CreateFile({'parents': [{parameter:variable,
                                                   'id': dir_id }], #'0B6P79ipNuR8EdDFraGgxMFJaaVE'
                                      'title': os.path.basename(file)})
     upload_excel.SetContentFile(file)
-    upload_excel.Upload({'convert': True})
+    upload_excel.Upload({'convert': boolean})
 

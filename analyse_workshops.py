@@ -386,7 +386,10 @@ def main():
                 drive = helper.google_drive_authentication()
                 helper.google_drive_upload(workshops_file, drive, args.google_drive_dir_id)
                 print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-                helper.google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id)
+                parameter = 'kind'
+                variable = 'drive#fileLink'
+                boolean = True
+                helper.google_drive_upload(workshop_analyses_excel_file, drive, args.google_drive_dir_id,parameter,variable,boolean)
                 print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
             except Exception:
                 print ("An error occurred while uploading workshops analyses to Google Drive ...")
