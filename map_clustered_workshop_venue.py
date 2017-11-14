@@ -96,20 +96,20 @@ def main():
     else:
         try:
             df = load_workshops_data(workshops_file)
-            print('Generating map of workshops per UK regions ...')
+            print('Generating map of workshops per venue ...')
             maps = generate_map(df, workshops_file_name_without_extension)
 
             ## Save map to a HTML file
             html_map_file = WORKSHOP_DATA_DIR + 'map_clustered_workshop_venue_' + workshops_file_name_without_extension + '.html'
             maps.save(html_map_file)
-            print('Map of workshops per region saved to HTML file ' + html_map_file)
+            print('Map of workshops per venue saved to HTML file ' + html_map_file)
         except:
             print ("An error occurred while creating the map Excel spreadsheet ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:
                 try:
-                    print("Uploading workshops per region map to Google Drive " + html_map_file)
+                    print("Uploading workshops per venue map to Google Drive " + html_map_file)
                     drive = helper.google_drive_authentication()
                     parameter = "mimeType" 
                     variable = "text/plain"
@@ -117,7 +117,7 @@ def main():
                     helper.google_drive_upload(html_map_file, drive, args.google_drive_dir_id,parameter,variable,boolean)
                     print('Map uploaded to Google Drive.')
                 except Exception:
-                    print ("An error occurred while uploading workshops per region map to Google Drive ...")
+                    print ("An error occurred while uploading workshops per venue map to Google Drive ...")
                     print(traceback.format_exc())
 
 
