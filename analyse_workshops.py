@@ -81,8 +81,8 @@ def workshop_years_analysis(df, writer):
     chart1 = workbook.add_chart({'type': 'column'})
 
     chart1.add_series({
-        'categories': ['workshops_per_year', 1, 0, len(workshops_per_year_table.index), 0],
-        'values': ['workshops_per_year', 1, 1, len(workshops_per_year_table.index), 1],
+        'categories': ['workshops_per_year', 1, 1, len(workshops_per_year_table.index), 1],
+        'values': ['workshops_per_year', 1, 2, len(workshops_per_year_table.index), 2],
         'gap': 2,
     })
 
@@ -92,7 +92,7 @@ def workshop_years_analysis(df, writer):
     chart1.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
     chart1.set_title({'name': 'Number of workshops per year'})
 
-    worksheet.insert_chart('D2', chart1)
+    worksheet.insert_chart('I2', chart1)
 
     return workshops_per_year_table
 
@@ -111,8 +111,8 @@ def workshops_venue_analysis(df, writer):
     chart2 = workbook.add_chart({'type': 'column'})
 
     chart2.add_series({
-        'categories': ['workshops_per_institution', 1, 1, len(venue_table.index), 1],
-        'values': ['workshops_per_institution', 1, 2, len(venue_table.index), 2],
+        'categories': ['workshop_venues', 1, 1, len(venue_table.index), 1],
+        'values': ['workshop_venues', 1, 2, len(venue_table.index), 2],
         'gap': 2,
     })
 
@@ -122,7 +122,7 @@ def workshops_venue_analysis(df, writer):
     chart2.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
     chart2.set_title({'name': 'Number of workshops per venue'})
 
-    worksheet.insert_chart('D2', chart2)
+    worksheet.insert_chart('I2', chart2)
 
     return venue_table
 
@@ -152,7 +152,7 @@ def workshops_type_analysis(df, writer):
     chart3.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
     chart3.set_title({'name': 'Workshops types'})
 
-    worksheet.insert_chart('D2', chart3)
+    worksheet.insert_chart('I2', chart3)
 
     return type_table
 
@@ -230,7 +230,7 @@ def attendees_per_year_analysis(df, writer):
     """
     Number of attendees per year - create corresponding tables and graphs and write to the spreadsheet.
     """
-    attendees_year_table = df.groupby(['start_year'])['number_of_attendees'].sum().to_frame()
+    attendees_year_table = DATAFRAME({'number_of_attendees' : df.groupby(['start_year'])['number_of_attendees'].sum()}).reset_index()
 
     attendees_year_table.to_excel(writer, sheet_name='attendees_per_year')
 
@@ -239,14 +239,11 @@ def attendees_per_year_analysis(df, writer):
 
     chart6 = workbook.add_chart({'type': 'column'})
 
-    ranged = range(1, len(attendees_year_table.columns) + 1)
-
-    for number in ranged:
-        chart6.add_series({
-            'categories': ['attendees_per_year', 1, 0, len(attendees_year_table.index), 0],
-            'values': ['attendees_per_year', 1, 1, len(attendees_year_table.index), 1],
-            'gap': 2,
-        })
+    chart6.add_series({
+        'categories': ['attendees_per_year', 1, 1, len(attendees_year_table.index), 1],
+        'values': ['attendees_per_year', 1, 2, len(attendees_year_table.index), 2],
+        'gap': 2,
+    })
 
     chart6.set_y_axis({'major_gridlines': {'visible': False}})
     chart6.set_legend({'position': 'none'})
