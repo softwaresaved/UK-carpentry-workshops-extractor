@@ -149,10 +149,10 @@ def main():
                 try:
                     print("Uploading workshops per region map to Google Drive " + html_map_file)
                     drive = helper.google_drive_authentication()
-                    parameter = "mimeType" 
-                    variable = "text/plain"
-                    boolean = False
-                    helper.google_drive_upload(html_map_file, drive, args.google_drive_dir_id,parameter,variable,boolean)
+                    helper.google_drive_upload(html_map_file,
+                                               drive,
+                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                               False)
                     print('Map uploaded to Google Drive.')
                 except Exception:
                     print ("An error occurred while uploading workshops per region map to Google Drive ...")
