@@ -38,7 +38,7 @@ def add_missing_coordinates(df):
 
     ## Check for missing data in coordinates and add missing coords
     for index, row in df.iterrows():
-        if row['LONGITUDE']=='':
+        if row['LONGITUDE']=='' or row['LATITUDE']=='':
             if row['VIEW_NAME'] in known_missing_coords.keys() :
                 df.set_value(index,'LONGITUDE',  known_missing_coords[row['VIEW_NAME']][0])
                 df.set_value(index,'LATITUDE', known_missing_coords[row['VIEW_NAME']][1])
@@ -62,6 +62,7 @@ def save_geocodes(df, file):
 
     df.to_excel(writer, sheet_name='UK-academic-institutions',index_label=False, index=False,)
     writer.save()
+
 
 def main():
     """
