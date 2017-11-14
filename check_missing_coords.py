@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import traceback
+from openpyxl import load_workbook
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -54,9 +55,12 @@ def save_geocodes(df, file):
     """
     Save dataframe to an Excel spreadsheet file.
     """
-    writer = pd.ExcelWriter(file , engine='xlsxwriter')
+    book = load_workbook(file)
+    writer = pd.ExcelWriter(file , engine='openpyxl')
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
-    df.to_excel(writer, sheet_name='UK-academic-institutions')
+    df.to_excel(writer, sheet_name='UK-academic-institutions',index_label=False, index=False,)
     writer.save()
 
 def main():
