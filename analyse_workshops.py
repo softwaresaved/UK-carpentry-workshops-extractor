@@ -1,5 +1,4 @@
 import os
-import argparse
 import re
 import pandas as pd
 import numpy
@@ -332,16 +331,13 @@ def main():
     """
     Main function
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse')
-    parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
-    args = parser.parse_args()
+    args = helper.parse_command_line_paramters()
 
     if args.workshops_file:
         workshops_file = args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
     else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR +"\n")
+        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR)
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_*.csv")
         workshops_files.sort(key=os.path.getctime) # order by creation date
 
@@ -357,7 +353,7 @@ def main():
     print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
 
     try:
-        workshops_df = helper.load_workshop_data(workshops_file)
+        workshops_df = helper.load_data_from_csv(workshops_file)
         workshops_df = insert_start_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
 

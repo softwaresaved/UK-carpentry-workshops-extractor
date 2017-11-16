@@ -57,17 +57,14 @@ def main():
     """
     Main function
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse')
-    parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
-    args = parser.parse_args()
+    args = helper.parse_command_line_paramters()
+    print("Mapping workshop venue geocoordinates into clusters on an interactive map ...")
 
     if args.workshops_file:
         workshops_file = args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.workshops_file)
     else:
-        print(
-            "Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR + "\n")
+        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR)
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_GB_*.csv")
         workshops_files.sort(key=os.path.getctime)  # order by creation date
 
@@ -79,7 +76,7 @@ def main():
 
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
-    print('CSV file with Carpentry workshops to analyse ' + workshops_file)
+    print("The CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file)
 
     try:
         regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
@@ -88,7 +85,7 @@ def main():
         print(traceback.format_exc())
     else:
         try:
-            df = helper.load_workshops_data(workshops_file, ['venue','latitude','longitude'])
+            df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             print('Generating map of workshop venues ...')
             maps = generate_map(df, workshops_file_name_without_extension)
 

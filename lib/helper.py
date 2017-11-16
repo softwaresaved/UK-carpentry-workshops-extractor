@@ -2,13 +2,14 @@ import pandas as pd
 import os
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import argparse
 
 #GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
-def load_workshops_data(csv_file, columns=None):
+def load_data_from_csv(csv_file, columns=None):
     """
-    Loads data from the CSV file with workshops into a dataframe with an optional list of columns to load.
+    Loads data from a CSV file into a dataframe with an optional list of columns to load.
     """
     df = pd.read_csv(csv_file, usecols=columns)
     return pd.DataFrame(df)
@@ -32,3 +33,12 @@ def google_drive_upload(file, drive, parents_list, convert):
     gfile.SetContentFile(file)
     gfile.Upload({'convert': convert})
 
+
+def parse_command_line_paramters():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-w', '--workshops_file', type=str, default=None, help='an absolute path to the workshops file to analyse')
+    parser.add_argument('-i', '--instructors_file', type=str, default=None, help='an absolute path to instructors file to analyse')
+    parser.add_argument('-gid', '--google_drive_dir_id', type=str,
+                        help='ID of a Google Drive directory where to upload the analyses and map files to')
+    args = parser.parse_args()
+    return args
