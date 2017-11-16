@@ -3,19 +3,19 @@ import os
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
-GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
-def load_workshop_data(csv_file):
+def load_workshops_data(csv_file, columns=None):
     """
-    Loads data from the CSV file with workshops into a dataframe
+    Loads data from the CSV file with workshops into a dataframe with an optional list of columns to load.
     """
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(csv_file, usecols=columns)
     return pd.DataFrame(df)
 
 def google_drive_authentication():
     """
-    Authentication to the google drive account
+    Authentication to a Google Drive account
     """
     gauth = GoogleAuth()
     gauth.LocalWebserverAuth()
@@ -25,10 +25,10 @@ def google_drive_authentication():
 
 def google_drive_upload(file, drive, parents_list, convert):
     """
-    Upload a file to Google Drive
+    Upload a file to a folder in Google Drive
     """
     gfile = drive.CreateFile({'parents': parents_list,
-                                     'title': os.path.basename(file)})
+                              'title': os.path.basename(file)})
     gfile.SetContentFile(file)
     gfile.Upload({'convert': convert})
 

@@ -105,23 +105,26 @@ def main():
     parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
     args = parser.parse_args()
 
+    print("Note: this map only makes sense to generate with workshops in the UK as it maps them per UK regions.")
+
     if args.workshops_file:
         workshops_file = args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.workshops_file)
     else:
-        print(
-            "Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR + "\n")
+        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR + "\n")
+
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_GB_*.csv")
         workshops_files.sort(key=os.path.getctime)  # order by creation date
 
         if not workshops_files[-1]:  # get the last element
-            print('No CSV file with UK Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
+            print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
             workshops_file = workshops_files[-1]
 
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+    print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
 
     try:
         regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
@@ -138,7 +141,7 @@ def main():
             maps = generate_map(workshops_per_region_df, regions, threshold_scale)
 
             ## Save map to a HTML file
-            html_map_file = WORKSHOP_DATA_DIR + 'map_per_region_' + workshops_file_name_without_extension + '.html'
+            html_map_file = WORKSHOP_DATA_DIR + 'map_per_UK_regions_' + workshops_file_name_without_extension + '.html'
             maps.save(html_map_file)
             print('Map of workshops per region saved to HTML file ' + html_map_file)
         except:
@@ -155,7 +158,7 @@ def main():
                                                False)
                     print('Map uploaded to Google Drive.')
                 except Exception:
-                    print ("An error occurred while uploading workshops per region map to Google Drive ...")
+                    print ("An error occurred while uploading the map to Google Drive ...")
                     print(traceback.format_exc())
 
 

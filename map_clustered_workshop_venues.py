@@ -17,15 +17,7 @@ import lib.helper as helper
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
-GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
-
-def load_workshops_data(csv_file):
-    """
-    Uploads instructors data to a dataframe.
-    """
-    df = pd.read_csv(csv_file, usecols=['venue','latitude','longitude'])
-    return pd.DataFrame(df)
 
 def generate_map(df,filename):
     """
@@ -80,13 +72,14 @@ def main():
         workshops_files.sort(key=os.path.getctime)  # order by creation date
 
         if not workshops_files[-1]:  # get the last element
-            print('No CSV file with UK Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
+            print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
             workshops_file = workshops_files[-1]
 
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+    print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
 
     try:
         regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
@@ -95,21 +88,21 @@ def main():
         print(traceback.format_exc())
     else:
         try:
-            df = load_workshops_data(workshops_file)
-            print('Generating map of workshops per venue ...')
+            df = helper.load_workshops_data(workshops_file, ['venue','latitude','longitude'])
+            print('Generating map of workshop venues ...')
             maps = generate_map(df, workshops_file_name_without_extension)
 
             ## Save map to a HTML file
-            html_map_file = WORKSHOP_DATA_DIR + 'map_clustered_workshop_venue_' + workshops_file_name_without_extension + '.html'
+            html_map_file = WORKSHOP_DATA_DIR + 'map_clustered_workshop_venues_' + workshops_file_name_without_extension + '.html'
             maps.save(html_map_file)
-            print('Map of workshops per venue saved to HTML file ' + html_map_file)
+            print('Map of workshop venues saved to HTML file ' + html_map_file)
         except:
             print ("An error occurred while creating the map Excel spreadsheet ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:
                 try:
-                    print("Uploading workshops per venue map to Google Drive " + html_map_file)
+                    print("Uploading workshop venues map to Google Drive " + html_map_file)
                     drive = helper.google_drive_authentication()
                     helper.google_drive_upload(html_map_file,
                                                drive,
@@ -117,7 +110,7 @@ def main():
                                                False)
                     print('Map uploaded to Google Drive.')
                 except Exception:
-                    print ("An error occurred while uploading workshops per venue map to Google Drive ...")
+                    print ("An error occurred while uploading the map to Google Drive ...")
                     print(traceback.format_exc())
 
 

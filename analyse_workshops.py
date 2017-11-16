@@ -354,6 +354,8 @@ def main():
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
+    print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
+
     try:
         workshops_df = helper.load_workshop_data(workshops_file)
         workshops_df = insert_start_year(workshops_df)
