@@ -23,8 +23,13 @@ def generate_map(df,filename):
     """
     Generates Map to be visualized.
     """
+    subset = df[['latitude', 'longitude']]
+    tuples = [tuple(coords) for coords in subset.values]
+    x,y=zip(*tuples)
+    center=(max(x)+min(x))/2., (max(y)+min(y))/2.
+    
     maps = folium.Map(
-            location=[54.00366, -2.547855],
+            location=[center[0], center[1]],
             zoom_start=6,
             tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
 
