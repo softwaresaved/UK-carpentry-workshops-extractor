@@ -79,7 +79,7 @@ def main():
 
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
-    print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
+    print('CSV file with Carpentry workshops to analyse ' + workshops_file)
 
     try:
         regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
