@@ -5,21 +5,22 @@ import numpy
 import traceback
 import glob
 import sys
+
 sys.path.append('/lib')
 import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
-DATAFRAME = pd.core.frame.DataFrame
+
 
 def insert_start_year(df):
     """
     Insert the start year column using the date in the 'start' column in YYYY-MM-DD format
     """
-    idx = df.columns.get_loc('start') # index of column 'start'
-    start_years = pd.to_datetime(df['start']).dt.year # get the year from the date in YYYY-MM-DD format
-    df.insert(loc=idx + 1, column='start_year', value=start_years) # insert to the right of the column 'start'
+    idx = df.columns.get_loc('start')  # index of column 'start'
+    start_years = pd.to_datetime(df['start']).dt.year  # get the year from the date in YYYY-MM-DD format
+    df.insert(loc=idx + 1, column='start_year', value=start_years)  # insert to the right of the column 'start'
     return df
 
 
@@ -44,24 +45,15 @@ def insert_workshop_type(df):
         else:
             workshop_types.append('unknown')
 
-    df.insert(loc=idx + 1, column='workshop_type', value=workshop_types) # insert to the right of the column 'tags'
+    df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
     return df
-
-
-def create_workshop_analyses_spreadsheet(file, df):
-    """
-    Create an Excel spreadsheet to save the dataframe and various analyses and graphs.
-    """
-    writer = pd.ExcelWriter(file, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name="carpentry-workshops")
-    return writer
 
 
 def workshop_years_analysis(df, writer):
     """
     Number of workshops per year - create corresponding tables and graphs and write to the spreadsheet.
     """
-    workshops_per_year_table = DATAFRAME({'count' : df.groupby(['start_year']).size()}).reset_index()
+    workshops_per_year_table = pd.core.frame.DataFrame({'count': df.groupby(['start_year']).size()}).reset_index()
 
     workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year')
 
@@ -86,12 +78,13 @@ def workshop_years_analysis(df, writer):
 
     return workshops_per_year_table
 
+
 def workshops_venue_analysis(df, writer):
     """
     Number of workshops per venue - create corresponding tables and graphs and write to the spreadsheet.
     Unfortunately, this is analysis does not give the true per institution analysis as venues are different for the same institution.
     """
-    venue_table = DATAFRAME({'count' : df.groupby(['venue']).size()}).reset_index()
+    venue_table = pd.core.frame.DataFrame({'count': df.groupby(['venue']).size()}).reset_index()
 
     venue_table.to_excel(writer, sheet_name='workshop_venues')
 
@@ -181,6 +174,7 @@ def number_workshops_per_venue_year(df, writer):
 
     return venue_year_table
 
+
 def number_workshops_per_type_year(df, writer):
     """
     Create corresponding tables and graphs and write to the spreadsheet
@@ -220,7 +214,8 @@ def attendees_per_year_analysis(df, writer):
     """
     Number of attendees per year - create corresponding tables and graphs and write to the spreadsheet.
     """
-    attendees_year_table = DATAFRAME({'number_of_attendees' : df.groupby(['start_year'])['number_of_attendees'].sum()}).reset_index()
+    attendees_year_table = pd.core.frame.DataFrame(
+        {'number_of_attendees': df.groupby(['start_year'])['number_of_attendees'].sum()}).reset_index()
 
     attendees_year_table.to_excel(writer, sheet_name='attendees_per_year')
 
@@ -246,7 +241,7 @@ def attendees_per_year_analysis(df, writer):
     return attendees_year_table
 
 
-def attendees_per_workshop_type(df, writer):
+def attendees_per_workshop_type_analysis(df, writer):
     """
     Number of attendees per for various workshop type - create corresponding tables and graphs and write to the spreadsheet.
     """
@@ -278,7 +273,8 @@ def attendees_per_workshop_type(df, writer):
 
     return attendees_type_table
 
-def attendees_per_workshop_type_over_years(df, writer):
+
+def attendees_per_workshop_type_over_years_analysis(df, writer):
     """
     Number of attendees per type over years - create corresponding tables and graphs and write to the spreadsheet.
     """
@@ -311,21 +307,6 @@ def attendees_per_workshop_type_over_years(df, writer):
 
     return type_year_attend_table
 
-def create_readme_tab(file_name, writer):
-    """
-    Create the README tab in the spreadsheet.
-    """
-    date = file_name.split("_")  # Extract date from the workshops file name in YYYY-MM-DD format
-    readme_text = "Data in sheet 'carpentry_workshops' was extracted on " + date[
-        2] + " using Ruby script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor"
-    readme_text2 = "It contains info on all UK Carpentry workshops recorded in the Carpentry's record keeping system AMY until the date it was extracted on. " \
-                   "Added columns include 'start_year', extracted from column 'start', and 'workshop_type', extracted from column 'tags'."
-
-    workbook = writer.book
-    worksheet = workbook.add_worksheet('README')
-    worksheet.write(0, 0, readme_text)
-    worksheet.write(2, 0, readme_text2)
-
 
 def main():
     """
@@ -339,9 +320,9 @@ def main():
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR)
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_*.csv")
-        workshops_files.sort(key=os.path.getctime) # order by creation date
+        workshops_files.sort(key=os.path.getctime)  # order by creation date
 
-        if not workshops_files[-1]: # get the last element
+        if not workshops_files[-1]:  # get the last element
             print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
@@ -350,7 +331,7 @@ def main():
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    print('CSV file with Carpentry workshops to analyse ' + workshops_file_name)
+    print('CSV file with Carpentry workshops to analyse ' + workshops_file)
 
     try:
         workshops_df = helper.load_data_from_csv(workshops_file)
@@ -359,9 +340,14 @@ def main():
 
         print('Creating the analyses Excel spreadsheet ...')
         workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
-        excel_writer = create_workshop_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df)
+        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df, "carpentry_workshops")
 
-        create_readme_tab(workshops_file_name_without_extension, excel_writer)
+        date = workshops_file_name_without_extension.split("_")  # Extract date from the file name in YYYY-MM-DD format
+        helper.create_readme_tab(excel_writer,
+                                 "Data in sheet 'carpentry_workshops' was extracted on " + date[
+                                     2] + " using Ruby script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. " \
+                                          "It contains info on Carpentry workshops in a specified country (or all countries) recorded in the Carpentry's record keeping system AMY until the date it was extracted on. " \
+                                          "Added columns include 'start_year', extracted from column 'start', and 'workshop_type', extracted from column 'tags'.")
 
         workshop_years_analysis(workshops_df, excel_writer)
         workshops_venue_analysis(workshops_df, excel_writer)
@@ -369,8 +355,8 @@ def main():
         ##number_workshops_per_venue_year(workshops_df, excel_writer)
         ##number_workshops_per_type_year(workshops_df, excel_writer)
         attendees_per_year_analysis(workshops_df, excel_writer)
-        attendees_per_workshop_type(workshops_df, excel_writer)
-        attendees_per_workshop_type_over_years(workshops_df, excel_writer)
+        attendees_per_workshop_type_analysis(workshops_df, excel_writer)
+        attendees_per_workshop_type_over_years_analysis(workshops_df, excel_writer)
 
         excel_writer.save()
         print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
@@ -386,10 +372,12 @@ def main():
                 parents_list = [{'kind': 'drive#fileLink', 'id': args.google_drive_dir_id}]
 
                 helper.google_drive_upload(workshops_file, drive, parents_list, True)
-                print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
+                print(
+                    'Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
 
                 helper.google_drive_upload(workshop_analyses_excel_file, drive, parents_list, True)
-                print('Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
+                print(
+                    'Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
             except Exception:
                 print ("An error occurred while uploading workshops analyses to Google Drive ...")
                 print(traceback.format_exc())
