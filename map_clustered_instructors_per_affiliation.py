@@ -6,17 +6,17 @@ import pandas as pd
 import traceback
 import glob
 import re
-from folium.plugins import MarkerCluster
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import sys
+
 sys.path.append('/lib')
 import lib.helper as helper
 
+from folium.plugins import MarkerCluster
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def transform_data(df):
     """
@@ -72,7 +72,7 @@ def add_missing_institutions(excel_file):
     center=(max(x)+min(x))/2., (max(y)+min(y))/2.
     return all_coords,center
 
-def generate_map(df,df_all,filename,center):
+def generate_map(df,df_all,center):
     """
     Generates Map to be visualized.
     """
@@ -119,10 +119,8 @@ def main():
     """
     Main function
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--instructors_file', type=str, help='an absolute path to a instructors file to analyse')
-    parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
-    args = parser.parse_args()
+    args = helper.parse_command_line_paramters()
+    print("Mapping instructors affiliation geocoordinates into clusters on an interactive map ...")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
@@ -133,33 +131,33 @@ def main():
         instructors_files.sort(key=os.path.getctime)  # order by creation date
 
         if not instructors_files[-1]:  # get the last element
-            print('No CSV file with Carpentry workshops found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
+            print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
             instructors_file = instructors_files[-1]
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-    print('CSV file with Carpentry workshops to analyse ' + instructors_file_name)
+    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name)
 
     try:
-        df = helper.load_workshops_data(instructors_file, ['affiliation'])
-        print('Generating map of instructors per affiliation ...')
+        df = helper.load_data_from_csv(instructors_file, ['affiliation'])
         df = transform_data(df)
         df_values = add_missing_institutions(EXCEL_FILE)
-        maps = generate_map(df,df_values[0], instructors_file_name_without_extension,df_values[1])
+        print('Generating map of instructors per affiliation ...')
+        maps = generate_map(df,df_values[0],df_values[1])
 
         ## Save map to a HTML file
         html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
         maps.save(html_map_file)
-        print('Map of workshop venues saved to HTML file ' + html_map_file)
+        print('Map of instructors affiliations saved to HTML file ' + html_map_file)
     except:
         print ("An error occurred while creating the map Excel spreadsheet ...")
         print(traceback.format_exc())
     else:
         if args.google_drive_dir_id:
             try:
-                print("Uploading workshop venues map to Google Drive " + html_map_file)
+                print("Uploading instructors affiliations map to Google Drive " + html_map_file)
                 drive = helper.google_drive_authentication()
                 helper.google_drive_upload(html_map_file,
                                            drive,

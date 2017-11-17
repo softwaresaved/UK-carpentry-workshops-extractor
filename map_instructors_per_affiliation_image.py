@@ -12,6 +12,7 @@ import traceback
 import glob
 import re
 import sys
+
 sys.path.append('/lib')
 import lib.helper as helper
 
@@ -26,15 +27,7 @@ warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
-
-
-def load_instructors_data(csv_file):
-    """
-    Uploads instructors data to a dataframe.
-    """
-    df = pd.read_csv(csv_file, usecols=['affiliation','nearest_airport_code'])
-    return pd.DataFrame(df)
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def transform_data(df):
     """
@@ -83,132 +76,95 @@ def add_missing_institutions(excel_file):
     other_coords = pd.DataFrame(other_dic)
 
     ## Merge both dataframes to include all coordinates
-    return data_coords.append(other_coords)
+    all_coords = data_coords.append(other_coords)
 
+    ## List of Tuples for longitude and latitude
+    subset = all_coords[['LATITUDE', 'LONGITUDE']]
+    tuples = [tuple(coords) for coords in subset.values]
+    x,y=zip(*tuples)
+    ## Find center
+    center=(max(x)+min(x))/2., (max(y)+min(y))/2.
+    return all_coords,center
 
-def create_coordinates_columns(df,df_all):
-    """
-    Find coordinates and create the respective columns.
-    """
-    ## Create latitude and longitude list to create columns
-    latitude = []
-    longitude = []
-
-    ## Transform affiliation column into List and find respective coords
-    affiliation_list = df['affiliation'].tolist()
-    for aff in affiliation_list:
-            long_coords = df_all[df_all['VIEW_NAME'] == aff]['LONGITUDE']
-            lat_coords = df_all[df_all['VIEW_NAME'] == aff]['LATITUDE']
-            latitude.append(lat_coords.iloc[0])
-            longitude.append(long_coords.iloc[0])
-
-    ## Add coords to the DataFrame
-    df["LATITUDE"] = latitude
-    df["LONGITUDE"] = longitude
-    return df
-
-def generate_map(df,filename):
+def generate_map(df,center):
     """
     Generates Map to be visualized.
     """
     ax = plt.subplots(figsize=(10,20))
-
-    m = Basemap(resolution='i', # c, l, i, h, f or None
+    maps = Basemap(resolution='i', # c, l, i, h, f or None
                 projection='merc',
-                lat_0=58.44, lon_0=-9.26,
+                lat_0=center[0], lon_0=center[1],
                 llcrnrlon=-10.9, llcrnrlat= 49.68, urcrnrlon=2.29, urcrnrlat=59.14)
 
-    m.drawmapboundary(fill_color='#46bcec')
-    m.fillcontinents(color='grey',lake_color='#46bcec')
-    m.drawcoastlines()
+    maps.drawmapboundary(fill_color='#46bcec')
+    maps.fillcontinents(color='grey',lake_color='#46bcec')
+    maps.drawcoastlines()
 
     ##Add Markers to the Map
     count = 1
     for row in df.itertuples():
             print('Plotting marker ' + str(count) + ' out of ' +
                   str(len(df.index)))
-            x,y = m(row[4].item(),row[3].item())
-            m.plot(x, y, 'ro', markersize = 5, marker = 'o')
+            x,y = maps(row[1].item(),row[0].item())
+            maps.plot(x, y, 'ro', markersize = 5, marker = 'o')
             count+=1
 
     plt.title('Map of Instructors per affiliation')
 
-    ## Find suffix
-    suffix = filename.split('_',1)[1].replace('.csv','')
-
-    #Save file to png
-    img_path = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_'
-    plt.savefig(img_path + suffix,pad_inches=0.0, bbox_inches='tight')
-    return img_path + '.png'
+    return maps
     
 def main():
     """
     Main function
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workshops_file', type=str, help='an absolute path to a workshops file to analyse')
-    parser.add_argument('-gid', '--google_drive_dir_id', type=str, help='ID of a Google Drive directory where to upload the files to')
-    args = parser.parse_args()
+    args = helper.parse_command_line_paramters()
+    print("Mapping instructors affiliation geocoordinates on an interactive map ...")
 
-    if args.instructors_files:
-        instructors_files = args.instructors_files
-        print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.instructors_files)
+    if args.instructors_file:
+        instructors_file = args.instructors_file
+        print("The CSV spreadsheet with Carpentry instructors to be mapped: " + args.instructors_file)
     else:
-        print(
-            "Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + INSTRUCTORS_DATA_DIR + "\n")
-        instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-workshops_GB_*.csv")
+        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
+        instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")
         instructors_files.sort(key=os.path.getctime)  # order by creation date
 
         if not instructors_files[-1]:  # get the last element
-            print('No CSV file with UK Carpentry workshops found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
+            print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
             instructors_file = instructors_files[-1]
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
+    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name)
 
     try:
-        df = load_workshops_data(instructors_file)
+        df = helper.load_data_from_csv(instructors_file, ['affiliation','nearest_airport_code'])
+        df = transform_data(df)
+        df_values = add_missing_institutions(EXCEL_FILE)
         print('Generating map of instructors per affiliation ...')
-        ##ADD OTHER FUNCTIONS MISSING
-        maps = generate_map(df, instructors_file_name_without_extension)
+        maps = generate_map(df_values[0],df_values[1])
         
-        ## Save map to a HTML file
-        html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + workshops_file_name_without_extension + '.html'
-        maps.save(html_map_file)
-        print('Map of instructors per affiliation saved to HTML file ' + html_map_file)
+        ## Save map to a PNG file
+        img_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.png'
+        plt.savefig(img_map_file,pad_inches=0.0, bbox_inches='tight')
+        print('Map of instructors per affiliation saved to image file ' + img_map_file)
     except:
-        print ("An error occurred while creating the map Excel spreadsheet ...")
+        print ("An error occurred while creating the map image ...")
         print(traceback.format_exc())
     else:
         if args.google_drive_dir_id:
             try:
-                print("Uploading instructors per affiliation map to Google Drive " + html_map_file)
+                print("Uploading instructors per affiliation map to Google Drive " + img_map_file)
                 drive = helper.google_drive_authentication()
-                helper.google_drive_upload(html_map_file,
+                helper.google_drive_upload(img_map_file,
                                            drive,
-                                           [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                           [{'id': args.google_drive_dir_id}],
                                            False)
                 print('Map uploaded to Google Drive.')
             except Exception:
                 print ("An error occurred while uploading instructors per affiliation map to Google Drive ...")
-                print(traceback.format_exc())  
-        
-    df = load_instructors_data(instructors_file)
-    df = transform_data(df)
-    df_all = add_missing_institutions(EXCEL_FILE)
-    df = create_coordinates_columns(df,df_all)
-
-    print('Generating map...')    
-    image_file = generate_map(df,instructors_file)
-    print('Image of instructors per region created - see results in ' +
-          image_file + '.')
-
-##    print("Uploading Image of instructors per region to Google Drive ...")    
-##    drive = google_drive_authentication()
-##    google_drive_upload(image_file,drive)
-##    print('Image uploaded to Google Drive.')
+                print(traceback.format_exc())
 
 
 

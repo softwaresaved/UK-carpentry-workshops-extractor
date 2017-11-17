@@ -1,10 +1,10 @@
 import os
 import re
 import pandas as pd
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import sys
 import glob
+import traceback
+
 sys.path.append('/lib')
 import lib.helper as helper
 
@@ -30,6 +30,19 @@ def insert_earliest_badge_year(df):
     df.insert(loc=idx + 1, column='earliest-badge-awarded-year', value=earliest_badge_awarded_years) # insert to the right of the column 'earliest-badge-awarded'
     return df
 
+def insert_airport_region(df):
+    """
+    Insert the new column that corresponds to the UK region for the nearest_airport.
+    """
+    regions_excel_file = pd.ExcelFile(UK_AIRPORTS_REGIONS_FILE)
+    regions = regions_excel_file.parse('UK-regions-airports')
+    airports_regions_dict = dict(zip(regions['Airport_code'],
+                                    regions['UK_region']))
+
+    idx = df.columns.get_loc('nearest_airport_code') # index of column 'nearest_airport_code'
+    df.insert(loc=idx + 1, column='nearest_airport_UK_region', value=df.nearest_airport_code) # copy values from 'nearest_airport_code' column and insert to the right of the column 'nearest_airport_code'
+    df['nearest_airport_UK_region'].replace(airports_regions_dict, inplace=True) # replace the airport with its UK region
+    return df
 
 def instructors_nearest_airport_analysis(df, writer):
     """
@@ -56,20 +69,6 @@ def instructors_nearest_airport_analysis(df, writer):
     chart1.set_title ({'name': 'Instructors per (nearest) airport'})
 
     worksheet.insert_chart('D2', chart1)
-
-def insert_airport_region(df):
-    """
-    Insert the new column that corresponds to the UK region for the nearest_airport.
-    """
-    regions_excel_file = pd.ExcelFile(UK_AIRPORTS_REGIONS_FILE)
-    regions = regions_excel_file.parse('UK-regions-airports')
-    airports_regions_dict = dict(zip(regions['Airport_code'],
-                                    regions['UK_region']))
-
-    idx = df.columns.get_loc('nearest_airport_code') # index of column 'nearest_airport_code'
-    df.insert(loc=idx + 1, column='nearest_airport_UK_region', value=df.nearest_airport_code) # copy values from 'nearest_airport_code' column and insert to the right of the column 'nearest_airport_code'
-    df.nearest_airport_UK_region.replace(airports_regions_dict, inplace=True) # replace the airport with its UK region
-    return df
     
 def instructors_per_UK_region_analysis(df, writer):
     """

@@ -2,24 +2,19 @@ import os
 import argparse
 import folium
 import pandas as pd
-import pycountry
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+import traceback
+import glob
+import re
+import sys
+
+sys.path.append('/lib')
+import lib.helper as helper
 
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-  
-def load_instructors_data(csv_file):
-    """
-    Uploads instructors data to a dataframe.
-    """
-    try:
-      df = pd.read_csv(csv_file, usecols=['affiliation'])
-    except:
-      raise
-    return pd.DataFrame(df)
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def transform_data(df):
     """
@@ -65,7 +60,15 @@ def add_missing_institutions(excel_file):
     other_coords = pd.DataFrame(other_dic)
 
     ## Merge both dataframes to include all coordinates
-    return data_coords.append(other_coords)
+    all_coords = data_coords.append(other_coords)
+
+    ## List of Tuples for longitude and latitude
+    subset = all_coords[['LATITUDE', 'LONGITUDE']]
+    tuples = [tuple(coords) for coords in subset.values]
+    x,y=zip(*tuples)
+    ## Find center
+    center=(max(x)+min(x))/2., (max(y)+min(y))/2.
+    return all_coords,center
 
 def instructors_per_affiliation(df):
     """
@@ -75,12 +78,12 @@ def instructors_per_affiliation(df):
     table = df.groupby(['affiliation']).size()
     return table.to_dict()
 
-def generate_map(dictionary,df_all,filename):
+def generate_map(dictionary,df_all,filename,center):
     """
     Generates Map to be visualized.
     """
-    m = folium.Map(
-            location=[54.00366, -2.547855],
+    maps = folium.Map(
+            location=[center[0], center[1]],
             zoom_start=6,
             tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
 
@@ -95,79 +98,64 @@ def generate_map(dictionary,df_all,filename):
                       popup = label,
                       color = '#ff6600',
                       fill = True,
-                      fill_color = '#ff6600').add_to(m)
+                      fill_color = '#ff6600').add_to(maps)
 
-    ## Find suffix
-    suffix = filename.split('_',1)[1].replace('.csv','')
-
-    ## Save mapp to html
-    path_html = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + suffix + '.html'
-    m.save(path_html)
-    return path_html
-
-
-def google_drive_authentication():
-    """
-    Authentication to the google drive account
-    """
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-    return drive
-    
-def google_drive_upload(html_file,drive):
-    """
-    Upload map to google drive
-    """
-    upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
-                                                'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':'map_intructors_per_region_' + date })
-    upload_map.SetContentFile(html_file)
-    upload_map.Upload({'convert': False})
+    return maps
 
 
 def main():
     """
     Main function
     """
-    country_code = ''
+    args = helper.parse_command_line_paramters()
+    print("Mapping instructors affiliation geocoordinates on an interactive map ...")
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--country_code', default='GB', type=str)
-    args = parser.parse_args()
+    if args.instructors_file:
+        instructors_file = args.instructors_file
+        print("The CSV spreadsheet with Carpentry instructors to be mapped: " + args.instructors_file)
+    else:
+        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
+        instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")
+        instructors_files.sort(key=os.path.getctime)  # order by creation date
+
+        if not instructors_files[-1]:  # get the last element
+            print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
+            sys.exit(1)
+        else:
+            instructors_file = instructors_files[-1]
+
+    instructors_file_name = os.path.basename(instructors_file)
+    instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
+    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name)
 
     try:
-        pycountry.countries.get(alpha_2=args.country_code)
+        df = helper.load_data_from_csv(instructors_file, ['affiliation'])
+        print('Generating map of instructors per affiliation ...')
+        df = transform_data(df)
+        df_values = add_missing_institutions(EXCEL_FILE)
+        instructors_dic = instructors_per_affiliation(df)
+        maps = generate_map(instructors_dic,df_values[0], instructors_file_name_without_extension,df_values[1])
+
+        ## Save map to a HTML file
+        html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
+        maps.save(html_map_file)
+        print('Map of instructors per affiliation saved to HTML file ' + html_map_file)
     except:
-        print('The country code submitted does not exist.')
-        raise
-        
-    print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in directory " + INSTRUCTORS_DATA_DIR + ".")
-    instructors_files = [os.path.join(INSTRUCTORS_DATA_DIR,filename) for filename in os.listdir(INSTRUCTORS_DATA_DIR)
-                       if filename.startswith("carpentry-instructors_" + str(args.country_code)) and filename.endswith('.csv')]
-
-    if not instructors_files:
-        print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ".")
-        print('Exiting...')
-        raise SystemExit
+        print ("An error occurred while creating the map Excel spreadsheet ...")
+        print(traceback.format_exc())
     else:
-        instructors_file = max(instructors_files, key=os.path.getctime)## if want most recent modification date use getmtime
-
-    
-    df = load_instructors_data(instructors_file)
-    df = transform_data(df)
-    df_all = add_missing_institutions(EXCEL_FILE)
-    instructors_dic = instructors_per_affiliation(df)
-    print('Generating map...')    
-    html_file = generate_map(instructors_dic,df_all,instructors_file)
-    print('Map of instructors per affiliation created - see results in ' +
-          html_file + '.')
-
-##    print("Uploading Map of instructors per affiliation to Google Drive ...")
-##    drive = google_drive_authentication()
-##    google_drive_upload(html_file,drive)
-##    print('Map uploaded to Google Drive.')
-
+        if args.google_drive_dir_id:
+            try:
+                print("Uploading instructors per affiliation map to Google Drive " + html_map_file)
+                drive = helper.google_drive_authentication()
+                helper.google_drive_upload(html_map_file,
+                                           drive,
+                                           [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                           False)
+                print('Map uploaded to Google Drive.')
+            except Exception:
+                print ("An error occurred while uploading the map to Google Drive ...")
+                print(traceback.format_exc())
 
 
 if __name__ == '__main__':

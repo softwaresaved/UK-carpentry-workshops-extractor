@@ -4,28 +4,22 @@ import json
 import folium
 import pandas as pd
 import shapefile
-import pycountry
+import traceback
+import glob
+import re
+import sys
+
+sys.path.append('/lib')
+import lib.helper as helper
+
 from shapely.geometry import shape, Point
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-try:
-  REGIONS = json.load(open(CURRENT_DIR + '/lib/regions.json',encoding = 'utf-8-sig'))
-except FileNotFoundError:
-  print("Wrong file or file path")
-  
-def load_instructors_data(csv_file):
-    """
-    Uploads instructors data to a dataframe.
-    """
-    try:
-      df = pd.read_csv(csv_file, usecols=['affiliation','nearest_airport_code'])
-    except:
-      raise
-    return pd.DataFrame(df)
+REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
+
 
 def transform_data(df):
     """
@@ -135,18 +129,18 @@ def define_threshold_scale(df_region):
       threshold_scale.append(each)
     return threshold_scale
 
-def generate_map(df_region,regions,filename,threshold_scale):
+def generate_map(df,regions,threshold_scale):
     """
     Generates Map to be visualized.
     """
-    m = folium.Map(
+    maps = folium.Map(
             location=[54.00366, -2.547855],
             zoom_start=6,
             tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
 
-    m.choropleth(
+    maps.choropleth(
             geo_data=regions,
-            data=df_region,
+            data=df,
             columns=['region', 'count'],
             key_on='feature.properties.NAME',
             fill_color='YlGn',
@@ -154,78 +148,69 @@ def generate_map(df_region,regions,filename,threshold_scale):
             line_opacity=0.2,
             legend_name='Number of Instructors per region',
             threshold_scale = threshold_scale)
-
-    ## Find suffix
-    suffix = filename.split('_',1)[1].replace('.csv','')
-
-    ## Save mapp to html
-    path_html = INSTRUCTORS_DATA_DIR + 'map_instructors_per_region_' + suffix + '.html'
-    m.save(path_html)
-    return path_html
-
-
-def google_drive_authentication():
-    """
-    Authentication to the google drive account
-    """
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-    return drive
-    
-def google_drive_upload(file,drive):
-    """
-    Upload map to google drive
-    """
-    upload_map = drive.CreateFile({'parents': [{"mimeType":"text/plain",
-                                                'id': '0B6P79ipNuR8EdDFraGgxMFJaaVE'}],
-                                   'title':os.path.basename(file)})
-    upload_map.SetContentFile(html_file)
-    upload_map.Upload({'convert': False})
+    return maps
 
 def main():
     """
     Main function
     """
-    country_code = ''
+    args = helper.parse_command_line_paramters()
+    print("Mapping instructors affiliation geocoordinates into a 'heat map' over UK regions ...")
+    print("Note: this map only makes sense to generate with instructors in the UK as it maps them per UK regions.")
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--country_code', default='GB', type=str)
-    args = parser.parse_args()
+    if args.instructors_file:
+        instructors_file = args.instructors_file
+    else:
+        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
+        instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")
+        instructors_files.sort(key=os.path.getctime)  # order by creation date
+
+        if not instructors_files[-1]:  # get the last element
+            print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
+            sys.exit(1)
+        else:
+            instructors_file = instructors_files[-1]
+
+    instructors_file_name = os.path.basename(instructors_file)
+    instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
+    print("The CSV spreadsheet with Carpentry instructors to be mapped: " + instructors_file)
 
     try:
-        pycountry.countries.get(alpha_2=args.country_code)
+        regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
     except:
-        print('The country code submitted does not exist.')
-        raise
-        
-    print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in directory " + INSTRUCTORS_DATA_DIR + ".")
-    instructors_files = [os.path.join(INSTRUCTORS_DATA_DIR,filename) for filename in os.listdir(INSTRUCTORS_DATA_DIR)
-                       if filename.startswith("carpentry-instructors_" + str(args.country_code)) and filename.endswith('.csv')]
-
-    if not instructors_files:
-        print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ".")
-        print('Exiting...')
-        raise SystemExit
+        print ("An error occurred while reading the UK regions file " + REGIONS_FILE)
+        print(traceback.format_exc())
     else:
-        instructors_file = max(instructors_files, key=os.path.getctime)## if want most recent modification date use getmtime
+        try:
+            df = helper.load_data_from_csv(instructors_file, ['affiliation','nearest_airport_code'])
+            df = transform_data(df)
+            df_all = add_missing_institutions(EXCEL_FILE)
+            df = create_regions_column(df,df_all,regions)    
+            instructors_per_region_df = instructors_per_region(df)
+            print('Generating map of instructors per UK regions ...')
+            threshold_scale = define_threshold_scale(instructors_per_region_df)
+            maps = generate_map(instructors_per_region_df, regions, threshold_scale)
 
-    
-    df = load_instructors_data(instructors_file)
-    df = transform_data(df)
-    df_all = add_missing_institutions(EXCEL_FILE)
-    df = create_regions_column(df,df_all,REGIONS)
-    df_region = instructors_per_region(df)
-    print('Generating map...')
-    threshold_scale = define_threshold_scale(df_region)
-    html_file = generate_map(df_region,REGIONS,instructors_file,threshold_scale)
-    print('Map of instructors per region created - see results in ' +
-          html_file + '.')
-    
-##    print("Uploading Map of instructors per region to Google Drive ...")
-##    drive = google_drive_authentication()
-##    google_drive_upload(html_file,drive)
-##    print('Map uploaded to Google Drive.')
+            ## Save map to a HTML file
+            html_map_file = INSTRUCTORS_DATA_DIR + 'map_per_UK_regions_' + instructors_file_name_without_extension + '.html'
+            maps.save(html_map_file)
+            print('Map of Instructors per region saved to HTML file ' + html_map_file)
+        except:
+            print ("An error occurred while creating the map Excel spreadsheet ...")
+            print(traceback.format_exc())
+        else:
+            if args.google_drive_dir_id:
+                try:
+                    print("Uploading instructors per region map to Google Drive " + html_map_file)
+                    drive = helper.google_drive_authentication()
+                    helper.google_drive_upload(html_map_file,
+                                               drive,
+                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                               False)
+                    print('Map uploaded to Google Drive.')
+                except Exception:
+                    print ("An error occurred while uploading the map to Google Drive ...")
+                    print(traceback.format_exc())
 
 
 if __name__ == '__main__':

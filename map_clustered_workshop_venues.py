@@ -6,18 +6,17 @@ import pandas as pd
 import traceback
 import glob
 import re
-from folium.plugins import MarkerCluster
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import sys
+
 sys.path.append('/lib')
 import lib.helper as helper
 
+from folium.plugins import MarkerCluster
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
-
+#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def generate_map(df,filename):
     """

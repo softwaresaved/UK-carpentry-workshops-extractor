@@ -4,14 +4,15 @@ import json
 import folium
 import pandas as pd
 import shapefile
-import pycountry
-from shapely.geometry import shape, Point
 import traceback
 import glob
 import re
 import sys
+
 sys.path.append('/lib')
 import lib.helper as helper
+
+from shapely.geometry import shape, Point
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
