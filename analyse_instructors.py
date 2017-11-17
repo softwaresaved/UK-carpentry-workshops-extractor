@@ -160,6 +160,7 @@ def main():
                                         'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
         instructors_df = drop_null_values_for_affiliation_country(instructors_df)
         instructors_df = insert_earliest_badge_year(instructors_df)
+        instructors_df = insert_airport_region(instructors_df)
 
         print('Creating the analyses Excel spreadsheet ...')
         instructors_analyses_excel_file = INSTRUCTOR_DATA_DIR + 'analysed_' + instructors_file_name_without_extension + '.xlsx'
@@ -173,7 +174,6 @@ def main():
              +   "a new column 'earliest-badge-awarded-year' was added, which contains extracted year from column 'earliest-badge-awarded'.")
 
         instructors_nearest_airport_analysis(instructors_df, excel_writer)
-        instructors_df = insert_airport_region(instructors_df)
         instructors_per_UK_region_analysis(instructors_df, excel_writer)
         instructors_per_year_analysis(instructors_df, excel_writer)
 
