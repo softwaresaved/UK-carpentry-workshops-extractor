@@ -12,15 +12,6 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTOR_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions-airports.xlsx'
 
-def drop_null_values_for_affiliation_country(df):
-    """
-    Removes rows with null values for affiliation and country_code
-    """ 
-    df = df.dropna(subset=['country_code'])
-    df = df.dropna(subset=['affiliation'])
-    return df
-
-
 def insert_earliest_badge_year(df):
     """
     Insert the earliest-badge-awarded-year column using the date in the 'earliest-badge-awarded' column in YYYY-MM-DD format
@@ -157,7 +148,7 @@ def main():
                                         'trainer-badge-awarded',
                                         'earliest-badge-awarded',
                                         'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
-        instructors_df = drop_null_values_for_affiliation_country(instructors_df)
+        instructors_df = helper.transform_data('c',instructors_df)
         instructors_df = insert_earliest_badge_year(instructors_df)
         instructors_df = insert_airport_region(instructors_df)
 

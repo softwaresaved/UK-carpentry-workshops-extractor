@@ -63,3 +63,29 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     writer = pd.ExcelWriter(file, engine='xlsxwriter')
     df.to_excel(writer, sheet_name=sheet_name)
     return writer
+
+def transform_data(option,df):
+    """
+    Initial dataframe transformation for instructors.
+    """
+    ## Removes null values for affiliation.
+    ## Change Imperial College for the name in UK institutions.
+    if option == 'a':
+        df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
+        return df.dropna(subset=['affiliation'])
+    ## Removes null values for affiliation and nearest_airport_code.
+    ## Change Imperial College for the name in UK institutions.
+    elif option == 'b':
+        df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
+        df = df.dropna(subset=['affiliation'])
+        df = df.dropna(subset=['nearest_airport_code'])
+        return df
+    ## Removes rows with null values for affiliation and country_code
+    elif option == 'c':
+        df = df.dropna(subset=['country_code'])
+        df = df.dropna(subset=['affiliation'])
+        return df
+    
+        
+
+    

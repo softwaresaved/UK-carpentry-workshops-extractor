@@ -16,14 +16,6 @@ INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 #GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
-def transform_data(df):
-    """
-    Removes null values for affiliation.
-    Change Imperial College for the name in UK institutions.
-    """
-    df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
-    return df.dropna(subset=['affiliation'])
-
 def add_missing_institutions(excel_file):
     """
     Add coordinates for missing institutions in excel file.
@@ -131,7 +123,7 @@ def main():
     try:
         df = helper.load_data_from_csv(instructors_file, ['affiliation'])
         print('Generating map of instructors per affiliation ...')
-        df = transform_data(df)
+        df = helper.transform_data('a',df)
         df_values = add_missing_institutions(EXCEL_FILE)
         instructors_dic = instructors_per_affiliation(df)
         maps = generate_map(instructors_dic,df_values[0], instructors_file_name_without_extension,df_values[1])
