@@ -89,13 +89,13 @@ def generate_map(df,center):
     maps.drawmapboundary(fill_color='#46bcec')
     maps.fillcontinents(color='grey',lake_color='#46bcec')
     maps.drawcoastlines()
-
+    
     ##Add Markers to the Map
     count = 1
     for row in df.itertuples():
             print('Plotting marker ' + str(count) + ' out of ' +
                   str(len(df.index)))
-            x,y = maps(row[1].item(),row[0].item())
+            x,y = maps(row[2].item(),row[1].item())
             maps.plot(x, y, 'ro', markersize = 5, marker = 'o')
             count+=1
 
@@ -132,9 +132,9 @@ def main():
         df = helper.load_data_from_csv(instructors_file, ['affiliation','nearest_airport_code'])
         df = helper.drop_null_values_from_columns(df, ['affiliation', 'nearest_airport_code'])
         df = helper.fix_imperial_college_name(df)
-        df_values = add_missing_institutions(EXCEL_FILE)
+        df = add_missing_institutions(EXCEL_FILE)
         print('Generating map of instructors per affiliation ...')
-        maps = generate_map(df_values[0],df_values[1])
+        maps = generate_map(df[0],df[1])
         
         ## Save map to a PNG file
         img_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.png'

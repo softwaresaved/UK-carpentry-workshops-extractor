@@ -173,6 +173,7 @@ def main():
         try:
             df = helper.load_data_from_csv(instructors_file, ['affiliation','nearest_airport_code'])
             df = helper.drop_null_values_from_columns(df, ['affiliation', 'nearest_airport_code'])
+            df = helper.fix_imperial_college_name(df)
             df_all = add_missing_institutions(EXCEL_FILE)
             df = create_regions_column(df,df_all,regions)    
             instructors_per_region_df = instructors_per_region(df)
