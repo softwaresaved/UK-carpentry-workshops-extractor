@@ -134,7 +134,8 @@ def main():
 
     try:
         df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-        df = helper.transform_data('a',df)
+        df = helper.drop_null_values_from_columns(df, ['affiliation'])
+        df = helper.fix_imperial_college_name(df)
         df_values = add_missing_institutions(EXCEL_FILE)
         print('Generating map of instructors per affiliation ...')
         maps = generate_map(df,df_values[0],df_values[1])

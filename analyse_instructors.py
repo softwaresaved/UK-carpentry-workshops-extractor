@@ -148,7 +148,7 @@ def main():
                                         'trainer-badge-awarded',
                                         'earliest-badge-awarded',
                                         'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
-        instructors_df = helper.transform_data('c',instructors_df)
+        instructors_df = helper.drop_null_values_from_columns(instructors_df, ['country_code', 'affiliation'])
         instructors_df = insert_earliest_badge_year(instructors_df)
         instructors_df = insert_airport_region(instructors_df)
 
