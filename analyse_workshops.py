@@ -247,7 +247,8 @@ def attendees_per_workshop_type_analysis(df, writer):
     """
     Number of attendees per for various workshop type - create corresponding tables and graphs and write to the spreadsheet.
     """
-    attendees_type_table = df.groupby(['workshop_type'])['number_of_attendees'].sum().to_frame()
+    attendees_type_table = pd.core.frame.DataFrame(
+        {'number_of_attendees': df.groupby(['workshop_type'])['number_of_attendees'].sum()}).reset_index()
 
     attendees_type_table.to_excel(writer, sheet_name='attendees_per_workshop_type')
 
