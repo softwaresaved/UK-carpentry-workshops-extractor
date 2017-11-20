@@ -48,3 +48,27 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
     -v, --version                    Show version
     -h, --help                       Show this help message
 ```
+
+## Running the analysis and maps
+To prepare for running Python install libraries:
+* pip install -r requirements.txt
+
+If you want to run the code directly from the project root you can, for example, do:
+```python analyse_workshops.py```
+
+Otherwise, There are several command line options available:
+```
+ analyse_workshops.py -h
+usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]
+                            [-gid GOOGLE_DRIVE_DIR_ID]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -w WORKSHOPS_FILE, --workshops_file WORKSHOPS_FILE
+                        an absolute path to the workshops file to analyse
+  -i INSTRUCTORS_FILE, --instructors_file INSTRUCTORS_FILE
+                        an absolute path to instructors file to analyse
+  -gid GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
+                        ID of a Google Drive directory where to upload the
+                        analyses and map files to
+```
