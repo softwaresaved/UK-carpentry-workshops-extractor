@@ -50,6 +50,7 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
 ```
 
 ## Running the analysis and maps
+In order to analyse the data resulting from the previous scripts and visualize it in a map format you will have to run several python scripts.
 To prepare for running Python install libraries:
 * pip install -r requirements.txt
 
