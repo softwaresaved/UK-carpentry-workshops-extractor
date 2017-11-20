@@ -64,7 +64,6 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     df.to_excel(writer, sheet_name=sheet_name)
     return writer
 
-
 def drop_null_values_from_columns(df, column_list):
     for column in column_list:
         df = df.dropna(subset=[column])
@@ -72,5 +71,10 @@ def drop_null_values_from_columns(df, column_list):
 
 def fix_imperial_college_name(df):
     df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
+    return df
+
+def remove_stalled_workshops(df, tag_list):
+    for tag in tag_list:
+        df = df[df.tags != tag]
     return df
 

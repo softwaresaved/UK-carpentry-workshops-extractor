@@ -12,6 +12,7 @@ import lib.helper as helper
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
+STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled', 'unresponsive']
 
 
 def insert_start_year(df):
@@ -43,7 +44,8 @@ def insert_workshop_type(df):
         elif WORKSHOP_TYPES[3] in tag:
             workshop_types.append(WORKSHOP_TYPES[3])
         else:
-            workshop_types.append('unknown')
+            workshop_types.append('unkown')
+
 
     df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
     return df
@@ -114,7 +116,7 @@ def workshops_type_analysis(df, writer):
     """
     Number of workshops of different types - create corresponding tables and graphs and write to the spreadsheet.
     """
-    type_table = df.groupby(['workshop_type']).size()
+    type_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_type']).size()}).reset_index()
 
     type_table.to_excel(writer, sheet_name='workshop_types')
 
@@ -124,8 +126,8 @@ def workshops_type_analysis(df, writer):
     chart3 = workbook.add_chart({'type': 'column'})
 
     chart3.add_series({
-        'categories': ['workshop_types', 1, 0, len(type_table.index), 0],
-        'values': ['workshop_types', 1, 1, len(type_table.index), 1],
+        'categories': ['workshop_types', 1, 1, len(type_table.index), 1],
+        'values': ['workshop_types', 1, 2, len(type_table.index), 2],
         'gap': 2,
     })
 
@@ -145,8 +147,8 @@ def number_workshops_per_venue_year(df, writer):
     Create corresponding tables and graphs and write to the spreadsheet
     Number of Workshops per Venue and Year
     """
-    venue_year_table = df.groupby(['venue', 'start']).size().to_frame()
-    venue_year_table = venue_year_table.pivot_table(index='venue', columns='start')
+    venue_year_table = df.groupby(['venue', 'start_year']).size().to_frame()
+    venue_year_table = venue_year_table.pivot_table(index='venue', columns='start_year')
 
     venue_year_table.to_excel(writer, sheet_name='Work_per_VenueYear')
 
@@ -180,13 +182,13 @@ def number_workshops_per_type_year(df, writer):
     Create corresponding tables and graphs and write to the spreadsheet
     Number of workshops per Type and Year
     """
-    type_year_table = df.groupby(['tags', 'start']).size().to_frame()
-    type_year_table = type_year_table.pivot_table(index='tags', columns='start')
+    type_year_table = df.groupby(['tags', 'start_year']).size().to_frame()
+    type_year_table = type_year_table.pivot_table(index='tags', columns='start_year')
 
-    type_year_table.to_excel(writer, sheet_name='Work_per_TypeYear')
+    type_year_table.to_excel(writer, sheet_name='work_per_TypeYear')
 
     workbook = writer.book
-    worksheet = writer.sheets['Work_per_TypeYear']
+    worksheet = writer.sheets['work_per_TypeYear']
 
     chart5 = workbook.add_chart({'type': 'column'})
 
@@ -194,9 +196,9 @@ def number_workshops_per_type_year(df, writer):
 
     for number in ranged:
         chart5.add_series({
-            'name': ['Work_per_TypeYear', 1, number],
-            'categories': ['Work_per_TypeYear', 3, 0, len(type_year_table.index) + 2, 0],
-            'values': ['Work_per_TypeYear', 3, number, len(type_year_table.index) + 2, number],
+            'name': ['work_per_TypeYear', 1, number],
+            'categories': ['work_per_TypeYear', 3, 0, len(type_year_table.index) + 2, 0],
+            'values': ['work_per_TypeYear', 3, number, len(type_year_table.index) + 2, number],
             'gap': 2,
         })
 
@@ -337,6 +339,7 @@ def main():
         workshops_df = helper.load_data_from_csv(workshops_file)
         workshops_df = insert_start_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
+        workshops_df = helper.remove_stalled_workshops(workshops_df,STALLED_WORKSHOP_TYPES)
 
         print('Creating the analyses Excel spreadsheet ...')
         workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
