@@ -121,7 +121,7 @@ def main():
     args = helper.parse_command_line_paramters()
 
     if args.instructors_file:
-        instructors_file = INSTRUCTOR_DATA_DIR + args.instructors_file
+        instructors_file = args.instructors_file
         print("The CSV spreadsheet with Carpentry instructors to be analysed: " + args.instructors_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + INSTRUCTOR_DATA_DIR)
