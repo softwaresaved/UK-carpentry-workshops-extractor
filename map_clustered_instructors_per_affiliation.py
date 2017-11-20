@@ -68,10 +68,6 @@ def generate_map(df,df_all,center):
     """
     Generates Map to be visualized.
     """
-    
-    ## Transform affiliation column into List
-    affiliation_list = df['affiliation'].tolist()
-
     maps = folium.Map(
             location=[center[0], center[1]],
             zoom_start=6,
@@ -79,11 +75,11 @@ def generate_map(df,df_all,center):
 
     marker_cluster = MarkerCluster(name = 'instructors').add_to(maps)
 
-    for aff in affiliation_list:
-            long_coords = df_all[df_all['VIEW_NAME'] == aff]['LONGITUDE']
-            lat_coords = df_all[df_all['VIEW_NAME'] == aff]['LATITUDE']
-            popup = folium.Popup(aff, parse_html=True)
-            if long_coords.empty == False:
+    for index,row in df.iterrows():
+            long_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
+            lat_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+            popup = folium.Popup(row['affiliation'], parse_html=True)
+            if long_coords.empty == False or lat_coords.empty == False:
                     folium.CircleMarker(
                       radius = 5,
                       location = [lat_coords.iloc[0], long_coords.iloc[0]],
@@ -91,6 +87,11 @@ def generate_map(df,df_all,center):
                       color = '#ff6600',
                       fill = True,
                       fill_color = '#ff6600').add_to(marker_cluster)
+            else:
+                print('')
+                print(row['affiliation'] + ' is out of range of our list of coordinates!')
+                print('')
+            
 
     ## Region information json
     regions = json.load(open(CURRENT_DIR + '/lib/regions.json'))

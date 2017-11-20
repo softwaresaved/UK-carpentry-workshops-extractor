@@ -68,12 +68,18 @@ def create_regions_column(df,df_all,regions):
     longitude = []
 
     ## Transform affiliation column into List and find respective coords
-    affiliation_list = df['affiliation'].tolist()
-    for aff in affiliation_list:
-            long_coords = df_all[df_all['VIEW_NAME'] == aff]['LONGITUDE']
-            lat_coords = df_all[df_all['VIEW_NAME'] == aff]['LATITUDE']
-            latitude.append(lat_coords.iloc[0])
-            longitude.append(long_coords.iloc[0])
+    ##affiliation_list = df['affiliation'].tolist()
+    for index,row in df.iterrows():
+            long_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
+            lat_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+            if lat_coords.empty or long_coords.empty:
+                print('')
+                print(row['affiliation'] + ' is out of range of our list of coordinates!')
+                print('')
+                df.drop(index, inplace=True)
+            else:
+                latitude.append(lat_coords.iloc[0])
+                longitude.append(long_coords.iloc[0])
 
     ## Add coords to the DataFrame
     df["LATITUDE"] = latitude

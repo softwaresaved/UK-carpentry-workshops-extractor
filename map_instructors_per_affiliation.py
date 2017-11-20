@@ -60,6 +60,7 @@ def add_missing_institutions(excel_file):
     x,y=zip(*tuples)
     ## Find center
     center=(max(x)+min(x))/2., (max(y)+min(y))/2.
+    
     return all_coords,center
 
 def instructors_per_affiliation(df):
@@ -83,7 +84,7 @@ def generate_map(dictionary,df_all,filename,center):
             long_coords = df_all[df_all['VIEW_NAME'] == key]['LONGITUDE']
             lat_coords = df_all[df_all['VIEW_NAME'] == key]['LATITUDE']
             label = folium.Popup(key+ ': ' + str(value), parse_html=True)
-            if long_coords.empty == False:
+            if long_coords.empty == False or lat_coords.empty == False:
                     folium.CircleMarker(
                       radius = 5,
                       location = [lat_coords.iloc[0], long_coords.iloc[0]],
@@ -91,6 +92,10 @@ def generate_map(dictionary,df_all,filename,center):
                       color = '#ff6600',
                       fill = True,
                       fill_color = '#ff6600').add_to(maps)
+            else:
+                print('')
+                print(key + ' is out of range of our list of coordinates!')
+                print('')
 
     return maps
 
