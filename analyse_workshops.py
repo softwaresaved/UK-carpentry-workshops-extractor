@@ -315,7 +315,7 @@ def main():
     args = helper.parse_command_line_paramters()
 
     if args.workshops_file:
-        workshops_file = args.workshops_file
+        workshops_file = WORKSHOP_DATA_DIR + args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR)
@@ -327,7 +327,7 @@ def main():
             sys.exit(1)
         else:
             workshops_file = workshops_files[-1]
-
+    print(workshops_file)
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
