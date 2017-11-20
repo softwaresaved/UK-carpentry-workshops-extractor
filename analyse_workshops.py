@@ -147,7 +147,7 @@ def number_workshops_per_venue_year(df, writer):
     Create corresponding tables and graphs and write to the spreadsheet
     Number of Workshops per Venue and Year
     """
-    venue_year_table = df.groupby(['venue', 'start_year']).size().to_frame()
+    venue_year_table = pd.core.frame.DataFrame({'count': df.groupby(['venue', 'start_year']).size()}).reset_index()
     venue_year_table = venue_year_table.pivot_table(index='venue', columns='start_year')
 
     venue_year_table.to_excel(writer, sheet_name='Work_per_VenueYear')
@@ -317,7 +317,7 @@ def main():
     args = helper.parse_command_line_paramters()
 
     if args.workshops_file:
-        workshops_file = WORKSHOP_DATA_DIR + args.workshops_file
+        workshops_file = args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR)

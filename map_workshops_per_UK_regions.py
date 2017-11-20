@@ -99,7 +99,7 @@ def main():
     print("Note: this map only makes sense to generate with workshops in the UK as it maps them per UK regions.")
 
     if args.workshops_file:
-        workshops_file = WORKSHOP_DATA_DIR + args.workshops_file
+        workshops_file = args.workshops_file
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR + "\n")
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_GB_*.csv")

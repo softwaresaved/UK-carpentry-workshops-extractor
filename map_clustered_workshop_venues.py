@@ -65,7 +65,7 @@ def main():
     print("Mapping workshop venue geocoordinates into clusters on an interactive map ...")
 
     if args.workshops_file:
-        workshops_file = WORKSHOP_DATA_DIR + args.workshops_file
+        workshops_file = args.workshops_file
         print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.workshops_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR)

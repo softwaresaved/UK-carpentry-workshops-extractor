@@ -148,7 +148,7 @@ def main():
     print("Note: this map only makes sense to generate with instructors in the UK as it maps them per UK regions.")
 
     if args.instructors_file:
-        instructors_file = INSTRUCTORS_DATA_DIR + args.instructors_file
+        instructors_file = args.instructors_file
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
         instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")

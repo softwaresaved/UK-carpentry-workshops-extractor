@@ -111,7 +111,7 @@ def main():
     print("Mapping instructors affiliation geocoordinates on an interactive map ...")
 
     if args.instructors_file:
-        instructors_file = INSTRUCTORS_DATA_DIR + args.instructors_file
+        instructors_file = args.instructors_file
         print("The CSV spreadsheet with Carpentry instructors to be mapped: " + args.instructors_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
