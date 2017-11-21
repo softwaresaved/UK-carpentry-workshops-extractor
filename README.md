@@ -1,16 +1,22 @@
-# Carpentry workshops and instructor extractor
-This project contains 2 Ruby scripts (`extract_workshops.rb` and `extract_instructors.rb`) that extract the details of Carpentry (Software, Data and Train The Trainer) workshops and instructors per country (or for all countries) recorded in Software Carpentry's AMY system. The extracted data is saved to CSV files named after the date they are generated on and the country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv` within the `data` folder.
+# Carpentry workshops and instructor extractor, analyser and mapper
+This project contains several ruby and python scripts to extract the details of Carpentry (Software, Data, Library and Train The Trainer) workshops and instructors and consequently analyse the extracted data and plot it on various maps.
 
-The scripts use AMY's public API to extract certain information, but also accesses some private HTML pages (to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
+## Carpentry workshops and instructor extractor (in ruby)
+
+This project contains 2 ruby scripts (`extract_workshops.rb` and `extract_instructors.rb`) that extract the details of Carpentry (Software, Data, Library and Train The Trainer) workshops
+and instructors per country (or for all countries) recorded in Software Carpentry's AMY system. The extracted data is saved to CSV files named after the date they are generated on and the
+country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv` within the appropriate `data/workshops` or `data/instructors` folders.
+
+The scripts use AMY's API to extract certain information, but also accesses some private HTML pages (to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
 
 Tested with Mac OS Sierra (10.12) and `ruby 2.2.1`.
 
-## Setup
+### Extractor scripts' setup
 You can pass various command line options to the scripts (see the section below). There are defaults set for all the options, apart from your AMY username and password. You have to either pass them as command line arguments, or configure them in  special config file `amy_login.yml`.
 
 To do the latter, create a copy of `amy_login.yml.pre` config file (located in the project root), rename it to `amy_login.yml` and configure your AMY username and password there accordingly. Make sure you do not share this file with the others as it contains sensitive information.
 
-## Running the scripts
+### Running extractor scripts
 There is a command line script ```run_ingest.sh``` that you can use to run the code, which calls one of the Ruby scripts `extract_workshops.rb` with some parameters pre-filled. You can tweak it to suit your requirements, see below for the available paramaters.
 
 ```$ sh run_ingest.sh```
@@ -49,26 +55,59 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
     -h, --help                       Show this help message
 ```
 
-## Running the analysis and maps
-In order to analyse the data resulting from the previous scripts and visualize it in a map format you will have to run several python scripts.
-To prepare for running Python install libraries:
-* pip install -r requirements.txt
+## Carpentry workshops and instructor analyser and mappers (in python)
 
-If you want to run the code directly from the project root you can, for example, do:
-```python analyse_workshops.py```
+The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_*.py`)
+to map the data from the extraction phase.
 
-Otherwise, There are several command line options available:
+Analyser scripts creates resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/workshops` or `data/instructors` folders.
+
+Mapper scripts generate various interactive maps embedded in HTML files and stores them in `data/workshops` or `data/instructors` folders.
+
+Finally, there is an option to upload the analyses and maps files to Google Drive, for which you have to setup access to several Google APIs and a folded in your Drive as well.
+
+### Analyser and mapper scripts' setup
+
+To prepare your python environment for running the python scripts, you need to install some dependencies listed in `requirements.txt`:
+
+```pip install -r requirements.txt```
+
+### Running analyser and mapper scripts
+To run the analyser and mapper python scrips, from the project root do, e.g.:
+
+```$ python analyse_workshops.rb```
+
+or
+
+```$ python analyse_instructors.rb```
+
+or
+
+```$ python map_instructor_affiliations.py```
+
+There are several command line options available for each set of scripts, depending on if they are dealing with workshops or instructors. See below for details.
 ```
- analyse_workshops.py -h
-usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE] [-i INSTRUCTORS_FILE]
+$ python analyse_workshops.py -h
+usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE]
                             [-gid GOOGLE_DRIVE_DIR_ID]
 
 optional arguments:
   -h, --help            show this help message and exit
   -w WORKSHOPS_FILE, --workshops_file WORKSHOPS_FILE
-                        an absolute path to the workshops file to analyse
+                        an absolute path to the workshops CSV file to analyse
+  -gid GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
+                        ID of a Google Drive directory where to upload the
+                        analyses and map files to
+```
+```
+$ python analyse_instructors.py -h
+usage: analyse_instructors.py [-h] [-i INSTRUCTORS_FILE]
+                              [-gid GOOGLE_DRIVE_DIR_ID]
+
+optional arguments:
+  -h, --help            show this help message and exit
   -i INSTRUCTORS_FILE, --instructors_file INSTRUCTORS_FILE
-                        an absolute path to instructors file to analyse
+                        an absolute path to instructors CSV file to analyse
   -gid GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
                         ID of a Google Drive directory where to upload the
                         analyses and map files to

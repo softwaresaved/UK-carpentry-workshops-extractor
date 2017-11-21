@@ -46,8 +46,7 @@ def parse_command_line_paramters():
         parser.add_argument('-i', '--instructors_file', type=str, default=None,
                             help='an absolute path to instructors CSV file to analyse')
     else:
-        puts
-        "You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py."
+        print("You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py.")
         exit(1)
 
     parser.add_argument('-gid', '--google_drive_dir_id', type=str,
