@@ -56,8 +56,7 @@ def workshop_years_analysis(df, writer):
     Number of workshops per year - create corresponding tables and graphs and write to the spreadsheet.
     """
     workshops_per_year_table = pd.core.frame.DataFrame({'count': df.groupby(['start_year']).size()}).reset_index()
-
-    workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year')
+    workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshops_per_year']
@@ -65,8 +64,8 @@ def workshop_years_analysis(df, writer):
     chart1 = workbook.add_chart({'type': 'column'})
 
     chart1.add_series({
-        'categories': ['workshops_per_year', 1, 1, len(workshops_per_year_table.index), 1],
-        'values': ['workshops_per_year', 1, 2, len(workshops_per_year_table.index), 2],
+        'categories': ['workshops_per_year', 1, 0, len(workshops_per_year_table.index), 0],
+        'values': ['workshops_per_year', 1, 1, len(workshops_per_year_table.index), 1],
         'gap': 2,
     })
 
@@ -88,7 +87,7 @@ def workshops_venue_analysis(df, writer):
     """
     venue_table = pd.core.frame.DataFrame({'count': df.groupby(['venue']).size()}).reset_index()
 
-    venue_table.to_excel(writer, sheet_name='workshop_venues')
+    venue_table.to_excel(writer, sheet_name='workshop_venues', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshop_venues']
@@ -96,8 +95,8 @@ def workshops_venue_analysis(df, writer):
     chart2 = workbook.add_chart({'type': 'column'})
 
     chart2.add_series({
-        'categories': ['workshop_venues', 1, 1, len(venue_table.index), 1],
-        'values': ['workshop_venues', 1, 2, len(venue_table.index), 2],
+        'categories': ['workshop_venues', 1, 0, len(venue_table.index), 0],
+        'values': ['workshop_venues', 1, 1, len(venue_table.index), 1],
         'gap': 2,
     })
 
@@ -118,7 +117,7 @@ def workshops_type_analysis(df, writer):
     """
     type_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_type']).size()}).reset_index()
 
-    type_table.to_excel(writer, sheet_name='workshop_types')
+    type_table.to_excel(writer, sheet_name='workshop_types', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshop_types']
@@ -126,8 +125,8 @@ def workshops_type_analysis(df, writer):
     chart3 = workbook.add_chart({'type': 'column'})
 
     chart3.add_series({
-        'categories': ['workshop_types', 1, 1, len(type_table.index), 1],
-        'values': ['workshop_types', 1, 2, len(type_table.index), 2],
+        'categories': ['workshop_types', 1, 0, len(type_table.index), 0],
+        'values': ['workshop_types', 1, 1, len(type_table.index), 1],
         'gap': 2,
     })
 
@@ -150,10 +149,10 @@ def number_workshops_per_venue_year(df, writer):
     venue_year_table = pd.core.frame.DataFrame({'count': df.groupby(['venue', 'start_year']).size()}).reset_index()
     venue_year_table = venue_year_table.pivot_table(index='venue', columns='start_year')
 
-    venue_year_table.to_excel(writer, sheet_name='Work_per_VenueYear')
+    venue_year_table.to_excel(writer, sheet_name='work_per_venueYear')
 
     workbook = writer.book
-    worksheet = writer.sheets['Work_per_VenueYear']
+    worksheet = writer.sheets['work_per_venueYear']
 
     chart4 = workbook.add_chart({'type': 'column'})
 
@@ -161,9 +160,9 @@ def number_workshops_per_venue_year(df, writer):
 
     for number in ranged:
         chart4.add_series({
-            'name': ['Work_per_VenueYear', 1, number],
-            'categories': ['Work_per_VenueYear', 3, 0, len(venue_year_table.index) + 2, 0],
-            'values': ['Work_per_VenueYear', 3, number, len(venue_year_table.index) + 2, number],
+            'name': ['work_per_venueYear', 1, number],
+            'categories': ['work_per_venueYear', 3, 0, len(venue_year_table.index) + 2, 0],
+            'values': ['work_per_venueYear', 3, number, len(venue_year_table.index) + 2, number],
             'gap': 2,
         })
 
@@ -219,7 +218,7 @@ def attendees_per_year_analysis(df, writer):
     attendees_year_table = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['start_year'])['number_of_attendees'].sum()}).reset_index()
 
-    attendees_year_table.to_excel(writer, sheet_name='attendees_per_year')
+    attendees_year_table.to_excel(writer, sheet_name='attendees_per_year', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['attendees_per_year']
@@ -227,8 +226,8 @@ def attendees_per_year_analysis(df, writer):
     chart6 = workbook.add_chart({'type': 'column'})
 
     chart6.add_series({
-        'categories': ['attendees_per_year', 1, 1, len(attendees_year_table.index), 1],
-        'values': ['attendees_per_year', 1, 2, len(attendees_year_table.index), 2],
+        'categories': ['attendees_per_year', 1, 0, len(attendees_year_table.index), 0],
+        'values': ['attendees_per_year', 1, 1, len(attendees_year_table.index), 1],
         'gap': 2,
     })
 
@@ -250,21 +249,18 @@ def attendees_per_workshop_type_analysis(df, writer):
     attendees_type_table = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['workshop_type'])['number_of_attendees'].sum()}).reset_index()
 
-    attendees_type_table.to_excel(writer, sheet_name='attendees_per_workshop_type')
+    attendees_type_table.to_excel(writer, sheet_name='attendees_per_workshop_type', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['attendees_per_workshop_type']
 
     chart7 = workbook.add_chart({'type': 'column'})
 
-    ranged = range(1, len(attendees_type_table.columns) + 1)
-
-    for number in ranged:
-        chart7.add_series({
-            'categories': ['attendees_per_workshop_type', 1, 0, len(attendees_type_table.index), 0],
-            'values': ['attendees_per_workshop_type', 1, 1, len(attendees_type_table.index), 1],
-            'gap': 2,
-        })
+    chart7.add_series({
+        'categories': ['attendees_per_workshop_type', 1, 0, len(attendees_type_table.index), 0],
+        'values': ['attendees_per_workshop_type', 1, 1, len(attendees_type_table.index), 1],
+        'gap': 2,
+    })
 
     chart7.set_y_axis({'major_gridlines': {'visible': False}})
     chart7.set_legend({'position': 'none'})
