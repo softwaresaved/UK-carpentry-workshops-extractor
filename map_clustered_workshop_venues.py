@@ -90,7 +90,7 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
-            print('Generating map of workshop venues ...')
+            print('Generating a map of workshop venues ...')
             maps = generate_map(df, workshops_file_name_without_extension)
 
             ## Save map to a HTML file
@@ -98,7 +98,7 @@ def main():
             maps.save(html_map_file)
             print('Map of workshop venues saved to HTML file ' + html_map_file)
         except:
-            print ("An error occurred while creating the map Excel spreadsheet ...")
+            print ("An error occurred while creating the map of workshop venues  ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:

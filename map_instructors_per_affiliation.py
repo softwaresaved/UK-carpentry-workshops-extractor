@@ -86,7 +86,7 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            print('Generating map of instructors per affiliation ...')
+            print('Generating a map of instructors per affiliation ...')
             df = helper.drop_null_values_from_columns(df, ['affiliation'])
             df = helper.fix_UK_academic_institutions_names(df)
 

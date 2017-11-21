@@ -159,7 +159,7 @@ def main():
                 df = add_region_column(df, all_uk_institutions_coords_df, regions)
                 instructors_per_region_df = instructors_per_region(df)
 
-                print('Generating map of instructors per UK regions ...')
+                print('Generating a map of instructors per UK regions ...')
                 threshold_scale = define_threshold_scale(instructors_per_region_df)
                 maps = generate_map(instructors_per_region_df, regions, threshold_scale)
 
