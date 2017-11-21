@@ -91,7 +91,7 @@ def define_threshold_scale(df_region):
 
 def generate_map(df, regions, threshold_scale):
     """
-    Generates Map to be visualized.
+    Generates a map.
     """
     maps = folium.Map(
         location=[54.00366, -2.547855],

@@ -20,7 +20,7 @@ REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
 
 def generate_map(df,filename):
     """
-    Generates Map to be visualized.
+    Generates a map.
     """
     subset = df[['latitude', 'longitude']]
     tuples = [tuple(coords) for coords in subset.values]
