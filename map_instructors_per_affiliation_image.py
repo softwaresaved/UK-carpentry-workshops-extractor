@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 EXCEL_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
+
 
 def add_missing_institutions(excel_file):
     """
@@ -131,7 +131,7 @@ def main():
     try:
         df = helper.load_data_from_csv(instructors_file, ['affiliation','nearest_airport_code'])
         df = helper.drop_null_values_from_columns(df, ['affiliation', 'nearest_airport_code'])
-        df = helper.fix_imperial_college_name(df)
+        df = helper.fix_UK_academic_institutions_names(df)
         df = add_missing_institutions(EXCEL_FILE)
         print('Generating map of instructors per affiliation ...')
         maps = generate_map(df[0],df[1])

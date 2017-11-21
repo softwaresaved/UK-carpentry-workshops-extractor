@@ -14,47 +14,7 @@ import lib.helper as helper
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
-def add_missing_institutions(uk_academic_institutions_df):
-    """
-    Add coordinates for missing institutions.
-    """
-    UK_academic_institutions_coords = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
-
-    ## Add missing coordinates - not all instructor affiliations are UK academic instiutions
-    other_institution_coords = [{'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE':-0.03999799999996867, 'LATITUDE':51.5229832},
-                 {'VIEW_NAME': 'Wellcome Trust Sanger Institute', 'LONGITUDE':0.18558740000003127, 'LATITUDE':52.0797171},
-                 {'VIEW_NAME': 'Earlham Institute', 'LONGITUDE':1.2189869000000044, 'LATITUDE':52.6217407},
-                 {'VIEW_NAME': 'Arriva Group', 'LONGITUDE':-1.4335148000000117, 'LATITUDE':54.86353090000001},
-                 {'VIEW_NAME': 'Delcam Ltd', 'LONGITUDE':-1.8450110999999652, 'LATITUDE':52.46245099999999},
-                 {'VIEW_NAME': 'Met Office', 'LONGITUDE':-3.472338000000036, 'LATITUDE':50.72742100000001},
-                 {'VIEW_NAME': 'Thales', 'LONGITUDE':-2.185189799999989, 'LATITUDE':53.3911872},
-                 {'VIEW_NAME': 'The John Innes Centre', 'LONGITUDE':1.2213810000000649, 'LATITUDE':52.622271},
-                 {'VIEW_NAME': 'Climate Code Foundation', 'LONGITUDE':-1.52900139999997, 'LATITUDE':53.3143842},
-                 {'VIEW_NAME': 'Kew Royal Botanic Gardens', 'LONGITUDE':-0.2955729999999903, 'LATITUDE':51.4787438},
-                 {'VIEW_NAME': 'The Sainsbury Laboratory', 'LONGITUDE':1.2228880000000117, 'LATITUDE':52.622316},
-                 {'VIEW_NAME': 'James Hutton Institute', 'LONGITUDE':-2.158366000000001, 'LATITUDE':57.133131},
-                 {'VIEW_NAME': 'Aberystwyth University', 'LONGITUDE':-4.0659220000000005, 'LATITUDE':52.417776},
-                 {'VIEW_NAME': 'Daresbury Laboratory', 'LONGITUDE':-2.6399344000000156, 'LATITUDE':53.34458119999999},
-                 {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE':-1.520078900000044, 'LATITUDE':52.28519050000001},
-                 {'VIEW_NAME': 'Public Health England', 'LONGITUDE':-0.10871080000003985, 'LATITUDE':51.50153030000001},
-                 {'VIEW_NAME': 'IBM', 'LONGITUDE':-0.1124157000000423, 'LATITUDE':51.5071586},
-                 {'VIEW_NAME': 'Media Molecule', 'LONGITUDE':-0.5756398999999419, 'LATITUDE':51.2355975},
-                 {'VIEW_NAME': 'BBC', 'LONGITUDE':-0.226846, 'LATITUDE':51.510025}]
-
-    ## Merge both dataframes to include all coordinates
-    all_institutions_coords = UK_academic_institutions_coords.append(pd.DataFrame(other_institution_coords))
-
-    ## List of tuples for longitude and latitude
-    subset = UK_academic_institutions_coords[['LATITUDE', 'LONGITUDE']]
-    tuples = [tuple(coords) for coords in subset.values]
-    x,y=zip(*tuples)
-
-    ## Find center
-    center=(max(x)+min(x))/2., (max(y)+min(y))/2.
-
-    return all_institutions_coords, center
 
 def instructors_per_affiliation(df):
     """
@@ -66,7 +26,7 @@ def instructors_per_affiliation(df):
 
 def generate_map(instructors_affiliations_dict, institutions_coords_df, center):
     """
-    Generates Map to be visualized.
+    Generates a map.
     """
     maps = folium.Map(
         location=[center[0], center[1]],
@@ -128,11 +88,16 @@ def main():
             df = helper.load_data_from_csv(instructors_file, ['affiliation'])
             print('Generating map of instructors per affiliation ...')
             df = helper.drop_null_values_from_columns(df, ['affiliation'])
-            df = helper.fix_imperial_college_name(df)
+            df = helper.fix_UK_academic_institutions_names(df)
 
-            all_institutions_coords_df, center = add_missing_institutions(uk_academic_institutions_df)
+            uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
+            all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
+                helper.get_UK_non_academic_institutions_coords())
+            center = helper.get_center(all_uk_institutions_coords_df)
+
             instructors_affiliatons_dict = instructors_per_affiliation(df)
-            maps = generate_map(instructors_affiliatons_dict, all_institutions_coords_df, center)
+
+            maps = generate_map(instructors_affiliatons_dict, all_uk_institutions_coords_df, center)
 
             ## Save map to a HTML file
             html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'

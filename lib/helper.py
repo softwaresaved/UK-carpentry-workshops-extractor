@@ -69,8 +69,9 @@ def drop_null_values_from_columns(df, column_list):
         df = df.dropna(subset=[column])
     return df
 
-def fix_imperial_college_name(df):
+def fix_UK_academic_institutions_names(df):
     df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
+    df.loc[df.affiliation == 'Queen Mary University of London', 'affiliation'] = 'Queen Mary and Westfield College, University of London'
     return df
 
 def remove_stalled_workshops(df, tag_list):
@@ -78,3 +79,42 @@ def remove_stalled_workshops(df, tag_list):
         df = df[df.tags != tag]
     return df
 
+def get_UK_non_academic_institutions_coords():
+    """
+    Return coordinates for non UK academic institutions that we know appear in AMY for affiliations of UK instructors.
+    This list needs to be periodically updated as more non-academic affiliations appear in AMY.
+    """
+    non_academic_UK_institutions_coords = [
+        {'VIEW_NAME': 'Wellcome Trust Sanger Institute', 'LONGITUDE': 0.18558740000003127, 'LATITUDE': 52.0797171},
+        {'VIEW_NAME': 'Earlham Institute', 'LONGITUDE': 1.2189869000000044, 'LATITUDE': 52.6217407},
+        {'VIEW_NAME': 'Arriva Group', 'LONGITUDE': -1.4335148000000117, 'LATITUDE': 54.86353090000001},
+        {'VIEW_NAME': 'Delcam Ltd', 'LONGITUDE': -1.8450110999999652, 'LATITUDE': 52.46245099999999},
+        {'VIEW_NAME': 'Met Office', 'LONGITUDE': -3.472338000000036, 'LATITUDE': 50.72742100000001},
+        {'VIEW_NAME': 'Thales', 'LONGITUDE': -2.185189799999989, 'LATITUDE': 53.3911872},
+        {'VIEW_NAME': 'The John Innes Centre', 'LONGITUDE': 1.2213810000000649, 'LATITUDE': 52.622271},
+        {'VIEW_NAME': 'Climate Code Foundation', 'LONGITUDE': -1.52900139999997, 'LATITUDE': 53.3143842},
+        {'VIEW_NAME': 'Kew Royal Botanic Gardens', 'LONGITUDE': -0.2955729999999903, 'LATITUDE': 51.4787438},
+        {'VIEW_NAME': 'The Sainsbury Laboratory', 'LONGITUDE': 1.2228880000000117, 'LATITUDE': 52.622316},
+        {'VIEW_NAME': 'James Hutton Institute', 'LONGITUDE': -2.158366000000001, 'LATITUDE': 57.133131},
+        {'VIEW_NAME': 'Aberystwyth University', 'LONGITUDE': -4.0659220000000005, 'LATITUDE': 52.417776},
+        {'VIEW_NAME': 'Daresbury Laboratory', 'LONGITUDE': -2.6399344000000156, 'LATITUDE': 53.34458119999999},
+        {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE': -1.520078900000044, 'LATITUDE': 52.28519050000001},
+        {'VIEW_NAME': 'Public Health England', 'LONGITUDE': -0.10871080000003985, 'LATITUDE': 51.50153030000001},
+        {'VIEW_NAME': 'IBM', 'LONGITUDE': -0.1124157000000423, 'LATITUDE': 51.5071586},
+        {'VIEW_NAME': 'Media Molecule', 'LONGITUDE': -0.5756398999999419, 'LATITUDE': 51.2355975},
+        {'VIEW_NAME': 'BBC', 'LONGITUDE': -0.226846, 'LATITUDE': 51.510025}]
+
+    return pd.DataFrame(non_academic_UK_institutions_coords)
+
+
+def get_center(coords_df):
+
+    # Extract longitude and latitude columns from the dataframe
+    coords = coords_df[['LATITUDE', 'LONGITUDE']]
+    tuples = [tuple(coords) for coords in coords.values]
+    x, y = zip(*tuples)
+
+    ## Find center
+    center = (max(x) + min(x)) / 2., (max(y) + min(y)) / 2.
+
+    return center
