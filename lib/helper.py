@@ -3,6 +3,7 @@ import os
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import argparse
+import sys
 
 
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
@@ -38,10 +39,17 @@ def google_drive_upload(file, drive, parents_list, convert):
 
 def parse_command_line_paramters():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--workshops_file', type=str, default=None,
-                        help='an absolute path to the workshops file to analyse')
-    parser.add_argument('-i', '--instructors_file', type=str, default=None,
-                        help='an absolute path to instructors file to analyse')
+    if "workshop" in sys.argv[0]: # e.g. the name of the script is 'analyse_workshops'
+        parser.add_argument('-w', '--workshops_file', type=str, default=None,
+                            help='an absolute path to the workshops CSV file to analyse')
+    elif "instructor" in sys.argv[0]:
+        parser.add_argument('-i', '--instructors_file', type=str, default=None,
+                            help='an absolute path to instructors CSV file to analyse')
+    else:
+        puts
+        "You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py."
+        exit(1)
+
     parser.add_argument('-gid', '--google_drive_dir_id', type=str,
                         help='ID of a Google Drive directory where to upload the analyses and map files to')
     args = parser.parse_args()
