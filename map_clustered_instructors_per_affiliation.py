@@ -103,7 +103,7 @@ def main():
                 helper.get_UK_non_academic_institutions_coords())
             center = helper.get_center(all_uk_institutions_coords_df)
 
-            print('Generating map of instructors per affiliation ...')
+            print('Generating the clustered map of instructors per affiliation ...')
             maps = generate_map(df, all_uk_institutions_coords_df, center)
 
             ## Save map to a HTML file
@@ -111,7 +111,7 @@ def main():
             maps.save(html_map_file)
             print('Map of instructors affiliations saved to HTML file ' + html_map_file)
         except:
-            print ("An error occurred while creating the map Excel spreadsheet ...")
+            print ("An error occurred while creating the clustered map of instructors per affiliation ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:

@@ -104,7 +104,7 @@ def main():
             maps.save(html_map_file)
             print('Map of instructors per affiliation saved to HTML file ' + html_map_file)
         except:
-            print ("An error occurred while creating the map Excel spreadsheet ...")
+            print ("An error occurred while creating the map of instructors per affiliation ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:
