@@ -20,38 +20,6 @@ UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geod
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
 
 
-def add_missing_institutions(uk_academic_institutions_df):
-    """
-    Add coordinates for missing institutions.
-    """
-    UK_academic_institutions_coords = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
-
-    ## Add missing coordinates - not all instructor affiliations are UK academic instiutions
-    other_institution_coords = [
-        {'VIEW_NAME': 'Queen Mary University of London', 'LONGITUDE': -0.03999799999996867, 'LATITUDE': 51.5229832},
-        {'VIEW_NAME': 'Wellcome Trust Sanger Institute', 'LONGITUDE': 0.18558740000003127, 'LATITUDE': 52.0797171},
-        {'VIEW_NAME': 'Earlham Institute', 'LONGITUDE': 1.2189869000000044, 'LATITUDE': 52.6217407},
-        {'VIEW_NAME': 'Arriva Group', 'LONGITUDE': -1.4335148000000117, 'LATITUDE': 54.86353090000001},
-        {'VIEW_NAME': 'Delcam Ltd', 'LONGITUDE': -1.8450110999999652, 'LATITUDE': 52.46245099999999},
-        {'VIEW_NAME': 'Met Office', 'LONGITUDE': -3.472338000000036, 'LATITUDE': 50.72742100000001},
-        {'VIEW_NAME': 'Thales', 'LONGITUDE': -2.185189799999989, 'LATITUDE': 53.3911872},
-        {'VIEW_NAME': 'The John Innes Centre', 'LONGITUDE': 1.2213810000000649, 'LATITUDE': 52.622271},
-        {'VIEW_NAME': 'Climate Code Foundation', 'LONGITUDE': -1.52900139999997, 'LATITUDE': 53.3143842},
-        {'VIEW_NAME': 'Kew Royal Botanic Gardens', 'LONGITUDE': -0.2955729999999903, 'LATITUDE': 51.4787438},
-        {'VIEW_NAME': 'The Sainsbury Laboratory', 'LONGITUDE': 1.2228880000000117, 'LATITUDE': 52.622316},
-        {'VIEW_NAME': 'James Hutton Institute', 'LONGITUDE': -2.158366000000001, 'LATITUDE': 57.133131},
-        {'VIEW_NAME': 'Aberystwyth University', 'LONGITUDE': -4.0659220000000005, 'LATITUDE': 52.417776},
-        {'VIEW_NAME': 'Daresbury Laboratory', 'LONGITUDE': -2.6399344000000156, 'LATITUDE': 53.34458119999999},
-        {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE': -1.520078900000044, 'LATITUDE': 52.28519050000001},
-        {'VIEW_NAME': 'Public Health England', 'LONGITUDE': -0.10871080000003985, 'LATITUDE': 51.50153030000001},
-        {'VIEW_NAME': 'IBM', 'LONGITUDE': -0.1124157000000423, 'LATITUDE': 51.5071586},
-        {'VIEW_NAME': 'Media Molecule', 'LONGITUDE': -0.5756398999999419, 'LATITUDE': 51.2355975},
-        {'VIEW_NAME': 'BBC', 'LONGITUDE': -0.226846, 'LATITUDE': 51.510025}]
-
-    ## Merge both dataframes to include all coordinates
-    return UK_academic_institutions_coords.append(pd.DataFrame(other_institution_coords))
-
-
 def add_region_column(df, coords_df, regions):
     """
     Find coordinates and see in which region they fall and create
@@ -123,7 +91,7 @@ def define_threshold_scale(df_region):
 
 def generate_map(df, regions, threshold_scale):
     """
-    Generates Map to be visualized.
+    Generates a map.
     """
     maps = folium.Map(
         location=[54.00366, -2.547855],
@@ -184,12 +152,14 @@ def main():
             try:
                 df = helper.load_data_from_csv(instructors_file, ['affiliation', 'nearest_airport_code'])
                 df = helper.drop_null_values_from_columns(df, ['affiliation', 'nearest_airport_code'])
-                df = helper.fix_imperial_college_name(df)
+                df = helper.fix_UK_academic_institutions_names(df)
 
-                all_institutions_coords_df = add_missing_institutions(uk_academic_institutions_df)
-                df = add_region_column(df, all_institutions_coords_df, regions)
+                uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
+                all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(helper.get_UK_non_academic_institutions_coords())
+                df = add_region_column(df, all_uk_institutions_coords_df, regions)
                 instructors_per_region_df = instructors_per_region(df)
-                print('Generating map of instructors per UK regions ...')
+
+                print('Generating a map of instructors per UK regions ...')
                 threshold_scale = define_threshold_scale(instructors_per_region_df)
                 maps = generate_map(instructors_per_region_df, regions, threshold_scale)
 
@@ -198,12 +168,12 @@ def main():
                 maps.save(html_map_file)
                 print('Map of instructors per UK regions saved to HTML file ' + html_map_file)
             except:
-                print ("An error occurred while creating the map Excel spreadsheet ...")
+                print ("An error occurred while creating the map of instructors per UK regions ...")
                 print(traceback.format_exc())
             else:
                 if args.google_drive_dir_id:
                     try:
-                        print("Uploading instructors per region map to Google Drive " + html_map_file)
+                        print("Uploading instructors per UK regions map to Google Drive " + html_map_file)
                         drive = helper.google_drive_authentication()
                         helper.google_drive_upload(html_map_file,
                                                    drive,

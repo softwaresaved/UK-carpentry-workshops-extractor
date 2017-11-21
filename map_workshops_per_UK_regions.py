@@ -71,7 +71,7 @@ def define_threshold_scale(df_region):
 
 def generate_map(df, regions, threshold_scale):
     """
-    Generates a map from the dataframe to be visualised.
+    Generates a map.
     """
     maps = folium.Map(
         location=[54.00366, -2.547855],
@@ -125,7 +125,7 @@ def main():
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             df = create_regions_column(df, regions)
             workshops_per_region_df = workshops_per_region(df)
-            print('Generating map of workshops per UK regions ...')
+            print('Generating a map of workshops per UK regions ...')
             threshold_scale = define_threshold_scale(workshops_per_region_df)
             maps = generate_map(workshops_per_region_df, regions, threshold_scale)
 
