@@ -39,15 +39,17 @@ def google_drive_upload(file, drive, parents_list, convert):
 
 def parse_command_line_paramters():
     parser = argparse.ArgumentParser()
+    print(sys.argv[0])
     if "workshop" in sys.argv[0]: # e.g. the name of the script is 'analyse_workshops'
+        print('bump')
         parser.add_argument('-w', '--workshops_file', type=str, default=None,
                             help='an absolute path to the workshops CSV file to analyse')
     elif "instructor" in sys.argv[0]:
+        print('bump')
         parser.add_argument('-i', '--instructors_file', type=str, default=None,
                             help='an absolute path to instructors CSV file to analyse')
     else:
-        puts
-        "You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py."
+        print("You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py.")
         exit(1)
 
     parser.add_argument('-gid', '--google_drive_dir_id', type=str,
