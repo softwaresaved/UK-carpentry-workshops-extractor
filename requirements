@@ -1,10 +1,8 @@
-basemap
 folium
 json
 matplotlib
 numpy
 pandas
-pycountry
 pydrive
 shapefile
 traceback
