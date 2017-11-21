@@ -25,7 +25,7 @@ def parse(args)
     options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_GB_#{date}.csv")
   else
     puts "You are possibly not invoking the correct Ruby script - extract_workshops.rb or extract_instructors.rb."
-    exit
+    exit 1
   end
 
   opt_parser = OptionParser.new do |opts|
