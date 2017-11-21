@@ -66,6 +66,8 @@ Mapper scripts generate various interactive maps embedded in HTML files and stor
 
 Finally, there is an option to upload the analyses and maps files to Google Drive, for which you have to setup access to several Google APIs and a folded in your Drive as well.
 
+Tested with Mac OS Sierra (10.12) and `python 3.6.0`.
+
 ### Analyser and mapper scripts' setup
 
 To prepare your python environment for running the python scripts, you need to install some dependencies listed in `requirements.txt`:
