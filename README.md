@@ -1,13 +1,20 @@
-# Carpentry workshops and instructor extractor, analyser and mapper
-This project contains several ruby and python scripts to extract the details of Carpentry (Software, Data, Library and Train The Trainer) workshops and instructors and consequently analyse the extracted data and plot it on various maps.
+# Carpentry workshops and instructor extractors, analysers and mappers
+This project contains several ruby and python scripts to extract the details
+of Carpentry (Software, Data, Library and Train The Trainer) workshops and instructors
+and consequently analyse the extracted data in summary tables and plot it on various graphs and maps.
 
-## Carpentry workshops and instructor extractor (in ruby)
+## Carpentry workshops and instructor extractors (in ruby)
 
-This project contains 2 ruby scripts (`extract_workshops.rb` and `extract_instructors.rb`) that extract the details of Carpentry (Software, Data, Library and Train The Trainer) workshops
-and instructors per country (or for all countries) recorded in Software Carpentry's AMY system. The extracted data is saved to CSV files named after the date they are generated on and the
-country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_GB_2017-06-26.csv` within the appropriate `data/workshops` or `data/instructors` folders.
+This project contains 2 ruby scripts (`extract_workshops.rb` and `extract_instructors.rb`) that extract
+the details of Carpentry workshops
+and instructors per country (or for all countries) recorded in Carpentries' system AMY.
 
-The scripts use AMY's API to extract certain information, but also accesses some private HTML pages (to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
+The extracted data is saved to CSV files and named after the date they are generated on and the
+country they are from, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_AU_2017-06-26.csv`
+within the appropriate `data/workshops` or `data/instructors` folders off the project's root.
+
+The scripts use AMY's API to extract certain information, but also access some private HTML pages in AMY's UI
+(to extract additional data not exposed via the API). Hence, in order for the script to work fully, one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
 
 Tested with Mac OS Sierra (10.12) and `ruby 2.2.1`.
 
@@ -31,11 +38,7 @@ nokogiri
 ```
 
 ### Running extractor scripts
-There is a command line script ```run_ingest.sh``` that you can use to run the code, which calls one of the Ruby scripts `extract_workshops.rb` with some parameters pre-filled. You can tweak it to suit your requirements, see below for the available paramaters.
-
-```$ sh run_ingest.sh```
-
-Alternatively, to run the code directly, from the project root do:
+To run the extractor scripts, from the project root do:
 
 ```$ ruby extract_workshops.rb```
 
@@ -69,7 +72,7 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
     -h, --help                       Show this help message
 ```
 
-## Carpentry workshops and instructor analyser and mappers (in python)
+## Carpentry workshops and instructor analysers and mappers (in python)
 
 The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_*.py`)
 to map the data from the extraction phase.
@@ -78,7 +81,8 @@ Analyser scripts creates resulting Excel spreadsheets with various summary table
 
 Mapper scripts generate various interactive maps embedded in HTML files and stores them in `data/workshops` or `data/instructors` folders.
 
-Finally, there is an option to upload the analyses and maps files to Google Drive, for which you have to setup access to several Google APIs and a folded in your Drive as well.
+Finally, there is an option to upload the analyses and maps files to Google Drive, which you have to setup prior to running the scripts. By default, the resulting files are
+only saved locally and are not uploaded to Google Drive.
 
 Tested with Mac OS Sierra (10.12) and `python 3.6.0`.
 
@@ -121,11 +125,11 @@ or
 
 ```$ python analyse_instructors.rb```
 
-or
+or, to run one of the mappers, do
 
 ```$ python map_instructor_affiliations.py```
 
-There are several command line options available for each set of scripts, depending on if they are dealing with workshops or instructors. See below for details.
+There are several command line options available for both analyses and mapper scripts, depending on if they are dealing with workshops or instructors. See below for details.
 ```
 $ python analyse_workshops.py -h
 usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE]
