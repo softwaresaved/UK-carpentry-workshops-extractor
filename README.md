@@ -16,6 +16,20 @@ You can pass various command line options to the scripts (see the section below)
 
 To do the latter, create a copy of `amy_login.yml.pre` config file (located in the project root), rename it to `amy_login.yml` and configure your AMY username and password there accordingly. Make sure you do not share this file with the others as it contains sensitive information.
 
+### Extractor scripts' dependencies
+The following ruby gems are required by the extractor scripts, so you will have to install them prior to running the scripts (e.g. via `bundle install`).
+```
+yaml
+open-uri
+json
+optparse
+ostruct
+date
+csv
+fileutils
+nokogiri
+```
+
 ### Running extractor scripts
 There is a command line script ```run_ingest.sh``` that you can use to run the code, which calls one of the Ruby scripts `extract_workshops.rb` with some parameters pre-filled. You can tweak it to suit your requirements, see below for the available paramaters.
 
@@ -66,12 +80,38 @@ Mapper scripts generate various interactive maps embedded in HTML files and stor
 
 Finally, there is an option to upload the analyses and maps files to Google Drive, for which you have to setup access to several Google APIs and a folded in your Drive as well.
 
-### Analyser and mapper scripts' setup
+Tested with Mac OS Sierra (10.12) and `python 3.6.0`.
 
+### Analyser and mapper scripts' setup
+If you want the scripts to upload the resulting analyses Excel spreadsheets and maps to Google Drive, you need to do the following.
+
+* Generate a project in [Google Developer's Console](https://console.developers.google.com/).
+
+* Enable the [Google Drive API](https://console.developers.google.com/apis/api/drive.googleapis.com/overview) for your project to allow the scripts to access the Google Drive.
+
+* Create a new OAuth client ID from the Google API Console Credential page (the type of client ID
+should be set to 'Other'). Detailed instructions on how to this are
+[available online](https://developers.google.com/api-client-library/python/samples/samples).
+Download the generated credentials file and save it as `client_secret.json` in the root directory of this project.
+* You will also need the ID of the parent folder in Google Drive where you want the files to be uploaded, and
+ to pass that to the script via the command-line option `-gid` (see below for details). If this option is not specified, by default the scripts will only
+ save the generated files to the `data/workshops` or `data/instructors` folders and will not attempt to upload anything to Google Drive.
+
+### Analyser and mapper scripts' dependencies
 To prepare your python environment for running the python scripts, you need to install some dependencies listed in `requirements.txt`:
 
 ```pip install -r requirements.txt```
-
+```
+folium
+json
+matplotlib
+numpy
+pandas
+pydrive
+shapefile
+traceback
+glob
+```
 ### Running analyser and mapper scripts
 To run the analyser and mapper python scrips, from the project root do, e.g.:
 
