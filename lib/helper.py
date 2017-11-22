@@ -41,10 +41,10 @@ def parse_command_line_paramters():
     parser = argparse.ArgumentParser()
     if "workshop" in os.path.basename(sys.argv[0]): # e.g. the name of the script is 'analyse_workshops'
         parser.add_argument('-w', '--workshops_file', type=str, default=None,
-                            help='an absolute path to the workshops CSV file to analyse')
+                            help='an absolute path to the workshops CSV file to analyse/map')
     elif "instructor" in os.path.basename(sys.argv[0]):
         parser.add_argument('-i', '--instructors_file', type=str, default=None,
-                            help='an absolute path to instructors CSV file to analyse')
+                            help='an absolute path to instructors CSV file to analyse/map')
     else:
         print("You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py.")
         exit(1)
