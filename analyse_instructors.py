@@ -19,6 +19,7 @@ def insert_earliest_badge_year(df):
     idx = df.columns.get_loc('earliest-badge-awarded') # index of column 'earliest-badge-awarded'
     earliest_badge_awarded_years = pd.to_datetime(df['earliest-badge-awarded']).dt.year # get the year from the date in YYYY-MM-DD format
     df.insert(loc=idx + 1, column='earliest-badge-awarded-year', value=earliest_badge_awarded_years) # insert to the right of the column 'earliest-badge-awarded'
+    col = df['earliest-badge-awarded-year'].tolist()
     return df
 
 def insert_airport_region(df):
@@ -39,8 +40,8 @@ def instructors_nearest_airport_analysis(df, writer):
     """
     Number of people per nearest_airport_code - create the corresponding table and graph and write to the spreadsheet.
     """
-    city_table = df.groupby(['nearest_airport_name']).size()
-    city_table.to_excel(writer, sheet_name='instructors_airports')
+    city_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_name']).size()}).reset_index()
+    city_table.to_excel(writer, sheet_name='instructors_airports', index = False)
 
     workbook  = writer.book
     worksheet = writer.sheets['instructors_airports']
@@ -60,13 +61,15 @@ def instructors_nearest_airport_analysis(df, writer):
     chart1.set_title ({'name': 'Instructors per (nearest) airport'})
 
     worksheet.insert_chart('D2', chart1)
+
+    return city_table
     
 def instructors_per_UK_region_analysis(df, writer):
     """
     Number of instructors per UK region - create corresponding tables and graphs and write to the spreadsheet.
     """
-    region_table = df.groupby(['nearest_airport_UK_region']).size()
-    region_table.to_excel(writer, sheet_name='instructors_per_region')
+    region_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_UK_region']).size()}).reset_index()
+    region_table.to_excel(writer, sheet_name='instructors_per_region', index = False)
 
     workbook  = writer.book
     worksheet = writer.sheets['instructors_per_region']
@@ -87,12 +90,14 @@ def instructors_per_UK_region_analysis(df, writer):
 
     worksheet.insert_chart('D2', chart2)
 
+    return region_table
+
 def instructors_per_year_analysis(df, writer):
     """
     Number of instructors over years - create corresponding tables and graphs and write to the spreadsheet.
     """
-    year_table = df.groupby(['earliest-badge-awarded-year']).size()
-    year_table.to_excel(writer, sheet_name='instructors_per_year')
+    year_table = pd.core.frame.DataFrame({'count': df.groupby(['earliest-badge-awarded-year']).size()}).reset_index()
+    year_table.to_excel(writer, sheet_name='instructors_per_year', index = False)
 
     workbook  = writer.book
     worksheet = writer.sheets['instructors_per_year']
@@ -112,6 +117,8 @@ def instructors_per_year_analysis(df, writer):
     chart3.set_title ({'name': 'Number of instructors per year'})
 
     worksheet.insert_chart('D2', chart3)
+
+    return year_table
 
 
 def main():
@@ -137,7 +144,7 @@ def main():
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
 
-    print('CSV file with Carpentry instructors to analyse ' + instructors_file)
+    print('CSV file with carpentry instructors to analyse ' + instructors_file)
 
     try:
         instructors_df = helper.load_data_from_csv(instructors_file, ['country_code','nearest_airport_name',

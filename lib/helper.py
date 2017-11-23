@@ -68,7 +68,7 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     Create an Excel spreadsheet to save the dataframe and various analyses and graphs.
     """
     writer = pd.ExcelWriter(file, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name=sheet_name)
+    df.to_excel(writer, sheet_name=sheet_name, index = False)
     return writer
 
 def drop_null_values_from_columns(df, column_list):
