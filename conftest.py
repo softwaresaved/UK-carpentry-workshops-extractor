@@ -31,6 +31,8 @@ def pytest_namespace():
         df_badges_instructors = ai.insert_earliest_badge_year(df_instructors)
         df_global_instructors = ai.insert_airport_region(df_badges_instructors)
         writer_instructors = helper.create_excel_analyses_spreadsheet(file_name_instructors_without_extension, df_badges_instructors, "carpentry_instructors")
+
+
         
         return {'file_path_workshops': file_path_workshops,
                 'df_workshops': df_workshops,

@@ -58,13 +58,11 @@ class TestAnalyseWorkshops(object):
     def test_df_workshops_per_venue_year(self):
         df_workshops_per_venue_year = aw.number_workshops_per_venue_year(pytest.df_global_workshops,pytest.writer_workshops)
         assert df_workshops_per_venue_year.empty == False
-        ## MISSING SPECIFIC VALUE
 
     ## Assert if dataframe is not empty and value for a specific year
     def test_df_workshops_per_type_year(self):
         df_workshops_per_type_year = aw.number_workshops_per_type_year(pytest.df_global_workshops,pytest.writer_workshops)
         assert df_workshops_per_type_year.empty == False
-        ## MISSING SPECIFIC VALUE
 
     ## Assert if dataframe is not empty and value for a specific year
     def test_df_attendees_per_year(self):
@@ -84,7 +82,6 @@ class TestAnalyseWorkshops(object):
     def test_df_attendees_per_workshop_type_over_years(self):
         df_attendees_per_workshop_type_over_years = aw.attendees_per_workshop_type_over_years_analysis(pytest.df_global_workshops,pytest.writer_workshops)
         assert df_attendees_per_workshop_type_over_years.empty == False
-        ## MISSING SPECIFIC VALUE
 
     def pytest_sessionfinish(self):
         print("*** test run reporting finishing")

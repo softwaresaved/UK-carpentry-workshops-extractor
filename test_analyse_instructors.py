@@ -1,9 +1,8 @@
 import pytest
 import os
-import datetime
 import analyse_instructors as ai
 
-class TestAnalyseWorkshops(object):
+class TestAnalyseInstructors(object):
     
     ## Assert if dataframe created is not empty
     def test_dataframe(self):
