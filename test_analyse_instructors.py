@@ -8,7 +8,7 @@ class TestAnalyseInstructors(object):
     def test_dataframe(self):
         assert os.path.isfile(pytest.file_path_instructors) == True
         assert pytest.df_instructors.empty == False
-        assert pytest.df_instructors['country_code'].isnull().any().any()== False
+        assert pytest.df_instructors['nearest_airport_code'].isnull().any().any()== False
         assert pytest.df_instructors['affiliation'].isnull().any().any()== False        
 
     ## Assert if badges collumn added and doesnt have nulls
