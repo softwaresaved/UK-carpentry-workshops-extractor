@@ -14,9 +14,9 @@ class TestAnalyseWorkshops(object):
     ## Assert if column was added and badges value is not null
     def test_start_year(self):
         assert {'start_year'}.issubset(pytest.df_badges_workshops) == True
-        assert pytest.df_badges_workshops['start_year'].isnull().any().any()== False
-        col = pytest.df_badges_workshops['start_year'].tolist()
-        assert 2015 in col == True
+        col = pytest.df_badges_workshops['start_year']
+        assert col.isnull().any().any()== False
+        assert 2017 in col.tolist() == True
 
     ## Assert if workshop column added
     def test_workshop_type(self):

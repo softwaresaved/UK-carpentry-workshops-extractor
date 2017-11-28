@@ -19,7 +19,6 @@ def insert_earliest_badge_year(df):
     idx = df.columns.get_loc('earliest-badge-awarded') # index of column 'earliest-badge-awarded'
     earliest_badge_awarded_years = pd.to_datetime(df['earliest-badge-awarded']).dt.year # get the year from the date in YYYY-MM-DD format
     df.insert(loc=idx + 1, column='earliest-badge-awarded-year', value=earliest_badge_awarded_years) # insert to the right of the column 'earliest-badge-awarded'
-    col = df['earliest-badge-awarded-year'].tolist()
     return df
 
 def insert_airport_region(df):

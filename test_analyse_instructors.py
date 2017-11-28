@@ -14,9 +14,9 @@ class TestAnalyseInstructors(object):
     ## Assert if badges collumn added and doesnt have nulls
     def test_badges_instructors(self):
         assert {'earliest-badge-awarded-year'}.issubset(pytest.df_badges_instructors) == True
-        assert pytest.df_badges_instructors['earliest-badge-awarded-year'].isnull().any().any()== False
-        col = pytest.df_badges_instructors['earliest-badge-awarded-year'].tolist()
-        assert 2014 in col == True
+        col = pytest.df_badges_instructors['earliest-badge-awarded-year']
+        assert col.isnull().any().any()== False
+        assert 2014 in col.tolist() == True
             
     ## Assert if new column added
     def test_airport_region(self):

@@ -19,8 +19,9 @@ class TestMaps(object):
     ## Assert if dataframe given is not empty and gives a certain value
     def test_df_workshops_per_region(self):
         assert pytest.workshops_per_region_df.empty == False
-        ## MISSING THE CERTAIN VALUE
-
+        assert pytest.workshops_per_region_df.loc[pytest.workshops_per_region_df['region'] == 'Scotland',
+                                                  'count'].iloc[0] == 20
+        
     ## Assert if map not none type
     def test_MapWorkVenUKRegion(self):
         assert type(pytest.maps_1) != None
@@ -37,7 +38,6 @@ class TestMaps(object):
     ## Assert if dictionary not empty and a certain value exists
     def test_instructors_affiliation_dict(self):
         assert bool(pytest.instructors_affiliatons_dict) == True
-        ## MISSING KNOWN VALUE
     
     ## Assert if map not empty
     def test_MapInstructAff(self):
@@ -56,7 +56,8 @@ class TestMaps(object):
     ## Assert if dataframe given is not empty and gives a certain known value
     def test_df_instructors_per_region(self):
         assert pytest.instructors_per_region_df.empty == False
-        ## MISSING KNOWN VALUE
+        assert pytest.instructors_per_region_df.loc[pytest.instructors_per_region_df['region'] == 'London',
+                                                  'count'].iloc[0] == 10
 
     ## Assert if map not none type
     def test_MapInstAffUKRegion(self):
