@@ -3,12 +3,16 @@ import argparse
 import folium
 import pandas as pd
 import traceback
+import gmaps
+import config
 import glob
 import re
 import sys
 
 sys.path.append('/lib')
 import lib.helper as helper
+
+from ipywidgets.embed import embed_minimal_html
 
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -18,13 +22,13 @@ UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geod
 
 def instructors_per_affiliation(df):
     """
-    Creates a dictionary with the values of the number of instructors
+    Creates a dataframe with the values of the number of instructors
     per affiliation.
     """
-    table = df.groupby(['affiliation']).size()
-    return table.to_dict()
+    table = pd.core.frame.DataFrame({'count': df.groupby(['affiliation']).size()}).reset_index()
+    return table
 
-def generate_map(instructors_affiliations_dict, institutions_coords_df, center):
+def generate_map(instructors_affiliations, institutions_coords_df, center):
     """
     Generates a map.
     """
@@ -33,10 +37,10 @@ def generate_map(instructors_affiliations_dict, institutions_coords_df, center):
         zoom_start=6,
         tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
 
-    for key, value in instructors_affiliations_dict.items():
-        long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == key]['LONGITUDE']
-        lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == key]['LATITUDE']
-        label = folium.Popup(key+ ': ' + str(value), parse_html=True)
+    for index, row in instructors_affiliations.iterrows():
+        long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
+        lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+        label = folium.Popup(row['affiliation']+ ': ' + str(row['count']), parse_html=True)
         if not long_coords.empty and not lat_coords.empty:
             folium.CircleMarker(
                 radius = 5,
@@ -46,12 +50,30 @@ def generate_map(instructors_affiliations_dict, institutions_coords_df, center):
                 fill = True,
                 fill_color = '#ff6600').add_to(maps)
         else:
-            print('For affiliation "' + key + '" we either have not got coordinates or it is not the official name of an UK '
+            print('For affiliation "' + row['affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
     return maps
 
+def generate_heat_map(instructors_affiliations,institutions_coords_df):
+    gmaps.configure(api_key=config.api_key)
 
+    lat_list = []
+    long_list = []
+    for index, row in instructors_affiliations.iterrows():
+        long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
+        lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+        if not long_coords.empty and not lat_coords.empty:
+            long_list.append(long_coords.iloc[0])
+            lat_list.append(lat_coords.iloc[0])
+            
+    locations = zip(lat_list, long_list)
+
+    fig = gmaps.figure()
+    fig.add_layer(gmaps.heatmap_layer(locations))
+
+    return fig
+    
 def main():
     """
     Main function
@@ -95,14 +117,20 @@ def main():
                 helper.get_UK_non_academic_institutions_coords())
             center = helper.get_center(all_uk_institutions_coords_df)
 
-            instructors_affiliatons_dict = instructors_per_affiliation(df)
+            instructors_affiliations = instructors_per_affiliation(df)
 
-            maps = generate_map(instructors_affiliatons_dict, all_uk_institutions_coords_df, center)
+            maps = generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
+            heat_map = generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
 
             ## Save map to a HTML file
             html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
             maps.save(html_map_file)
-            print('Map of instructors per affiliation saved to HTML file ' + html_map_file)
+            print('Map of instructors per affiliation saved to HTML file ' + html_map_file + '\n')
+            
+            html_heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
+            embed_minimal_html(html_heatmap_file, views=[heat_map])
+            print('HeatMap of instructors per affiliation saved to HTML file ' + html_heatmap_file)
+            
         except:
             print ("An error occurred while creating the map of instructors per affiliation ...")
             print(traceback.format_exc())
