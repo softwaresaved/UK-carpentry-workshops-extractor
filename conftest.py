@@ -11,8 +11,6 @@ import map_instructor_affiliations_per_UK_regions as mapiaUK
 import map_clustered_instructor_affiliations as mapcia
 import map_instructor_affiliations as mapia
 
-
-
 sys.path.append('/lib')
 import lib.helper as helper
 
@@ -56,7 +54,7 @@ def pytest_namespace():
         maps_1 = mapwvUK.generate_map(workshops_per_region_df, regions, threshold_scale_1)
 
         ## Map clustered workshop venue
-        maps_2 = mapcwv.generate_map(df_workshop_venue, file_name_instructors_without_extension)
+        maps_2 = mapcwv.generate_map(df_workshop_venue)
 
         uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
         uk_academic_institutions_df = uk_academic_institutions_excel_file.parse('UK-academic-institutions')
@@ -80,8 +78,8 @@ def pytest_namespace():
         maps_4 = mapcia.generate_map(df_instructor_affiliation, all_uk_institutions_coords_df, center)
         
         ## Map instructor affiliations
-        instructors_affiliatons_dict = mapia.instructors_per_affiliation(df_instructor_affiliation)
-        maps_5 = mapia.generate_map(instructors_affiliatons_dict, all_uk_institutions_coords_df, center)
+        instructors_affiliatons = mapia.instructors_per_affiliation(df_instructor_affiliation)
+        maps_5 = mapia.generate_map(instructors_affiliatons, all_uk_institutions_coords_df, center)
         
         return {'file_path_workshops': file_path_workshops,
                 'df_workshops': df_workshops,
@@ -103,5 +101,5 @@ def pytest_namespace():
                 'maps_3': maps_3,
                 'df_instructor_affiliation': df_instructor_affiliation,
                 'maps_4': maps_4,
-                'instructors_affiliatons_dict': instructors_affiliatons_dict,
+                'instructors_affiliatons': instructors_affiliatons,
                 'maps_5': maps_5}

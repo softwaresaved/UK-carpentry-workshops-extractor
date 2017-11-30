@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import numpy
 import traceback
+import yaml
 import glob
 import sys
 
@@ -13,6 +14,7 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
 STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled', 'unresponsive']
+WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
 
 
 def insert_start_year(df):
@@ -23,7 +25,6 @@ def insert_start_year(df):
     start_years = pd.to_datetime(df['start']).dt.year  # get the year from the date in YYYY-MM-DD format
     df.insert(loc=idx + 1, column='start_year', value=start_years)  # insert to the right of the column 'start'
     return df
-
 
 def insert_workshop_type(df):
     """
@@ -50,6 +51,27 @@ def insert_workshop_type(df):
     df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
     return df
 
+def insert_workshop_intitution(df, file):
+    """
+    Extract workshop institution from yaml file
+    """
+    # index of column 'tags' which contains a list tags for a workshop (we are just looking to detect one of SWC, DC or TTT)
+    idx = df.columns.get_loc("venue")
+
+    workshop_inst_dic = yaml.load(open(file))['instance']
+    
+    workshop_institution = []
+    for venue in df['venue']:
+        venue_stripped = venue.strip()
+        if venue_stripped in workshop_inst_dic:
+            workshop_institution.append(workshop_inst_dic.get(venue_stripped))
+        else:
+            workshop_institution.append('Unkown')
+            print('For workshop "' + venue + ' we do not have the institution information. ' +
+                  'Adding Unkown to the columns value ...\n')
+
+    df.insert(loc=idx + 1, column='workshop_institution', value=workshop_institution)  # insert to the right of the column 'tags'
+    return df
 
 def workshop_years_analysis(df, writer):
     """
@@ -80,23 +102,26 @@ def workshop_years_analysis(df, writer):
     return workshops_per_year_table
 
 
-def workshops_venue_analysis(df, writer):
+def workshops_institution_analysis(df, writer):
     """
     Number of workshops per venue - create corresponding tables and graphs and write to the spreadsheet.
     Unfortunately, this is analysis does not give the true per institution analysis as venues are different for the same institution.
     """
-    venue_table = pd.core.frame.DataFrame({'count': df.groupby(['venue']).size()}).reset_index()
+    ## Removes 'Unkown' values from workshop_institution
+    df = df[df.workshop_institution != 'Unkown']
+    
+    venue_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
 
-    venue_table.to_excel(writer, sheet_name='workshop_venues', index = False)
+    venue_table.to_excel(writer, sheet_name='workshop_institution', index = False)
 
     workbook = writer.book
-    worksheet = writer.sheets['workshop_venues']
+    worksheet = writer.sheets['workshop_institution']
 
     chart2 = workbook.add_chart({'type': 'column'})
 
     chart2.add_series({
-        'categories': ['workshop_venues', 1, 0, len(venue_table.index), 0],
-        'values': ['workshop_venues', 1, 1, len(venue_table.index), 1],
+        'categories': ['workshop_institution', 1, 0, len(venue_table.index), 0],
+        'values': ['workshop_institution', 1, 1, len(venue_table.index), 1],
         'gap': 2,
     })
 
@@ -141,18 +166,21 @@ def workshops_type_analysis(df, writer):
     return type_table
 
 
-def number_workshops_per_venue_year(df, writer):
+def number_workshops_per_institution_year(df, writer):
     """
     Create corresponding tables and graphs and write to the spreadsheet
     Number of Workshops per Venue and Year
     """
-    venue_year_table = pd.core.frame.DataFrame({'count': df.groupby(['venue', 'start_year']).size()}).reset_index()
-    venue_year_table = venue_year_table.pivot_table(index='venue', columns='start_year')
+    ## Removes 'Unkown' values from workshop_institution
+    df = df[df.workshop_institution != 'Unkown']
+    
+    venue_year_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution', 'start_year']).size()}).reset_index()
+    venue_year_table = venue_year_table.pivot_table(index='workshop_institution', columns='start_year')
 
-    venue_year_table.to_excel(writer, sheet_name='work_per_venueYear')
+    venue_year_table.to_excel(writer, sheet_name='work_per_institutionYear')
 
     workbook = writer.book
-    worksheet = writer.sheets['work_per_venueYear']
+    worksheet = writer.sheets['work_per_institutionYear']
 
     chart4 = workbook.add_chart({'type': 'column'})
 
@@ -160,9 +188,9 @@ def number_workshops_per_venue_year(df, writer):
 
     for number in ranged:
         chart4.add_series({
-            'name': ['work_per_venueYear', 1, number],
-            'categories': ['work_per_venueYear', 3, 0, len(venue_year_table.index) + 2, 0],
-            'values': ['work_per_venueYear', 3, number, len(venue_year_table.index) + 2, number],
+            'name': ['work_per_institutionYear', 1, number],
+            'categories': ['work_per_institutionYear', 3, 0, len(venue_year_table.index) + 2, 0],
+            'values': ['work_per_institutionYear', 3, number, len(venue_year_table.index) + 2, number],
             'gap': 2,
         })
 
@@ -181,7 +209,7 @@ def number_workshops_per_type_year(df, writer):
     Create corresponding tables and graphs and write to the spreadsheet
     Number of workshops per Type and Year
     """
-    type_year_table = df.groupby(['tags', 'start_year']).size().to_frame()
+    type_year_table = pd.core.frame.DataFrame({'count': df.groupby(['tags', 'start_year']).size()}).reset_index()
     type_year_table = type_year_table.pivot_table(index='tags', columns='start_year')
 
     type_year_table.to_excel(writer, sheet_name='work_per_TypeYear')
@@ -336,6 +364,7 @@ def main():
         workshops_df = helper.load_data_from_csv(workshops_file)
         workshops_df = insert_start_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
+        workshops_df = insert_workshop_intitution(workshops_df,WORKSHOPS_INSTITUTIONS_FILE)
         workshops_df = helper.remove_stalled_workshops(workshops_df,STALLED_WORKSHOP_TYPES)
 
         print('Creating the analyses Excel spreadsheet ...')
@@ -350,9 +379,9 @@ def main():
                                           "Added columns include 'start_year', extracted from column 'start', and 'workshop_type', extracted from column 'tags'.")
 
         workshop_years_analysis(workshops_df, excel_writer)
-        workshops_venue_analysis(workshops_df, excel_writer)
+        workshops_institution_analysis(workshops_df, excel_writer)
         workshops_type_analysis(workshops_df, excel_writer)
-        ##number_workshops_per_venue_year(workshops_df, excel_writer)
+        ##number_workshops_per_institution_year(workshops_df, excel_writer)
         ##number_workshops_per_type_year(workshops_df, excel_writer)
         attendees_per_year_analysis(workshops_df, excel_writer)
         attendees_per_workshop_type_analysis(workshops_df, excel_writer)
