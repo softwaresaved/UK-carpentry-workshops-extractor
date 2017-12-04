@@ -51,7 +51,7 @@ def insert_workshop_type(df):
     df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
     return df
 
-def insert_workshop_intitution(df, file):
+def insert_workshop_institution(df, file):
     """
     Extract workshop institution from yaml file
     """
@@ -364,7 +364,7 @@ def main():
         workshops_df = helper.load_data_from_csv(workshops_file)
         workshops_df = insert_start_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
-        workshops_df = insert_workshop_intitution(workshops_df,WORKSHOPS_INSTITUTIONS_FILE)
+        workshops_df = insert_workshop_institution(workshops_df,WORKSHOPS_INSTITUTIONS_FILE)
         workshops_df = helper.remove_stalled_workshops(workshops_df,STALLED_WORKSHOP_TYPES)
 
         print('Creating the analyses Excel spreadsheet ...')
