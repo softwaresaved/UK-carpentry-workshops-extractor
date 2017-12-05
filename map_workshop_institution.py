@@ -14,6 +14,7 @@ sys.path.append('/lib')
 import lib.helper as helper
 
 from ipywidgets.embed import embed_minimal_html
+import analyse_workshops as aw
 
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,27 +23,6 @@ UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geod
 WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
 #GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
-def insert_workshop_institution(df, file):
-    """
-    Extract workshop institution from yaml file
-    """
-    # index of column 'tags' which contains a list tags for a workshop (we are just looking to detect one of SWC, DC or TTT)
-    idx = df.columns.get_loc("venue")
-
-    workshop_inst_dic = yaml.load(open(file))['instance']
-    
-    workshop_institution = []
-    for venue in df['venue']:
-        venue_stripped = venue.strip()
-        if venue_stripped in workshop_inst_dic:
-            workshop_institution.append(workshop_inst_dic.get(venue_stripped))
-        else:
-            workshop_institution.append('Unkown')
-            print('For workshop "' + venue + ' we do not have the institution information. ' +
-                  'Adding Unkown to the columns value ...\n')
-
-    df.insert(loc=idx + 1, column='workshop_institution', value=workshop_institution)  # insert to the right of the column 'tags'
-    return df
 
 def workshops_per_institution(df):
     """
@@ -117,7 +97,7 @@ def main():
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             print('Generating a map of workshop institutions ...')
-            df = insert_workshop_institution(df,WORKSHOPS_INSTITUTIONS_FILE)
+            df = aw.insert_workshop_institution(df,WORKSHOPS_INSTITUTIONS_FILE)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
