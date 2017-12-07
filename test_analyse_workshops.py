@@ -43,7 +43,7 @@ class TestAnalyseWorkshops(object):
         assert not df_workshops_per_institution.empty
         assert df_workshops_per_institution.loc[df_workshops_per_institution['workshop_institution'] ==
                                                 'University of Southampton',
-                                                'count'].iloc[0] == 8
+                                                'count'].iloc[0] == 9
         assert df_workshops_per_institution.loc[df_workshops_per_institution['workshop_institution'] ==
                                                 'University College London',
                                                 'count'].iloc[0] == 18

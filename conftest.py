@@ -66,7 +66,7 @@ def pytest_namespace():
         center = helper.get_center(all_uk_institutions_coords_df)
 
         ## Map workshop per institution
-        df_workshop_institution = mapwi.insert_workshop_institution(df_workshop_venue,WORKSHOPS_INSTITUTIONS_FILE)
+        df_workshop_institution = aw.insert_workshop_institution(df_workshop_venue,WORKSHOPS_INSTITUTIONS_FILE)
         df_workshop_institution = mapwi.workshops_per_institution(df_workshop_institution)
         maps_wi = mapwi.generate_map(df_workshop_institution,all_uk_institutions_coords_df,center)
         

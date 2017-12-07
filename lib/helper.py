@@ -109,7 +109,14 @@ def get_UK_non_academic_institutions_coords():
         {'VIEW_NAME': 'Public Health England', 'LONGITUDE': -0.10871080000003985, 'LATITUDE': 51.50153030000001},
         {'VIEW_NAME': 'IBM', 'LONGITUDE': -0.1124157000000423, 'LATITUDE': 51.5071586},
         {'VIEW_NAME': 'Media Molecule', 'LONGITUDE': -0.5756398999999419, 'LATITUDE': 51.2355975},
-        {'VIEW_NAME': 'BBC', 'LONGITUDE': -0.226846, 'LATITUDE': 51.510025}]
+        {'VIEW_NAME': 'BBC', 'LONGITUDE': -0.226846, 'LATITUDE': 51.510025},
+        {'VIEW_NAME': 'Culham Centre for Fusion Energy', 'LONGITUDE': -1.2305023999999776, 'LATITUDE': 51.6588505},
+        {'VIEW_NAME': 'Digital Greenwich', 'LONGITUDE': 0.006866500000000997, 'LATITUDE': 51.5007361},
+        {'VIEW_NAME': 'National Oceanography Centre', 'LONGITUDE': -1.3945247000000336, 'LATITUDE': 50.8928051},
+        {'VIEW_NAME': 'Natural History Museum', 'LONGITUDE': -0.17636719999995876, 'LATITUDE': 51.49671499999999},
+        {'VIEW_NAME': 'Rutherford Appleton Laboratory', 'LONGITUDE': -1.3159226000000217, 'LATITUDE': 51.5726621},
+        {'VIEW_NAME': 'SAP', 'LONGITUDE': -0.44502220000003945, 'LATITUDE': 51.44902499999999},
+        {'VIEW_NAME': 'The Francis Crick Institute', 'LONGITUDE': -0.12875610000003235, 'LATITUDE': 51.5315844}]
 
     return pd.DataFrame(non_academic_UK_institutions_coords)
 
