@@ -119,11 +119,11 @@ glob
 ### Running analyser and mapper scripts
 To run the analyser and mapper python scrips, from the project root do, e.g.:
 
-```$ python analyse_workshops.rb```
+```$ python analyse_workshops.py```
 
 or
 
-```$ python analyse_instructors.rb```
+```$ python analyse_instructors.py```
 
 or, to run one of the mappers, do
 
