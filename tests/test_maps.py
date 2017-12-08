@@ -1,10 +1,5 @@
 import pytest
 import os
-import map_clustered_workshop_venues as mapcwv
-import map_workshop_venues_per_UK_regions as mapwvUK
-import map_clustered_instructor_affiliations as mapcia
-import map_instructor_affiliations as mapia
-import map_instructor_affiliations_per_UK_regions as mapiaUK
 
 class TestMaps(object):
 

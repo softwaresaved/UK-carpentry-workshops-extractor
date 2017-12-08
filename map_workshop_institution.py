@@ -42,24 +42,49 @@ def generate_map(workshop_institution, workshop_coords_df, center):
     gmaps.configure(api_key=config.api_key)
 
     m = gmaps.Map()
+
+    max_value = workshop_institution['count'].max()
+    min_value = workshop_institution['count'].min()
+    grouping = (max_value - min_value)/3
+    second_value = min_value + grouping
+    third_value = second_value + grouping
+
+    names_small = []
+    locations_small = []
     
-    names = []
-    locations = []
+    names_medium = []
+    locations_medium = []
+
+    names_large = []
+    locations_large = []
 
     for index, row in workshop_institution.iterrows():
         long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LONGITUDE']
         lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LATITUDE']
         if not long_coords.empty and not lat_coords.empty:
-            locations.append((lat_coords.iloc[0],long_coords.iloc[0]))
-            names.append(row['workshop_institution'] + ': ' + str(row['count']))
+            if row['count']>=min_value and row['count']<second_value:
+                locations_small.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_small.append(row['workshop_institution'] + ': ' + str(row['count']))
+            elif row['count']>=second_value and row['count']<third_value:
+                locations_medium.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_medium.append(row['workshop_institution'] + ': ' + str(row['count']))
+            elif row['count']>=third_value and row['count']<=max_value:
+                locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_large.append(row['workshop_institution'] + ': ' + str(row['count']))
         else:
             print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
-    symbol_layer = gmaps.symbol_layer(locations, fill_color="green", stroke_color="green",
-                                      scale=3, hover_text=names)
+    symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
+                                      scale=3, hover_text=names_small)
+    symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="green", stroke_color="green",
+                                      scale=6, hover_text=names_medium)
+    symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
+                                      scale=8, hover_text=names_large)
     m = gmaps.Map()
-    m.add_layer(symbol_layer)
+    m.add_layer(symbol_layer_small)
+    m.add_layer(symbol_layer_medium)
+    m.add_layer(symbol_layer_large)
 
     return m
 

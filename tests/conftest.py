@@ -3,6 +3,8 @@ import re
 import sys
 import json
 import pandas as pd
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.sys.path.insert(0,parentdir)
 import analyse_workshops as aw
 import analyse_instructors as ai
 import map_workshop_venues_per_UK_regions as mapwvUK
@@ -15,15 +17,14 @@ import map_instructor_affiliations as mapia
 sys.path.append('/lib')
 import lib.helper as helper
 
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
-UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
+REGIONS_FILE = parentdir + '/lib/regions.json'
+UK_INSTITUTIONS_GEODATA_FILE = parentdir + '/lib/UK-academic-institutions-geodata.xlsx'
+WORKSHOPS_INSTITUTIONS_FILE = parentdir + '/lib/workshop_institutions.yaml'
 
-WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
+WORKSHOP_DATA_DIR = parentdir + '/data/workshops/'
 STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled', 'unresponsive']
 
-INSTRUCTOR_DATA_DIR = CURRENT_DIR + '/data/instructors/'
+INSTRUCTOR_DATA_DIR = parentdir + '/data/instructors/'
 
 def pytest_namespace():
         ## Analysis workshops
