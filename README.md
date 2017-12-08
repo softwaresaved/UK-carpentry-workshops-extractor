@@ -156,3 +156,11 @@ optional arguments:
                         ID of a Google Drive directory where to upload the
                         analyses and map files to
 ```
+### Testing the analyser and mapper scripts
+In order to guarantee that the scripts are outputting the intended results some tests were developed. There are two test files in the lib folder used to perform the test: test_file_instructors.py and test_file_workshops.py. These are used to represent the real data files and simulate some problems that may be found.
+To run the test there are several options. First you can run the tests directly in the command line by doing the following command:
+```
+$ pytest test_maps.py
+```
+This will run the test one for a specific module, in this case the test for the map scripts. There are two more modules for the test: test_analyse_instructors.py and test_analyse_workshops that test the execution of the analysis scripts.
+You can also run the tests by opening one of the modules and running the code directly but this way it will run all the modules present instead of just a specific one.
