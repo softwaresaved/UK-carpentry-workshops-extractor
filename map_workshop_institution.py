@@ -41,8 +41,6 @@ def generate_map(workshop_institution, workshop_coords_df, center):
     """
     gmaps.configure(api_key=config.api_key)
 
-    m = gmaps.Map()
-
     max_value = workshop_institution['count'].max()
     min_value = workshop_institution['count'].min()
     grouping = (max_value - min_value)/3
@@ -81,7 +79,7 @@ def generate_map(workshop_institution, workshop_coords_df, center):
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
                                       scale=8, display_info_box = True, info_box_content=names_large)
-    m = gmaps.Map()
+    m = gmaps.Map(height="100%")
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
     m.add_layer(symbol_layer_large)
@@ -99,10 +97,10 @@ def generate_heat_map(df):
             
     locations = zip(lat_list, long_list)
 
-    fig = gmaps.figure()
-    fig.add_layer(gmaps.heatmap_layer(locations))
+    m = gmaps.Map(align_self = 'center',width="100%",height='100%')
+    m.add_layer(gmaps.heatmap_layer(locations))
 
-    return fig
+    return m
 
 def main():
     """

@@ -32,28 +32,52 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
     """
     Generates a map.
     """
-    maps = folium.Map(
-        location=[center[0], center[1]],
-        zoom_start=6,
-        tiles='cartodbpositron') # for a lighter map tiles='Mapbox Bright'
+    gmaps.configure(api_key=config.api_key)
+
+    max_value = instructors_affiliations['count'].max()
+    min_value = instructors_affiliations['count'].min()
+    grouping = (max_value - min_value)/3
+    second_value = min_value + grouping
+    third_value = second_value + grouping
+
+    names_small = []
+    locations_small = []
+    
+    names_medium = []
+    locations_medium = []
+
+    names_large = []
+    locations_large = []
 
     for index, row in instructors_affiliations.iterrows():
         long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
         lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
-        label = folium.Popup(row['affiliation']+ ': ' + str(row['count']), parse_html=True)
         if not long_coords.empty and not lat_coords.empty:
-            folium.CircleMarker(
-                radius = 5,
-                location = [lat_coords.iloc[0], long_coords.iloc[0]],
-                popup = label,
-                color = '#ff6600',
-                fill = True,
-                fill_color = '#ff6600').add_to(maps)
+            if row['count']>=min_value and row['count']<second_value:
+                locations_small.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_small.append(row['affiliation'] + ': ' + str(row['count']))
+            elif row['count']>=second_value and row['count']<third_value:
+                locations_medium.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_medium.append(row['affiliation'] + ': ' + str(row['count']))
+            elif row['count']>=third_value and row['count']<=max_value:
+                locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
+                names_large.append(row['affiliation'] + ': ' + str(row['count']))
         else:
-            print('For affiliation "' + row['affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
+            print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
-    return maps
+    symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
+                                      scale=3, display_info_box = True, info_box_content=names_small)
+    symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="#ff6600", stroke_color="#ff6600",
+                                      scale=6, display_info_box = True, info_box_content=names_medium)
+    symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
+                                      scale=8, display_info_box = True, info_box_content=names_large)
+    m = gmaps.Map(height="100%")
+    m.add_layer(symbol_layer_small)
+    m.add_layer(symbol_layer_medium)
+    m.add_layer(symbol_layer_large)
+
+    return m
 
 def generate_heat_map(instructors_affiliations,institutions_coords_df):
     gmaps.configure(api_key=config.api_key)
@@ -69,10 +93,10 @@ def generate_heat_map(instructors_affiliations,institutions_coords_df):
             
     locations = zip(lat_list, long_list)
 
-    fig = gmaps.figure()
-    fig.add_layer(gmaps.heatmap_layer(locations))
+    m = gmaps.Map(height="100%")
+    m.add_layer(gmaps.heatmap_layer(locations))
 
-    return fig
+    return m
     
 def main():
     """
@@ -124,7 +148,7 @@ def main():
 
             ## Save map to a HTML file
             html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
-            maps.save(html_map_file)
+            embed_minimal_html(html_map_file, views=[maps])
             print('Map of instructors per affiliation saved to HTML file ' + html_map_file + '\n')
             
             html_heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
