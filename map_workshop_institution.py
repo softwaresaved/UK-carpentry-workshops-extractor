@@ -76,11 +76,11 @@ def generate_map(workshop_institution, workshop_coords_df, center):
                   'academic institution. Skipping it ...\n')
 
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
-                                      scale=3, hover_text=names_small)
+                                      scale=3, display_info_box = True, info_box_content=names_small)
     symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="green", stroke_color="green",
-                                      scale=6, hover_text=names_medium)
+                                      scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
-                                      scale=8, hover_text=names_large)
+                                      scale=8, display_info_box = True, info_box_content=names_large)
     m = gmaps.Map()
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
