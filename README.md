@@ -101,7 +101,7 @@ Download the generated credentials file and save it as `client_secret.json` in t
  to pass that to the script via the command-line option `-gid` (see below for details). If this option is not specified, by default the scripts will only
  save the generated files to the `data/workshops` or `data/instructors` folders and will not attempt to upload anything to Google Drive.
 
-To visualize the map_workshop_institution.py and the map_clustered_workshop_venues.py you will also need a Google Maps JavaScript API key. In order to get the key you simply need to follow the steps at https://developers.google.com/maps/documentation/javascript/get-api-key and create you own config.py script in the directory. For that you can use the example script config.py.pre.
+To visualize the map_workshop_institution.py and map_instructor_affiliations.py you will also need a Google Maps JavaScript API key. In order to get the key you simply need to follow the steps at https://developers.google.com/maps/documentation/javascript/get-api-key and create you own config.py script in the directory. For that you can use the example script config.py.pre.
 
 ### Analyser and mapper scripts' dependencies
 To prepare your python environment for running the python scripts, you need to install some dependencies listed in `requirements.txt`:
