@@ -4,8 +4,6 @@ import folium
 import json
 import pandas as pd
 import traceback
-import gmaps
-import config
 import glob
 import re
 import sys
@@ -14,7 +12,6 @@ sys.path.append('/lib')
 import lib.helper as helper
 
 from folium.plugins import MarkerCluster
-from ipywidgets.embed import embed_minimal_html
 
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -61,21 +58,6 @@ def generate_map(df):
 
     return maps
 
-def generate_heat_map(df):
-    gmaps.configure(api_key=config.api_key)
-
-    lat_list = []
-    long_list = []
-    for index, row in df.iterrows():
-        long_list.append(row['longitude'])
-        lat_list.append(row['latitude'])
-            
-    locations = zip(lat_list, long_list)
-
-    fig = gmaps.figure()
-    fig.add_layer(gmaps.heatmap_layer(locations))
-
-    return fig
 
 def main():
     """
@@ -112,16 +94,11 @@ def main():
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             print('Generating a map of workshop venues ...')
             maps = generate_map(df)
-            heat_map = generate_heat_map(df)
 
             ## Save map to a HTML file
             html_map_file = WORKSHOP_DATA_DIR + 'map_clustered_workshop_venues_' + workshops_file_name_without_extension + '.html'
             maps.save(html_map_file)
-            print('Map of workshop venues saved to HTML file ' + html_map_file + '\n')
-
-            html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
-            embed_minimal_html(html_heatmap_file, views=[heat_map])
-            print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
+            print('Map of workshop venues saved to HTML file ' + html_map_file + '\n')            
 
         except:
             print ("An error occurred while creating the map of workshop venues  ...")

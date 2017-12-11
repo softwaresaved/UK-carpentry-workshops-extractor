@@ -88,6 +88,22 @@ def generate_map(workshop_institution, workshop_coords_df, center):
 
     return m
 
+def generate_heat_map(df):
+    gmaps.configure(api_key=config.api_key)
+
+    lat_list = []
+    long_list = []
+    for index, row in df.iterrows():
+        long_list.append(row['longitude'])
+        lat_list.append(row['latitude'])
+            
+    locations = zip(lat_list, long_list)
+
+    fig = gmaps.figure()
+    fig.add_layer(gmaps.heatmap_layer(locations))
+
+    return fig
+
 def main():
     """
     Main function
@@ -132,12 +148,17 @@ def main():
             workshops_per_institution_df = workshops_per_institution(df)
 
             maps = generate_map(workshops_per_institution_df,all_uk_institutions_coords_df,center)
-
+            heat_map = generate_heat_map(df)
+                        
             ## Save map to a HTML file
             html_map_file = WORKSHOP_DATA_DIR + 'map_workshop_institution_' + workshops_file_name_without_extension + '.html'
             embed_minimal_html(html_map_file, views=[maps])
             print('Map of workshop institutions saved to HTML file ' + html_map_file + '\n')
 
+            html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
+            embed_minimal_html(html_heatmap_file, views=[heat_map])
+            print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
+            
         except:
             print ("An error occurred while creating the map of workshop institutions  ...")
             print(traceback.format_exc())
