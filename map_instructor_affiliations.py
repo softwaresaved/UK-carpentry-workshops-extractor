@@ -72,7 +72,7 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
                                       scale=8, display_info_box = True, info_box_content=names_large)
-    m = gmaps.Map(height="100%")
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
     m.add_layer(symbol_layer_large)
@@ -93,7 +93,7 @@ def generate_heat_map(instructors_affiliations,institutions_coords_df):
             
     locations = zip(lat_list, long_list)
 
-    m = gmaps.Map(height="100%")
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
     m.add_layer(gmaps.heatmap_layer(locations))
 
     return m

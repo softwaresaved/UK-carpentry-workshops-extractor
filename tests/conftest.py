@@ -68,7 +68,8 @@ def pytest_namespace():
         df_workshop_institution = aw.insert_workshop_institution(df_workshop_venue,WORKSHOPS_INSTITUTIONS_FILE)
         df_workshop_institution = mapwi.workshops_per_institution(df_workshop_institution)
         maps_wi = mapwi.generate_map(df_workshop_institution,all_uk_institutions_coords_df,center)
-        
+        heat_map_wi = mapwi.generate_heat_map(df_workshop_venue)
+
         ## Map instructor affiliations per UK region
         df_instructor_affiliation_region = helper.load_data_from_csv(file_path_instructors, ['affiliation', 'nearest_airport_code'])
         df_instructor_affiliation_region = helper.drop_null_values_from_columns(df_instructor_affiliation_region, ['affiliation', 'nearest_airport_code'])
@@ -85,8 +86,9 @@ def pytest_namespace():
         maps_cia = mapcia.generate_map(df_instructor_affiliation, all_uk_institutions_coords_df, center)
         
         ## Map instructor affiliations
-        instructors_affiliatons = mapia.instructors_per_affiliation(df_instructor_affiliation)
-        maps_ia = mapia.generate_map(instructors_affiliatons, all_uk_institutions_coords_df, center)
+        instructors_affiliations = mapia.instructors_per_affiliation(df_instructor_affiliation)
+        maps_ia = mapia.generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
+        heat_map_ia = mapia.generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
         
         return {'file_path_workshops': file_path_workshops,
                 'df_workshops': df_workshops,
@@ -104,11 +106,13 @@ def pytest_namespace():
                 'maps_cwv': maps_cwv,
                 'df_workshop_institution': df_workshop_institution,
                 'maps_wi': maps_wi,
+                'heat_map_wi': heat_map_wi,
                 'df_instructor_affiliation_region': df_instructor_affiliation_region,
                 'df_instructorUKregion': df_instructorUKregion,
                 'instructors_per_region_df': instructors_per_region_df,
                 'maps_iaUK': maps_iaUK,
                 'df_instructor_affiliation': df_instructor_affiliation,
                 'maps_cia': maps_cia,
-                'instructors_affiliatons': instructors_affiliatons,
-                'maps_ia': maps_ia}
+                'instructors_affiliations': instructors_affiliations,
+                'maps_ia': maps_ia,
+                'heat_map_ia': heat_map_ia}

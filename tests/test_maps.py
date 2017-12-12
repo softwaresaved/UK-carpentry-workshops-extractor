@@ -2,20 +2,31 @@ import pytest
 import os
 
 class TestMaps(object):
-
+    '''
+    map_workshop_institution
+    '''
     ## Assert if workshop institution column was added to the dataframe
-    def test_add_region_column(self):
+    def test_add_institution_column(self):
         assert {'workshop_institution'}.issubset(pytest.df_workshop_institution)
     
     ## Assert if map not none type
     def test_MapWorkInstit(self):
         assert type(pytest.maps_wi) != None
-    
+
+    ## Assert if map not none type
+    def test_HeatMapWorkInstit(self):
+        assert type(pytest.heat_map_wi) != None
+
+    '''
+    map_clustered_workshop_venues
+    '''
     ## Assert if map not none type
     def test_MapClustWorkVen(self):
         assert type(pytest.maps_cwv) != None
 
-
+    '''
+    map_workshop_venues_per_UK_regions
+    '''
     ## Assert if region column was added to the dataframe
     def test_add_region_column(self):
         assert {'region'}.issubset(pytest.df_workshopUKregions)
@@ -25,12 +36,14 @@ class TestMaps(object):
         assert not pytest.workshops_per_region_df.empty
         assert pytest.workshops_per_region_df.loc[pytest.workshops_per_region_df['region'] == 'Scotland',
                                                   'count'].iloc[0] == 20
-       
+
     ## Assert if map not none type
     def test_MapWorkVenUKRegion(self):
         assert type(pytest.maps_wvUK) != None
 
-
+    '''
+    map_clustered_instructor_affiliations
+    '''
     ## Assert if dataframe given is not empty and gives a certain known value
     def test_df_instructors_per_affiliation(self):
         assert not pytest.df_instructor_affiliation.empty
@@ -40,16 +53,24 @@ class TestMaps(object):
     def test_MapClustInstructAff(self):
         assert type(pytest.maps_cia) != None
 
-    
+    '''
+    map_instructor_affiliations
+    ''' 
     ## Assert if dataframe not empty and a certain value exists
     def test_instructors_affiliation_dict(self):
-        assert not pytest.instructors_affiliatons.empty
+        assert not pytest.instructors_affiliations.empty
     
     ## Assert if map not empty
     def test_MapInstructAff(self):
         assert type(pytest.maps_ia) != None
 
+    ## Assert if map not none type
+    def test_HeatMapInstructAff(self):
+        assert type(pytest.heat_map_ia) != None
 
+    '''
+    map_instructor_affiliations_per_UK_regions
+    ''' 
     ## Assert if dataframe given is not empty and gives a certain known value
     def test_df_instructors_per_affiliation_region(self):
         assert not pytest.df_instructor_affiliation_region.empty

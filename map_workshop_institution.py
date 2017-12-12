@@ -79,7 +79,7 @@ def generate_map(workshop_institution, workshop_coords_df, center):
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
                                       scale=8, display_info_box = True, info_box_content=names_large)
-    m = gmaps.Map(height="100%")
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
     m.add_layer(symbol_layer_large)
@@ -97,7 +97,7 @@ def generate_heat_map(df):
             
     locations = zip(lat_list, long_list)
 
-    m = gmaps.Map(align_self = 'center',width="100%",height='100%')
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
     m.add_layer(gmaps.heatmap_layer(locations))
 
     return m
@@ -154,7 +154,7 @@ def main():
             print('Map of workshop institutions saved to HTML file ' + html_map_file + '\n')
 
             html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
-            embed_minimal_html(html_heatmap_file, views=[heat_map])
+            embed_minimal_html(html_heatmap_file, views=[heat_map], title=workshops_file_name_without_extension)
             print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
             
         except:
