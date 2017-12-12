@@ -5,7 +5,7 @@ class TestMaps(object):
     '''
     map_workshop_institution
     '''
-    ## Assert if workshop institution column was added to the dataframe
+    ## Assert if workshop_institution column was added to the dataframe
     def test_add_institution_column(self):
         assert {'workshop_institution'}.issubset(pytest.df_workshop_institution)
     
@@ -44,11 +44,12 @@ class TestMaps(object):
     '''
     map_clustered_instructor_affiliations
     '''
-    ## Assert if dataframe given is not empty and gives a certain known value
+    ## Assert if dataframe given is not empty and the affiliation column
+    ## does not have nulls
     def test_df_instructors_per_affiliation(self):
         assert not pytest.df_instructor_affiliation.empty
         assert pytest.df_instructor_affiliation['affiliation'].isnull().any().any()== False
-                
+        
     ## Assert if map not empty
     def test_MapClustInstructAff(self):
         assert type(pytest.maps_cia) != None
@@ -58,7 +59,9 @@ class TestMaps(object):
     ''' 
     ## Assert if dataframe not empty and a certain value exists
     def test_instructors_affiliation_dict(self):
-        assert not pytest.instructors_affiliations.empty
+        assert not pytest.df_instructors_affiliation_count.empty
+        assert pytest.df_instructors_affiliation_count.loc[pytest.df_instructors_affiliation_count['affiliation'] == 'University of Sussex',
+                                                  'count'].iloc[0] == 1
     
     ## Assert if map not empty
     def test_MapInstructAff(self):
@@ -70,12 +73,13 @@ class TestMaps(object):
 
     '''
     map_instructor_affiliations_per_UK_regions
-    ''' 
-    ## Assert if dataframe given is not empty and gives a certain known value
+    '''
+    ## Assert if dataframe created is not empty and the affiliation and
+    ## nearest_airport_code columns do not have null values.
     def test_df_instructors_per_affiliation_region(self):
         assert not pytest.df_instructor_affiliation_region.empty
         assert pytest.df_instructor_affiliation_region['nearest_airport_code'].isnull().any().any()== False
-        assert pytest.df_instructor_affiliation_region['affiliation'].isnull().any().any()== False        
+        assert pytest.df_instructor_affiliation_region['affiliation'].isnull().any().any()== False
     
     ## Assert if region column was added to the dataframe
     def test_add_region_column(self):

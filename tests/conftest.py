@@ -86,9 +86,9 @@ def pytest_namespace():
         maps_cia = mapcia.generate_map(df_instructor_affiliation, all_uk_institutions_coords_df, center)
         
         ## Map instructor affiliations
-        instructors_affiliations = mapia.instructors_per_affiliation(df_instructor_affiliation)
-        maps_ia = mapia.generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
-        heat_map_ia = mapia.generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
+        df_instructors_affiliation_count = mapia.instructors_per_affiliation(df_instructor_affiliation)
+        maps_ia = mapia.generate_map(df_instructors_affiliation_count, all_uk_institutions_coords_df, center)
+        heat_map_ia = mapia.generate_heat_map(df_instructors_affiliation_count, all_uk_institutions_coords_df)
         
         return {'file_path_workshops': file_path_workshops,
                 'df_workshops': df_workshops,
@@ -113,6 +113,6 @@ def pytest_namespace():
                 'maps_iaUK': maps_iaUK,
                 'df_instructor_affiliation': df_instructor_affiliation,
                 'maps_cia': maps_cia,
-                'instructors_affiliations': instructors_affiliations,
+                'df_instructors_affiliation_count': df_instructors_affiliation_count,
                 'maps_ia': maps_ia,
                 'heat_map_ia': heat_map_ia}
