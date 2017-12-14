@@ -63,7 +63,7 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
                 locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
                 names_large.append(row['affiliation'] + ': ' + str(row['count']))
         else:
-            print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
+            print('For institution "' + row['affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
@@ -142,7 +142,7 @@ def main():
             center = helper.get_center(all_uk_institutions_coords_df)
 
             instructors_affiliations = instructors_per_affiliation(df)
-
+            
             maps = generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
             heat_map = generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
 
