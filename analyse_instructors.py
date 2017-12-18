@@ -31,8 +31,8 @@ def insert_airport_region(df):
                                     regions['UK_region']))
 
     idx = df.columns.get_loc('nearest_airport_code') # index of column 'nearest_airport_code'
-    df.insert(loc=idx + 1, column='nearest_airport_UK_region', value=df.nearest_airport_code) # copy values from 'nearest_airport_code' column and insert to the right of the column 'nearest_airport_code'
-    df['nearest_airport_UK_region'].replace(airports_regions_dict, inplace=True) # replace the airport with its UK region
+    df.insert(loc=idx + 1, column='nearest_airport_region', value=df.nearest_airport_code) # copy values from 'nearest_airport_code' column and insert to the right of the column 'nearest_airport_code'
+    df['nearest_airport_region'].replace(airports_regions_dict, inplace=True) # replace the airport with its UK region
     return df
 
 def instructors_nearest_airport_analysis(df, writer):
@@ -67,7 +67,7 @@ def instructors_per_UK_region_analysis(df, writer):
     """
     Number of instructors per UK region - create corresponding tables and graphs and write to the spreadsheet.
     """
-    region_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_UK_region']).size()}).reset_index()
+    region_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_region']).size()}).reset_index()
     region_table.to_excel(writer, sheet_name='instructors_per_region', index = False)
 
     workbook  = writer.book
@@ -83,9 +83,9 @@ def instructors_per_UK_region_analysis(df, writer):
 
     chart2.set_y_axis({'major_gridlines': {'visible': False}})
     chart2.set_legend({'position': 'none'})
-    chart2.set_x_axis({'name': 'Region of the UK'})
+    chart2.set_x_axis({'name': 'Region'})
     chart2.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart2.set_title ({'name': 'Number of instructors per UK region'})
+    chart2.set_title ({'name': 'Number of instructors per region'})
 
     worksheet.insert_chart('D2', chart2)
 
