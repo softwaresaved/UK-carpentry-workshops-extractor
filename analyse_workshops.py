@@ -110,9 +110,9 @@ def workshops_institution_analysis(df, writer):
     ## Removes 'Unkown' values from workshop_institution
     df = df[df.workshop_institution != 'Unkown']
     
-    venue_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
+    institution_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
 
-    venue_table.to_excel(writer, sheet_name='workshop_institution', index = False)
+    institution_table.to_excel(writer, sheet_name='workshop_institution', index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshop_institution']
@@ -120,20 +120,20 @@ def workshops_institution_analysis(df, writer):
     chart2 = workbook.add_chart({'type': 'column'})
 
     chart2.add_series({
-        'categories': ['workshop_institution', 1, 0, len(venue_table.index), 0],
-        'values': ['workshop_institution', 1, 1, len(venue_table.index), 1],
+        'categories': ['workshop_institution', 1, 0, len(institution_table.index), 0],
+        'values': ['workshop_institution', 1, 1, len(institution_table.index), 1],
         'gap': 2,
     })
 
     chart2.set_y_axis({'major_gridlines': {'visible': False}})
     chart2.set_legend({'position': 'none'})
-    chart2.set_x_axis({'name': 'Venue'})
+    chart2.set_x_axis({'name': 'Institution'})
     chart2.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart2.set_title({'name': 'Number of workshops per venue'})
+    chart2.set_title({'name': 'Number of workshops per institution'})
 
     worksheet.insert_chart('I2', chart2)
 
-    return venue_table
+    return institution_table
 
 
 def workshops_type_analysis(df, writer):
