@@ -135,7 +135,7 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
-            print('Generating a map of workshop institutions ...')
+            print('Generating a map and a heatmap of workshop institutions ...')
             df = aw.insert_workshop_institution(df,WORKSHOPS_INSTITUTIONS_FILE)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
