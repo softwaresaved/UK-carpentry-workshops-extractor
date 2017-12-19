@@ -168,6 +168,12 @@ def main():
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
                     print('Map uploaded to Google Drive.')
+                    helper.google_drive_upload(html_heatmap_file,
+                                               drive,
+                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                               False)
+                    print('HeatMap uploaded to Google Drive.')
+
                 except Exception:
                     print ("An error occurred while uploading the map to Google Drive ...")
                     print(traceback.format_exc())

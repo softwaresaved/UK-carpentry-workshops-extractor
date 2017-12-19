@@ -155,7 +155,7 @@ def main():
 
             html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
             embed_minimal_html(html_heatmap_file, views=[heat_map], title=workshops_file_name_without_extension)
-            print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
+            print('HeatMap of workshop institutions saved to HTML file ' + html_map_file + '\n')
             
         except:
             print ("An error occurred while creating the map of workshop institutions  ...")
@@ -170,6 +170,11 @@ def main():
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
                     print('Map uploaded to Google Drive.')
+                    helper.google_drive_upload(html_heatmap_file,
+                                               drive,
+                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                               False)
+                    print('HeatMap uploaded to Google Drive.')
                 except Exception:
                     print ("An error occurred while uploading the map to Google Drive ...")
                     print(traceback.format_exc())
