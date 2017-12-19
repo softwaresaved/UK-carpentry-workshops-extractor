@@ -74,7 +74,7 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
 
 ## Carpentry workshops and instructor analysers and mappers (in python)
 
-The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_*.py`)
+The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 6 (at the moment) python mapper scripts (`map_*.py`)
 to map the data from the extraction phase.
 
 Analyser scripts creates resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/workshops` or `data/instructors` folders.
@@ -164,5 +164,5 @@ To run the test there are several options. First you can run the tests directly 
 ```
 $ pytest test_maps.py
 ```
-This will run the test one for a specific module, in this case the test for the map scripts. There are two more modules for the test: test_analyse_instructors.py and test_analyse_workshops that test the execution of the analysis scripts.
+This will run the test for a specific module, in this case the test for the map scripts. There are two more modules for the test: test_analyse_instructors.py and test_analyse_workshops.py that test the execution of the analysis scripts.
 You can also run the tests by opening one of the modules and running the code directly but this way it will run all the modules present instead of just a specific one.
