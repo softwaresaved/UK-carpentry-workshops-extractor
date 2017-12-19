@@ -19,11 +19,14 @@ WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
 
 def insert_start_year(df):
     """
-    Insert the start year column using the date in the 'start' column in YYYY-MM-DD format
+    Insert the start year column using the date in the 'start' column
+    in YYYY-MM-DD format.
     """
     idx = df.columns.get_loc('start')  # index of column 'start'
     start_years = pd.to_datetime(df['start']).dt.year  # get the year from the date in YYYY-MM-DD format
-    df.insert(loc=idx + 1, column='start_year', value=start_years)  # insert to the right of the column 'start'
+    df.insert(loc=idx + 1,
+              column='start_year',
+              value=start_years)  # insert to the right of the column 'start'
     return df
 
 def insert_workshop_type(df):
@@ -31,7 +34,7 @@ def insert_workshop_type(df):
     Extract workshop type from tags.
     """
     # index of column 'tags' which contains a list tags for a workshop (we are just looking to detect one of SWC, DC or TTT)
-    idx = df.columns.get_loc("tags")
+    idx = df.columns.get_loc('tags')
 
     df['tags'].apply(str)
     workshop_types = []
@@ -48,7 +51,9 @@ def insert_workshop_type(df):
             workshop_types.append('unkown')
 
 
-    df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
+    df.insert(loc=idx + 1,
+              column='workshop_type',
+              value=workshop_types)  # insert to the right of the column 'tags'
     return df
 
 def insert_workshop_institution(df, file):
@@ -56,7 +61,7 @@ def insert_workshop_institution(df, file):
     Extract workshop institution from yaml file
     """
     # index of column 'tags' which contains a list tags for a workshop (we are just looking to detect one of SWC, DC or TTT)
-    idx = df.columns.get_loc("venue")
+    idx = df.columns.get_loc('venue')
 
     workshop_inst_dic = yaml.load(open(file))['instance']
     
@@ -75,10 +80,13 @@ def insert_workshop_institution(df, file):
 
 def workshop_years_analysis(df, writer):
     """
-    Number of workshops per year - create corresponding tables and graphs and write to the spreadsheet.
+    Number of workshops per year - create corresponding table and
+    graph and write to the spreadsheet.
     """
     workshops_per_year_table = pd.core.frame.DataFrame({'count': df.groupby(['start_year']).size()}).reset_index()
-    workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year', index = False)
+    workshops_per_year_table.to_excel(writer,
+                                      sheet_name='workshops_per_year',
+                                      index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshops_per_year']
@@ -104,15 +112,16 @@ def workshop_years_analysis(df, writer):
 
 def workshops_institution_analysis(df, writer):
     """
-    Number of workshops per venue - create corresponding tables and graphs and write to the spreadsheet.
-    Unfortunately, this is analysis does not give the true per institution analysis as venues are different for the same institution.
+    Number of workshops per institution - create corresponding table and
+    graph and write to the spreadsheet.
     """
-    ## Removes 'Unkown' values from workshop_institution
-    df = df[df.workshop_institution != 'Unkown']
+    df = df[df.workshop_institution != 'Unkown'] # removes 'Unkown' values from workshop_institution
     
     institution_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
 
-    institution_table.to_excel(writer, sheet_name='workshop_institution', index = False)
+    institution_table.to_excel(writer,
+                               sheet_name='workshop_institution',
+                               index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshop_institution']
@@ -138,11 +147,14 @@ def workshops_institution_analysis(df, writer):
 
 def workshops_type_analysis(df, writer):
     """
-    Number of workshops of different types - create corresponding tables and graphs and write to the spreadsheet.
+    Number of workshops of different types - create corresponding table
+    and graph and write to the spreadsheet.
     """
     type_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_type']).size()}).reset_index()
 
-    type_table.to_excel(writer, sheet_name='workshop_types', index = False)
+    type_table.to_excel(writer,
+                        sheet_name='workshop_types',
+                        index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshop_types']
@@ -168,14 +180,15 @@ def workshops_type_analysis(df, writer):
 
 def number_workshops_per_institution_year(df, writer):
     """
-    Create corresponding tables and graphs and write to the spreadsheet
-    Number of Workshops per Venue and Year
+    Number of workshops per institution over the years- create corresponding
+    table and graph and write to the spreadsheet
     """
-    ## Removes 'Unkown' values from workshop_institution
-    df = df[df.workshop_institution != 'Unkown']
+    df = df[df.workshop_institution != 'Unkown'] # removes 'Unkown' values from workshop_institution
+
     
     venue_year_table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution', 'start_year']).size()}).reset_index()
-    venue_year_table = venue_year_table.pivot_table(index='workshop_institution', columns='start_year')
+    venue_year_table = venue_year_table.pivot_table(index='workshop_institution',
+                                                    columns='start_year')
 
     venue_year_table.to_excel(writer, sheet_name='work_per_institutionYear')
 
@@ -206,11 +219,12 @@ def number_workshops_per_institution_year(df, writer):
 
 def number_workshops_per_type_year(df, writer):
     """
-    Create corresponding tables and graphs and write to the spreadsheet
-    Number of workshops per Type and Year
+    Number of workshops per type over the years- create corresponding
+    table and graph and write to the spreadsheet
     """
     type_year_table = pd.core.frame.DataFrame({'count': df.groupby(['tags', 'start_year']).size()}).reset_index()
-    type_year_table = type_year_table.pivot_table(index='tags', columns='start_year')
+    type_year_table = type_year_table.pivot_table(index='tags',
+                                                  columns='start_year')
 
     type_year_table.to_excel(writer, sheet_name='work_per_TypeYear')
 
@@ -241,12 +255,15 @@ def number_workshops_per_type_year(df, writer):
 
 def attendees_per_year_analysis(df, writer):
     """
-    Number of attendees per year - create corresponding tables and graphs and write to the spreadsheet.
+    Number of attendees per year - create corresponding table and graph
+    and write to the spreadsheet.
     """
     attendees_year_table = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['start_year'])['number_of_attendees'].sum()}).reset_index()
 
-    attendees_year_table.to_excel(writer, sheet_name='attendees_per_year', index = False)
+    attendees_year_table.to_excel(writer,
+                                  sheet_name='attendees_per_year',
+                                  index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['attendees_per_year']
@@ -272,12 +289,15 @@ def attendees_per_year_analysis(df, writer):
 
 def attendees_per_workshop_type_analysis(df, writer):
     """
-    Number of attendees per for various workshop types - create corresponding tables and graphs and write to the spreadsheet.
+    Number of attendees per for various workshop types - create corresponding
+    table and graph and write to the spreadsheet.
     """
     attendees_type_table = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['workshop_type'])['number_of_attendees'].sum()}).reset_index()
 
-    attendees_type_table.to_excel(writer, sheet_name='attendees_per_workshop_type', index = False)
+    attendees_type_table.to_excel(writer,
+                                  sheet_name='attendees_per_workshop_type',
+                                  index = False)
 
     workbook = writer.book
     worksheet = writer.sheets['attendees_per_workshop_type']
@@ -303,10 +323,12 @@ def attendees_per_workshop_type_analysis(df, writer):
 
 def attendees_per_workshop_type_over_years_analysis(df, writer):
     """
-    Number of attendees per type over years - create corresponding tables and graphs and write to the spreadsheet.
+    Number of attendees per type over years - create corresponding table
+    and graph and write to the spreadsheet.
     """
     type_year_attend_table = df.groupby(['workshop_type', 'start_year'])['number_of_attendees'].sum().to_frame()
-    type_year_attend_table = type_year_attend_table.pivot_table(index='workshop_type', columns='start_year')
+    type_year_attend_table = type_year_attend_table.pivot_table(index='workshop_type',
+                                                                columns='start_year')
 
     type_year_attend_table.to_excel(writer, sheet_name='attendees_workshop_type_years')
 

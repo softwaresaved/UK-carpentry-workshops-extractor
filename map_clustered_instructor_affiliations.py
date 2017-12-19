@@ -20,7 +20,7 @@ UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geod
 
 def generate_map(df,df_all,center):
     """
-    Generates a map.
+    Generates a cluster map of the number of instructors per affiliation.
     """
     maps = folium.Map(
         location=[center[0], center[1]],

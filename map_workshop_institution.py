@@ -21,32 +21,31 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
-
 
 def workshops_per_institution(df):
     """
     Creates a dataframe with the values of the number of workshops
     per institution.
-    """
-    ## Removes 'Unkown' values from workshop_institution
-    df = df[df.workshop_institution != 'Unkown']
+    """ 
+    df = df[df.workshop_institution != 'Unkown']  # removes 'Unkown' values from workshop_institution
     
     table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
     return table
 
 def generate_map(workshop_institution, workshop_coords_df, center):
     """
-    Generates a map.
+    Generates a map of the number of workshops per institution.
     """
     gmaps.configure(api_key=config.api_key)
 
+    ## Calculate the values for the circle scalling in the map.
     max_value = workshop_institution['count'].max()
     min_value = workshop_institution['count'].min()
     grouping = (max_value - min_value)/3
     second_value = min_value + grouping
     third_value = second_value + grouping
 
+    ## Create lists that will hold the found values.
     names_small = []
     locations_small = []
     
@@ -56,6 +55,8 @@ def generate_map(workshop_institution, workshop_coords_df, center):
     names_large = []
     locations_large = []
 
+    ## Iterate through the datafrane to found the information needed to fill
+    ## the lists.
     for index, row in workshop_institution.iterrows():
         long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LONGITUDE']
         lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LATITUDE']
@@ -73,13 +74,19 @@ def generate_map(workshop_institution, workshop_coords_df, center):
             print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
+    ## Add the different markers to a different layers corresponding to the
+    ## different amounts of workshops per institution.
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
                                       scale=3, display_info_box = True, info_box_content=names_small)
     symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="green", stroke_color="green",
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
                                       scale=8, display_info_box = True, info_box_content=names_large)
+
+    ## Resize the map to fit the full browser screen.
     m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+
+    ## Add all the layers to the map.
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
     m.add_layer(symbol_layer_large)
@@ -87,17 +94,27 @@ def generate_map(workshop_institution, workshop_coords_df, center):
     return m
 
 def generate_heat_map(df):
+    """
+    Generates a heatmap of the number of workshops per institution.
+    """
     gmaps.configure(api_key=config.api_key)
 
+    ## Create lat and long list and fill it with the information from the
+    ## dataframe.
     lat_list = []
     long_list = []
     for index, row in df.iterrows():
         long_list.append(row['longitude'])
         lat_list.append(row['latitude'])
-            
+
+    ## Create a list of tuples with the following format
+    ## [(lat1,long1),(lat2,long2),...,(latx,longx)]
     locations = zip(lat_list, long_list)
 
+    ## Resize the map to fit the full browser screen.
     m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+
+    ## Add heatmap layer to the map
     m.add_layer(gmaps.heatmap_layer(locations))
 
     return m
