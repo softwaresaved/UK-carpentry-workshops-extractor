@@ -20,7 +20,7 @@ UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geod
 
 def generate_map(df,df_all,center):
     """
-    Generates a cluster map of the number of instructors per affiliation.
+    Generates a cluster map of instructors' UK affiliations.
     """
     maps = folium.Map(
         location=[center[0], center[1]],
@@ -46,7 +46,7 @@ def generate_map(df,df_all,center):
                                                              'academic institution. Skipping it ...\n')
 
 
-    ## Region information json
+    ## Read region information from a json file - only of interest for UK regions
     regions = json.load(open(CURRENT_DIR + '/lib/regions.json'))
 
     ## Add to a layer
@@ -66,7 +66,7 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping instructors affiliation geocoordinates into clusters on an interactive map ...")
+    print("Mapping instructor affiliations's geocoordinates into clusters on an interactive map ... \n")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
@@ -84,7 +84,7 @@ def main():
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name)
+    print('Found CSV file with Carpentry instructors to analyse ' + instructors_file_name + "\n")
 
     try:
         uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
@@ -101,12 +101,12 @@ def main():
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
-            center = helper.get_center(all_uk_institutions_coords_df)
 
-            print('Generating a clustered map of instructors per affiliation ...')
+            print("Generating a map of instructors' affiliations as clusters that can be zoomed in and out of ... \n")
+            center = helper.get_center(all_uk_institutions_coords_df)
             maps = generate_map(df, all_uk_institutions_coords_df, center)
 
-            ## Save map to a HTML file
+            ## Save map to an HTML file
             html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
             maps.save(html_map_file)
             print('Map of instructors affiliations saved to HTML file ' + html_map_file)

@@ -1,0 +1,127 @@
+[
+  {
+    "VIEW_NAME": "Wellcome Trust Sanger Institute",
+    "LONGITUDE": 0.18558740000003127,
+    "LATITUDE": 52.0797171
+  },
+  {
+    "VIEW_NAME": "Earlham Institute",
+    "LONGITUDE": 1.2189869000000044,
+    "LATITUDE": 52.6217407
+  },
+  {
+    "VIEW_NAME": "Arriva Group",
+    "LONGITUDE": -1.4335148000000117,
+    "LATITUDE": 54.86353090000001
+  },
+  {
+    "VIEW_NAME": "Delcam Ltd",
+    "LONGITUDE": -1.8450110999999652,
+    "LATITUDE": 52.46245099999999
+  },
+  {
+    "VIEW_NAME": "Met Office",
+    "LONGITUDE": -3.472338000000036,
+    "LATITUDE": 50.72742100000001
+  },
+  {
+    "VIEW_NAME": "Thales",
+    "LONGITUDE": -2.185189799999989,
+    "LATITUDE": 53.3911872
+  },
+  {
+    "VIEW_NAME": "The John Innes Centre",
+    "LONGITUDE": 1.2213810000000649,
+    "LATITUDE": 52.622271
+  },
+  {
+    "VIEW_NAME": "Climate Code Foundation",
+    "LONGITUDE": -1.52900139999997,
+    "LATITUDE": 53.3143842
+  },
+  {
+    "VIEW_NAME": "Kew Royal Botanic Gardens",
+    "LONGITUDE": -0.2955729999999903,
+    "LATITUDE": 51.4787438
+  },
+  {
+    "VIEW_NAME": "The Sainsbury Laboratory",
+    "LONGITUDE": 1.2228880000000117,
+    "LATITUDE": 52.622316
+  },
+  {
+    "VIEW_NAME": "James Hutton Institute",
+    "LONGITUDE": -2.158366000000001,
+    "LATITUDE": 57.133131
+  },
+  {
+    "VIEW_NAME": "Daresbury Laboratory",
+    "LONGITUDE": -2.6399344000000156,
+    "LATITUDE": 53.34458119999999
+  },
+  {
+    "VIEW_NAME": "Owen Stephens Consulting",
+    "LONGITUDE": -1.520078900000044,
+    "LATITUDE": 52.28519050000001
+  },
+  {
+    "VIEW_NAME": "Public Health England",
+    "LONGITUDE": -0.10871080000003985,
+    "LATITUDE": 51.50153030000001
+  },
+  {
+    "VIEW_NAME": "IBM",
+    "LONGITUDE": -0.1124157000000423,
+    "LATITUDE": 51.5071586
+  },
+  {
+    "VIEW_NAME": "Media Molecule",
+    "LONGITUDE": -0.5756398999999419,
+    "LATITUDE": 51.2355975
+  },
+  {
+    "VIEW_NAME": "BBC",
+    "LONGITUDE": -0.226846,
+    "LATITUDE": 51.510025
+  },
+  {
+    "VIEW_NAME": "Culham Centre for Fusion Energy",
+    "LONGITUDE": -1.2305023999999776,
+    "LATITUDE": 51.6588505
+  },
+  {
+    "VIEW_NAME": "Digital Greenwich",
+    "LONGITUDE": 0.006866500000000997,
+    "LATITUDE": 51.5007361
+  },
+  {
+    "VIEW_NAME": "National Oceanography Centre",
+    "LONGITUDE": -1.3945247000000336,
+    "LATITUDE": 50.8928051
+  },
+  {
+    "VIEW_NAME": "Natural History Museum",
+    "LONGITUDE": -0.17636719999995876,
+    "LATITUDE": 51.49671499999999
+  },
+  {
+    "VIEW_NAME": "Rutherford Appleton Laboratory",
+    "LONGITUDE": -1.3159226000000217,
+    "LATITUDE": 51.5726621
+  },
+  {
+    "VIEW_NAME": "SAP",
+    "LONGITUDE": -0.44502220000003945,
+    "LATITUDE": 51.44902499999999
+  },
+  {
+    "VIEW_NAME": "The Francis Crick Institute",
+    "LONGITUDE": -0.12875610000003235,
+    "LATITUDE": 51.5315844
+  },
+  {
+    "VIEW_NAME": "The Sir Alister Hardy Foundation for Ocean Science (SAHFOS)",
+    "LONGITUDE": -4.138946,
+    "LATITUDE": 50.364335
+  }
+]

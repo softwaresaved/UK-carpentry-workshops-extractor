@@ -4,7 +4,9 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import argparse
 import sys
+import json
 
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
@@ -77,8 +79,12 @@ def drop_null_values_from_columns(df, column_list):
     return df
 
 def fix_UK_academic_institutions_names(df):
+    """
+    Fix names of academic institutions to be the official names, so we can cross reference them with their geocodes later on.
+    """
     df.loc[df.affiliation == 'Imperial College London', 'affiliation'] = 'Imperial College of Science, Technology and Medicine'
     df.loc[df.affiliation == 'Queen Mary University of London', 'affiliation'] = 'Queen Mary and Westfield College, University of London'
+    df.loc[df.affiliation == 'Aberystwyth University', 'affiliation'] = 'Prifysgol Aberystwyth'
     return df
 
 def remove_stopped_workshops(df, tag_list):
@@ -88,36 +94,11 @@ def remove_stopped_workshops(df, tag_list):
 
 def get_UK_non_academic_institutions_coords():
     """
-    Return coordinates for non UK academic institutions that we know appear in AMY for affiliations of UK instructors.
+    Return coordinates for UK institutions that are not high education providers
+    (so are not in the official academic institutions list), but appear in AMY as affiliations of UK instructors.
     This list needs to be periodically updated as more non-academic affiliations appear in AMY.
     """
-    non_academic_UK_institutions_coords = [
-        {'VIEW_NAME': 'Wellcome Trust Sanger Institute', 'LONGITUDE': 0.18558740000003127, 'LATITUDE': 52.0797171},
-        {'VIEW_NAME': 'Earlham Institute', 'LONGITUDE': 1.2189869000000044, 'LATITUDE': 52.6217407},
-        {'VIEW_NAME': 'Arriva Group', 'LONGITUDE': -1.4335148000000117, 'LATITUDE': 54.86353090000001},
-        {'VIEW_NAME': 'Delcam Ltd', 'LONGITUDE': -1.8450110999999652, 'LATITUDE': 52.46245099999999},
-        {'VIEW_NAME': 'Met Office', 'LONGITUDE': -3.472338000000036, 'LATITUDE': 50.72742100000001},
-        {'VIEW_NAME': 'Thales', 'LONGITUDE': -2.185189799999989, 'LATITUDE': 53.3911872},
-        {'VIEW_NAME': 'The John Innes Centre', 'LONGITUDE': 1.2213810000000649, 'LATITUDE': 52.622271},
-        {'VIEW_NAME': 'Climate Code Foundation', 'LONGITUDE': -1.52900139999997, 'LATITUDE': 53.3143842},
-        {'VIEW_NAME': 'Kew Royal Botanic Gardens', 'LONGITUDE': -0.2955729999999903, 'LATITUDE': 51.4787438},
-        {'VIEW_NAME': 'The Sainsbury Laboratory', 'LONGITUDE': 1.2228880000000117, 'LATITUDE': 52.622316},
-        {'VIEW_NAME': 'James Hutton Institute', 'LONGITUDE': -2.158366000000001, 'LATITUDE': 57.133131},
-        {'VIEW_NAME': 'Aberystwyth University', 'LONGITUDE': -4.0659220000000005, 'LATITUDE': 52.417776},
-        {'VIEW_NAME': 'Daresbury Laboratory', 'LONGITUDE': -2.6399344000000156, 'LATITUDE': 53.34458119999999},
-        {'VIEW_NAME': 'Owen Stephens Consulting', 'LONGITUDE': -1.520078900000044, 'LATITUDE': 52.28519050000001},
-        {'VIEW_NAME': 'Public Health England', 'LONGITUDE': -0.10871080000003985, 'LATITUDE': 51.50153030000001},
-        {'VIEW_NAME': 'IBM', 'LONGITUDE': -0.1124157000000423, 'LATITUDE': 51.5071586},
-        {'VIEW_NAME': 'Media Molecule', 'LONGITUDE': -0.5756398999999419, 'LATITUDE': 51.2355975},
-        {'VIEW_NAME': 'BBC', 'LONGITUDE': -0.226846, 'LATITUDE': 51.510025},
-        {'VIEW_NAME': 'Culham Centre for Fusion Energy', 'LONGITUDE': -1.2305023999999776, 'LATITUDE': 51.6588505},
-        {'VIEW_NAME': 'Digital Greenwich', 'LONGITUDE': 0.006866500000000997, 'LATITUDE': 51.5007361},
-        {'VIEW_NAME': 'National Oceanography Centre', 'LONGITUDE': -1.3945247000000336, 'LATITUDE': 50.8928051},
-        {'VIEW_NAME': 'Natural History Museum', 'LONGITUDE': -0.17636719999995876, 'LATITUDE': 51.49671499999999},
-        {'VIEW_NAME': 'Rutherford Appleton Laboratory', 'LONGITUDE': -1.3159226000000217, 'LATITUDE': 51.5726621},
-        {'VIEW_NAME': 'SAP', 'LONGITUDE': -0.44502220000003945, 'LATITUDE': 51.44902499999999},
-        {'VIEW_NAME': 'The Francis Crick Institute', 'LONGITUDE': -0.12875610000003235, 'LATITUDE': 51.5315844}]
-
+    non_academic_UK_institutions_coords = json.load(open(CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'))
     return pd.DataFrame(non_academic_UK_institutions_coords)
 
 
