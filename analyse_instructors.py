@@ -27,7 +27,7 @@ def insert_earliest_badge_year(df):
 def insert_airport_region(df):
     """
     Insert the new column that corresponds to the UK region for the
-    nearest_airport.
+    nearest_airport of the instructor.
     """
     regions_excel_file = pd.ExcelFile(UK_AIRPORTS_REGIONS_FILE)
     regions = regions_excel_file.parse('UK-regions-airports')
@@ -43,10 +43,10 @@ def insert_airport_region(df):
 
 def instructors_nearest_airport_analysis(df, writer):
     """
-    Number of people per nearest_airport_code - create the corresponding
+    Number of people per nearest airport - create the corresponding
     table and graph and write to the spreadsheet.
     """
-    city_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_name']).size()}).reset_index()
+    city_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_name']).size().sort_values()}).reset_index()
     city_table.to_excel(writer,
                         sheet_name='instructors_airports',
                         index = False)
@@ -54,30 +54,30 @@ def instructors_nearest_airport_analysis(df, writer):
     workbook  = writer.book
     worksheet = writer.sheets['instructors_airports']
 
-    chart1 = workbook.add_chart({'type': 'column'})
+    chart = workbook.add_chart({'type': 'column'})
 
-    chart1.add_series({
+    chart.add_series({
         'categories': ['instructors_airports', 1, 0, len(city_table.index), 0],
         'values': ['instructors_airports', 1, 1, len(city_table.index), 1],
         'gap': 2,
     })
 
-    chart1.set_y_axis({'major_gridlines': {'visible': False}})
-    chart1.set_legend({'position': 'none'})
-    chart1.set_x_axis({'name': 'Nearest airport (code)'})
-    chart1.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart1.set_title ({'name': 'Instructors per (nearest) airport'})
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Nearest airport'})
+    chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
+    chart.set_title ({'name': 'Instructors per (nearest) airport'})
 
-    worksheet.insert_chart('D2', chart1)
+    worksheet.insert_chart('D2', chart)
 
     return city_table
     
 def instructors_per_UK_region_analysis(df, writer):
     """
-    Number of instructors per UK region - create corresponding
+    Number of instructors per UK region (by looking up the nearest airport) - create the corresponding
     table and graph and write to the spreadsheet.
     """
-    region_table = pd.core.frame.DataFrame({'count': df.groupby(['nearest_airport_region']).size()}).reset_index()
+    region_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_region']).size().sort_values()}).reset_index()
     region_table.to_excel(writer,
                           sheet_name='instructors_per_region',
                           index = False)
@@ -85,21 +85,21 @@ def instructors_per_UK_region_analysis(df, writer):
     workbook  = writer.book
     worksheet = writer.sheets['instructors_per_region']
 
-    chart2 = workbook.add_chart({'type': 'column'})
+    chart = workbook.add_chart({'type': 'column'})
 
-    chart2.add_series({
+    chart.add_series({
         'categories': ['instructors_per_region', 1, 0, len(region_table.index), 0],
         'values': ['instructors_per_region', 1, 1, len(region_table.index), 1],
         'gap': 2,
     })
 
-    chart2.set_y_axis({'major_gridlines': {'visible': False}})
-    chart2.set_legend({'position': 'none'})
-    chart2.set_x_axis({'name': 'Region'})
-    chart2.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart2.set_title ({'name': 'Number of instructors per region'})
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Region'})
+    chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
+    chart.set_title ({'name': 'Number of instructors per region'})
 
-    worksheet.insert_chart('D2', chart2)
+    worksheet.insert_chart('D2', chart)
 
     return region_table
 
@@ -108,7 +108,7 @@ def instructors_per_year_analysis(df, writer):
     Number of instructors over years - create corresponding
     table and graph and write to the spreadsheet.
     """
-    year_table = pd.core.frame.DataFrame({'count': df.groupby(['earliest-badge-awarded-year']).size()}).reset_index()
+    year_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['earliest-badge-awarded-year']).size()}).reset_index()
     year_table.to_excel(writer,
                         sheet_name='instructors_per_year',
                         index = False)
@@ -173,7 +173,7 @@ def main():
         instructors_df = insert_earliest_badge_year(instructors_df)
         instructors_df = insert_airport_region(instructors_df)
 
-        print('Creating the analyses Excel spreadsheet ...')
+        print('Creating the instructor analyses Excel spreadsheet ...')
         instructors_analyses_excel_file = INSTRUCTOR_DATA_DIR + 'analysed_' + instructors_file_name_without_extension + '.xlsx'
         excel_writer = helper.create_excel_analyses_spreadsheet(instructors_analyses_excel_file, instructors_df, "carpentry_instructors")
 

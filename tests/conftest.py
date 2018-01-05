@@ -29,7 +29,7 @@ STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled']
 
 def pytest_namespace():
     ## Analysis workshops
-    file_path_workshops = LIB_DATA_DIR + 'test_file_workshops.csv'
+    file_path_workshops = LIB_DATA_DIR + 'test_workshops.csv'
     file_name_workshops = os.path.basename(file_path_workshops)
     file_name_workshops_without_extension = re.sub('\.csv$', '', file_name_workshops.strip())
     df_workshops = helper.load_data_from_csv(file_path_workshops)
@@ -41,7 +41,7 @@ def pytest_namespace():
                                                                 df_badges_workshops, "carpentry_workshops")
 
     ## Analysis instructors
-    file_path_instructors = LIB_DATA_DIR + 'test_file_instructors.csv'
+    file_path_instructors = LIB_DATA_DIR + 'test_instructors.csv'
     file_name_instructors = os.path.basename(file_path_instructors)
     file_name_instructors_without_extension = re.sub('\.csv$', '', file_name_instructors.strip())
     df_instructors = helper.load_data_from_csv(file_path_instructors)
