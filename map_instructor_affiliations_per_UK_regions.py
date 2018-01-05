@@ -116,8 +116,8 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping instructors affiliation geocoordinates into a 'heat map' over UK regions ...")
-    print("Note: this map only makes sense to generate with instructors in the UK as it maps them per UK regions.")
+    print("Mapping instructors affiliation geocoordinates into a 'heat map' over UK regions...\n")
+    print("Note: this map only makes sense to generate with instructors in the UK as it maps them per UK regions.\n")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
@@ -164,7 +164,7 @@ def main():
                 maps = generate_map(instructors_per_region_df, regions, threshold_scale)
 
                 ## Save map to a HTML file
-                html_map_file = INSTRUCTORS_DATA_DIR + 'map_per_UK_regions_' + instructors_file_name_without_extension + '.html'
+                html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
                 maps.save(html_map_file)
                 print('Map of instructors per UK regions saved to HTML file ' + html_map_file)
             except:

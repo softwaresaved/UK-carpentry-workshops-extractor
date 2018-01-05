@@ -13,8 +13,8 @@ import map_workshop_venues_per_UK_regions as mapwvUK
 import map_clustered_workshop_venues as mapcwv
 import map_workshop_institutions as mapwi
 import map_instructor_affiliations_per_UK_regions as mapiaUK
-import map_clustered_instructors_UK_affiliations as mapcia
-import map_instructor_affiliations as mapia
+import map_clustered_UK_instructors_affiliations as mapcia
+import map_and_heatmap_UK_instructors_affiliations as mapia
 
 sys.path.append('/lib')
 import lib.helper as helper

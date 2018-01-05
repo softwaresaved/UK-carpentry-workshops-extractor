@@ -20,14 +20,6 @@ INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def instructors_per_affiliation(df):
-    """
-    Creates a dataframe with the values of the number of instructors
-    per affiliation.
-    """
-    table = pd.core.frame.DataFrame({'count': df.groupby(['affiliation']).size()}).reset_index()
-    return table
-
 def generate_map(instructors_affiliations, institutions_coords_df, center):
     """
     Generates a map of the number of instructors per affiliation.
@@ -89,9 +81,9 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
 
     return m
 
-def generate_heat_map(instructors_affiliations,institutions_coords_df):
+def generate_heatmap(instructors_affiliations, institutions_coords_df):
     """
-    Generates a heat map of the number of instructors per affiliation.
+    Generates a heatmap of the number of instructors per affiliation.
     """
     gmaps.configure(api_key=config.api_key)
 
@@ -123,7 +115,8 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping instructors affiliation geocoordinates on an interactive map ...")
+    print("Mapping instructors affiliation geocoordinates on an interactive map and a heatmap ...\n")
+    print("Note: this map only makes sense to generate with instructors in the UK as it cross references their affiliations with geocoordinates of UK institutions.\n")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
@@ -152,7 +145,7 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            print('Generating a map and heatmap of instructors per affiliation ...')
+            print("Generating a map and heatmap of instructors' affiliations ...")
             df = helper.drop_null_values_from_columns(df, ['affiliation'])
             df = helper.fix_UK_academic_institutions_names(df)
 
@@ -161,38 +154,40 @@ def main():
                 helper.get_UK_non_academic_institutions_coords())
             center = helper.get_center(all_uk_institutions_coords_df)
 
-            instructors_affiliations = instructors_per_affiliation(df)
+            instructors_affiliations_df = pd.core.frame.DataFrame({'count': df.groupby(['affiliation']).size()}).reset_index()
             
-            maps = generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
-            heat_map = generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
+            map = generate_map(instructors_affiliations_df, all_uk_institutions_coords_df, center)
+            heatmap = generate_heatmap(instructors_affiliations_df, all_uk_institutions_coords_df)
 
-            ## Save map to a HTML file
-            html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
-            embed_minimal_html(html_map_file, views=[maps])
-            print('Map of instructors per affiliation saved to HTML file ' + html_map_file + '\n')
+            # Save maps to HTML files
+            map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+            embed_minimal_html(map_file, views=[map])
+            print("Map of instructors' affiliations saved to HTML file " + map_file + "\n")
             
-            html_heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
-            embed_minimal_html(html_heatmap_file, views=[heat_map])
-            print('HeatMap of instructors per affiliation saved to HTML file ' + html_heatmap_file)
+            heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+            embed_minimal_html(heatmap_file, views=[heatmap])
+            print("Heatmap of instructors' affiliations saved to HTML file " + heatmap_file + "\n")
             
         except:
-            print ("An error occurred while creating the map of instructors per affiliation ...")
+            print ("An error occurred while creating the map of instructors' affiliations ...")
             print(traceback.format_exc())
         else:
             if args.google_drive_dir_id:
                 try:
-                    print("Uploading instructors per affiliation map to Google Drive " + html_map_file)
+                    print("Uploading instructors' affiliations map " + map_file + " to Google Drive.\n")
                     drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
+                    helper.google_drive_upload(map_file,
                                                drive,
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
-                    print('Map uploaded to Google Drive.')
+                    print("Map uploaded to Google Drive.\n")
+
+                    print("Uploading instructors' affiliations heatmap " + html_heatmap_file + " to Google Drive.\n")
                     helper.google_drive_upload(html_heatmap_file,
                                                drive,
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
-                    print('HeatMap uploaded to Google Drive.')
+                    print("Heatmap uploaded to Google Drive.\n")
 
                 except Exception:
                     print ("An error occurred while uploading the map to Google Drive ...")

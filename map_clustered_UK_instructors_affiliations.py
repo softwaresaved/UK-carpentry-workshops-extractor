@@ -18,7 +18,7 @@ INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def generate_map(df,df_all,center):
+def generate_map(df, uk_institutions_geocoords_df, center):
     """
     Generates a cluster map of instructors' UK affiliations.
     """
@@ -30,8 +30,8 @@ def generate_map(df,df_all,center):
     marker_cluster = MarkerCluster(name = 'instructors').add_to(maps)
 
     for index,row in df.iterrows():
-        long_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
-        lat_coords = df_all[df_all['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+        long_coords = uk_institutions_geocoords_df[uk_institutions_geocoords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
+        lat_coords = uk_institutions_geocoords_df[uk_institutions_geocoords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
         popup = folium.Popup(row['affiliation'], parse_html=True)
         if not long_coords.empty and not lat_coords.empty:
             folium.CircleMarker(
@@ -67,6 +67,8 @@ def main():
     """
     args = helper.parse_command_line_paramters()
     print("Mapping instructor affiliations's geocoordinates into clusters on an interactive map ... \n")
+
+    print("Note: this map only makes sense to generate with instructors in the UK as it cross references their affiliations with geocoordinates of UK institutions.\n")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
