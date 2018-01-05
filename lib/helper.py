@@ -81,7 +81,7 @@ def fix_UK_academic_institutions_names(df):
     df.loc[df.affiliation == 'Queen Mary University of London', 'affiliation'] = 'Queen Mary and Westfield College, University of London'
     return df
 
-def remove_stalled_workshops(df, tag_list):
+def remove_stopped_workshops(df, tag_list):
     for tag in tag_list:
         df = df[df.tags != tag]
     return df

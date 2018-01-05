@@ -14,64 +14,64 @@ class TestAnalyseWorkshops(object):
         assert len(pytest.df_workshops['longitude'].index) == len(pytest.df_workshops.index)
 
     ## Assert if column was added and badges value is not null
-    def test_start_year(self):
-        assert {'start_year'}.issubset(pytest.df_badges_workshops)
-        col = pytest.df_badges_workshops['start_year']
+    def test_year_column(self):
+        assert {'year'}.issubset(pytest.df_badges_workshops)
+        col = pytest.df_badges_workshops['year']
         assert not col.isnull().any().any()
         assert 2017 in col.tolist()
 
     ## Assert if workshop type and institution columns added
     def test_workshop_type_institution(self):
         assert {'tags'}.issubset(pytest.df_global_workshops)
-        assert {'workshop_institution'}.issubset(pytest.df_global_workshops)
+        assert {'institution'}.issubset(pytest.df_global_workshops)
 
     ## Assert if cancelled, stalled and unresponsive rows removed
     def test_removed_stalled_workshops(self):
-        list_values = ['stalled', 'cancelled', 'unresponsive']
+        list_values = ['stalled', 'cancelled'] #, 'unresponsive']
         for value in list_values:
             assert pytest.df_global_workshops.tags[pytest.df_global_workshops.tags == value].count() == 0
 
     ## Assert if dataframe is not empty and the value for a certain year
     ## has a certain value.
     def test_df_workshops_per_year(self):
-        df_workshops_per_year = aw.workshop_years_analysis(pytest.df_global_workshops,pytest.writer_workshops)
+        df_workshops_per_year = aw.workshops_per_year_analysis(pytest.df_global_workshops, pytest.writer_workshops)
         assert not df_workshops_per_year.empty
-        assert df_workshops_per_year.loc[df_workshops_per_year['start_year'] ==
+        assert df_workshops_per_year.loc[df_workshops_per_year['year'] ==
                                          2013, 'count'].iloc[0] == 11
 
     ## Assert if dataframe is not empty
     def test_df_workshops_per_institution(self):
-        df_workshops_per_institution = aw.workshops_institution_analysis(pytest.df_global_workshops,pytest.writer_workshops)
+        df_workshops_per_institution = aw.workshops_per_institution_analysis(pytest.df_global_workshops, pytest.writer_workshops)
         assert not df_workshops_per_institution.empty
-        assert df_workshops_per_institution.loc[df_workshops_per_institution['workshop_institution'] ==
+        assert df_workshops_per_institution.loc[df_workshops_per_institution['institution'] ==
                                                 'University of Southampton',
                                                 'count'].iloc[0] == 9
-        assert df_workshops_per_institution.loc[df_workshops_per_institution['workshop_institution'] ==
+        assert df_workshops_per_institution.loc[df_workshops_per_institution['institution'] ==
                                                 'University College London',
                                                 'count'].iloc[0] == 18
         
     ## Assert if dataframe is not empty
     def test_df_workshops_type(self):
-        df_workshops_type = aw.workshops_type_analysis(pytest.df_global_workshops,pytest.writer_workshops)        
+        df_workshops_type = aw.workshop_types_analysis(pytest.df_global_workshops, pytest.writer_workshops)
         assert not df_workshops_type.empty
         assert df_workshops_type.loc[df_workshops_type['workshop_type'] ==
                                                 'SWC', 'count'].iloc[0] == 110
     
     ## Assert if dataframe is not empty and value for a specific year
     def test_df_workshops_per_venue_year(self):
-        df_workshops_per_venue_year = aw.number_workshops_per_institution_year(pytest.df_global_workshops,pytest.writer_workshops)
+        df_workshops_per_venue_year = aw.workshops_per_institution_over_years_analysis(pytest.df_global_workshops, pytest.writer_workshops)
         assert not df_workshops_per_venue_year.empty
 
     ## Assert if dataframe is not empty and value for a specific year
     def test_df_workshops_per_type_year(self):
-        df_workshops_per_type_year = aw.number_workshops_per_type_year(pytest.df_global_workshops,pytest.writer_workshops)
+        df_workshops_per_type_year = aw.workshops_of_different_types_over_years_analysis(pytest.df_global_workshops, pytest.writer_workshops)
         assert not df_workshops_per_type_year.empty
 
     ## Assert if dataframe is not empty and value for a specific year
     def test_df_attendees_per_year(self):
         df_attendees_per_year = aw.attendees_per_year_analysis(pytest.df_global_workshops,pytest.writer_workshops)
         assert not df_attendees_per_year.empty
-        assert df_attendees_per_year.loc[df_attendees_per_year['start_year'] ==
+        assert df_attendees_per_year.loc[df_attendees_per_year['year'] ==
                                          2013, 'number_of_attendees'].iloc[0] == 354
 
     ## Assert if dataframe is not empty

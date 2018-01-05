@@ -20,7 +20,7 @@ import analyse_workshops as aw
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yaml'
+WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yml'
 #GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
@@ -29,20 +29,21 @@ def workshops_per_institution(df):
     Creates a dataframe with the values of the number of workshops
     per institution.
     """
-    ## Removes 'Unkown' values from workshop_institution
-    df = df[df.workshop_institution != 'Unkown']
+    ## Removes 'Unkown' values from 'institution' column
+    df = df[df.institution != 'Unkown']
     
-    table = pd.core.frame.DataFrame({'count': df.groupby(['workshop_institution']).size()}).reset_index()
+    table = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
     return table
 
-def generate_map(workshop_institution, workshop_coords_df, center):
+def generate_map(workshop_institution_df, workshop_coords_df):
     """
     Generates a map.
     """
     gmaps.configure(api_key=config.api_key)
 
-    max_value = workshop_institution['count'].max()
-    min_value = workshop_institution['count'].min()
+    max_value = workshop_institution_df['count'].max()
+    min_value = workshop_institution_df['count'].min()
+
     grouping = (max_value - min_value)/3
     second_value = min_value + grouping
     third_value = second_value + grouping
@@ -56,7 +57,7 @@ def generate_map(workshop_institution, workshop_coords_df, center):
     names_large = []
     locations_large = []
 
-    for index, row in workshop_institution.iterrows():
+    for index, row in workshop_institution_df.iterrows():
         long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LONGITUDE']
         lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LATITUDE']
         if not long_coords.empty and not lat_coords.empty:
@@ -79,12 +80,12 @@ def generate_map(workshop_institution, workshop_coords_df, center):
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
                                       scale=8, display_info_box = True, info_box_content=names_large)
-    m = gmaps.Map(height="100%")
-    m.add_layer(symbol_layer_small)
-    m.add_layer(symbol_layer_medium)
-    m.add_layer(symbol_layer_large)
+    map = gmaps.Map(height="100%")
+    map.add_layer(symbol_layer_small)
+    map.add_layer(symbol_layer_medium)
+    map.add_layer(symbol_layer_large)
 
-    return m
+    return map
 
 def generate_heat_map(df):
     gmaps.configure(api_key=config.api_key)
@@ -136,18 +137,17 @@ def main():
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             print('Generating a map of workshop institutions ...')
-            df = aw.insert_workshop_institution(df,WORKSHOPS_INSTITUTIONS_FILE)
+            df = aw.insert_workshop_institution(df, WORKSHOPS_INSTITUTIONS_FILE)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
-            center = helper.get_center(all_uk_institutions_coords_df)
-            
+
             workshops_per_institution_df = workshops_per_institution(df)
 
-            maps = generate_map(workshops_per_institution_df,all_uk_institutions_coords_df,center)
+            maps = generate_map(workshops_per_institution_df,all_uk_institutions_coords_df)
             heat_map = generate_heat_map(df)
-                        
+
             ## Save map to a HTML file
             html_map_file = WORKSHOP_DATA_DIR + 'map_workshop_institution_' + workshops_file_name_without_extension + '.html'
             embed_minimal_html(html_map_file, views=[maps])

@@ -3,13 +3,15 @@ import re
 import sys
 import json
 import pandas as pd
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
+
+PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.sys.path.insert(0, PROJECT_ROOT_DIR)
+
 import analyse_workshops as aw
 import analyse_instructors as ai
 import map_workshop_venues_per_UK_regions as mapwvUK
 import map_clustered_workshop_venues as mapcwv
-import map_workshop_institution as mapwi
+import map_workshop_institutions as mapwi
 import map_instructor_affiliations_per_UK_regions as mapiaUK
 import map_clustered_instructor_affiliations as mapcia
 import map_instructor_affiliations as mapia
@@ -17,11 +19,12 @@ import map_instructor_affiliations as mapia
 sys.path.append('/lib')
 import lib.helper as helper
 
-REGIONS_FILE = parentdir + '/lib/regions.json'
-UK_INSTITUTIONS_GEODATA_FILE = parentdir + '/lib/UK-academic-institutions-geodata.xlsx'
-WORKSHOPS_INSTITUTIONS_FILE = parentdir + '/lib/workshop_institutions.yaml'
-STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled', 'unresponsive']
-LIB_DATA_DIR = parentdir + '/lib/'
+REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/regions.json'
+UK_INSTITUTIONS_GEODATA_FILE = PROJECT_ROOT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
+WORKSHOPS_INSTITUTIONS_FILE = PROJECT_ROOT_DIR + '/lib/workshop_institutions.yml'
+LIB_DATA_DIR = PROJECT_ROOT_DIR + '/lib/'
+
+STALLED_WORKSHOP_TYPES = ['stalled', 'cancelled']
 
 
 def pytest_namespace():
@@ -30,10 +33,10 @@ def pytest_namespace():
         file_name_workshops = os.path.basename(file_path_workshops)
         file_name_workshops_without_extension = re.sub('\.csv$', '', file_name_workshops.strip())
         df_workshops = helper.load_data_from_csv(file_path_workshops)
-        df_badges_workshops = aw.insert_start_year(df_workshops)
+        df_badges_workshops = aw.insert_year(df_workshops)
         df_global_workshops = aw.insert_workshop_type(df_badges_workshops)
-        df_global_workshops = aw.insert_workshop_institution(df_global_workshops,WORKSHOPS_INSTITUTIONS_FILE)
-        df_global_workshops = helper.remove_stalled_workshops(df_global_workshops,STALLED_WORKSHOP_TYPES)
+        df_global_workshops = aw.insert_workshop_institution(df_global_workshops, WORKSHOPS_INSTITUTIONS_FILE)
+        df_global_workshops = helper.remove_stopped_workshops(df_global_workshops, STALLED_WORKSHOP_TYPES)
         writer_workshops = helper.create_excel_analyses_spreadsheet(file_name_workshops_without_extension, df_badges_workshops, "carpentry_workshops")
 
         ## Analysis instructors
@@ -65,9 +68,9 @@ def pytest_namespace():
         center = helper.get_center(all_uk_institutions_coords_df)
 
         ## Map workshop per institution
-        df_workshop_institution = aw.insert_workshop_institution(df_workshop_venue,WORKSHOPS_INSTITUTIONS_FILE)
+        df_workshop_institution = aw.insert_workshop_institution(df_workshop_venue, WORKSHOPS_INSTITUTIONS_FILE)
         df_workshop_institution = mapwi.workshops_per_institution(df_workshop_institution)
-        maps_wi = mapwi.generate_map(df_workshop_institution,all_uk_institutions_coords_df,center)
+        maps_wi = mapwi.generate_map(df_workshop_institution,all_uk_institutions_coords_df)
         
         ## Map instructor affiliations per UK region
         df_instructor_affiliation_region = helper.load_data_from_csv(file_path_instructors, ['affiliation', 'nearest_airport_code'])

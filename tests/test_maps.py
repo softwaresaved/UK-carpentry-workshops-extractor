@@ -3,9 +3,9 @@ import os
 
 class TestMaps(object):
 
-    ## Assert if workshop institution column was added to the dataframe
+    ## Assert if workshop 'institution' column was added to the dataframe
     def test_add_region_column(self):
-        assert {'workshop_institution'}.issubset(pytest.df_workshop_institution)
+        assert {'institution'}.issubset(pytest.df_workshop_institution)
     
     ## Assert if map not none type
     def test_MapWorkInstit(self):
