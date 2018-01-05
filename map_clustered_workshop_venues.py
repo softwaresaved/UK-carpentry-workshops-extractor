@@ -17,11 +17,11 @@ from folium.plugins import MarkerCluster
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 def generate_map(df):
     """
-    Generates a map.
+    Generates a cluster map of the number of workshops per each venue
+    coordinates in the excel file extracted.
     """
     subset = df[['latitude', 'longitude']]
     tuples = [tuple(coords) for coords in subset.values]

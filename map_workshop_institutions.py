@@ -16,12 +16,13 @@ import lib.helper as helper
 from ipywidgets.embed import embed_minimal_html
 import analyse_workshops as aw
 
-
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yml'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
+
+
+# GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
 def workshops_per_institution(df):
@@ -31,9 +32,10 @@ def workshops_per_institution(df):
     """
     ## Removes 'Unkown' values from 'institution' column
     df = df[df.institution != 'Unkown']
-    
+
     table = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
     return table
+
 
 def generate_map(workshop_institution_df, workshop_coords_df):
     """
@@ -44,13 +46,13 @@ def generate_map(workshop_institution_df, workshop_coords_df):
     max_value = workshop_institution_df['count'].max()
     min_value = workshop_institution_df['count'].min()
 
-    grouping = (max_value - min_value)/3
+    grouping = (max_value - min_value) / 3
     second_value = min_value + grouping
     third_value = second_value + grouping
 
     names_small = []
     locations_small = []
-    
+
     names_medium = []
     locations_medium = []
 
@@ -61,31 +63,33 @@ def generate_map(workshop_institution_df, workshop_coords_df):
         long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LONGITUDE']
         lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LATITUDE']
         if not long_coords.empty and not lat_coords.empty:
-            if row['count']>=min_value and row['count']<second_value:
-                locations_small.append((lat_coords.iloc[0],long_coords.iloc[0]))
+            if row['count'] >= min_value and row['count'] < second_value:
+                locations_small.append((lat_coords.iloc[0], long_coords.iloc[0]))
                 names_small.append(row['workshop_institution'] + ': ' + str(row['count']))
-            elif row['count']>=second_value and row['count']<third_value:
-                locations_medium.append((lat_coords.iloc[0],long_coords.iloc[0]))
+            elif row['count'] >= second_value and row['count'] < third_value:
+                locations_medium.append((lat_coords.iloc[0], long_coords.iloc[0]))
                 names_medium.append(row['workshop_institution'] + ': ' + str(row['count']))
-            elif row['count']>=third_value and row['count']<=max_value:
-                locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
+            elif row['count'] >= third_value and row['count'] <= max_value:
+                locations_large.append((lat_coords.iloc[0], long_coords.iloc[0]))
                 names_large.append(row['workshop_institution'] + ': ' + str(row['count']))
         else:
-            print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
-                  'academic institution. Skipping it ...\n')
+            print('For institution "' + row[
+                'workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
+                                          'academic institution. Skipping it ...\n')
 
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
-                                      scale=3, display_info_box = True, info_box_content=names_small)
+                                            scale=3, display_info_box=True, info_box_content=names_small)
     symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="green", stroke_color="green",
-                                      scale=6, display_info_box = True, info_box_content=names_medium)
+                                             scale=6, display_info_box=True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
-                                      scale=8, display_info_box = True, info_box_content=names_large)
+                                            scale=8, display_info_box=True, info_box_content=names_large)
     map = gmaps.Map(height="100%")
     map.add_layer(symbol_layer_small)
     map.add_layer(symbol_layer_medium)
     map.add_layer(symbol_layer_large)
 
     return map
+
 
 def generate_heat_map(df):
     gmaps.configure(api_key=config.api_key)
@@ -95,13 +99,14 @@ def generate_heat_map(df):
     for index, row in df.iterrows():
         long_list.append(row['longitude'])
         lat_list.append(row['latitude'])
-            
+
     locations = zip(lat_list, long_list)
 
-    m = gmaps.Map(align_self = 'center',width="100%",height='100%')
+    m = gmaps.Map(align_self='center', width="100%", height='100%')
     m.add_layer(gmaps.heatmap_layer(locations))
 
     return m
+
 
 def main():
     """
@@ -132,7 +137,8 @@ def main():
         uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
         uk_academic_institutions_df = uk_academic_institutions_excel_file.parse('UK-academic-institutions')
     except:
-        print ("An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
+        print (
+        "An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
     else:
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
@@ -145,7 +151,7 @@ def main():
 
             workshops_per_institution_df = workshops_per_institution(df)
 
-            maps = generate_map(workshops_per_institution_df,all_uk_institutions_coords_df)
+            maps = generate_map(workshops_per_institution_df, all_uk_institutions_coords_df)
             heat_map = generate_heat_map(df)
 
             ## Save map to a HTML file
@@ -156,7 +162,7 @@ def main():
             html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
             embed_minimal_html(html_heatmap_file, views=[heat_map])
             print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
-            
+
         except:
             print ("An error occurred while creating the map of workshop institutions  ...")
             print(traceback.format_exc())

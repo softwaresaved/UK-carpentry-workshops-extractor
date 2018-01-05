@@ -30,16 +30,18 @@ def instructors_per_affiliation(df):
 
 def generate_map(instructors_affiliations, institutions_coords_df, center):
     """
-    Generates a map.
+    Generates a map of the number of instructors per affiliation.
     """
     gmaps.configure(api_key=config.api_key)
 
+    ## Calculate the values for the circle scalling in the map.
     max_value = instructors_affiliations['count'].max()
     min_value = instructors_affiliations['count'].min()
     grouping = (max_value - min_value)/3
     second_value = min_value + grouping
     third_value = second_value + grouping
 
+    ## Create lists that will hold the found values.
     names_small = []
     locations_small = []
     
@@ -49,6 +51,8 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
     names_large = []
     locations_large = []
 
+    ## Iterate through the datafrane to found the information needed to fill
+    ## the lists.
     for index, row in instructors_affiliations.iterrows():
         long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
         lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
@@ -63,16 +67,22 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
                 locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
                 names_large.append(row['affiliation'] + ': ' + str(row['count']))
         else:
-            print('For institution "' + row['workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
+            print('For institution "' + row['affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
                   'academic institution. Skipping it ...\n')
 
+    ## Add the different markers to a different layers corresponding to the
+    ## different amounts of instructors per affiliation.
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
                                       scale=3, display_info_box = True, info_box_content=names_small)
     symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="#ff6600", stroke_color="#ff6600",
                                       scale=6, display_info_box = True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
                                       scale=8, display_info_box = True, info_box_content=names_large)
-    m = gmaps.Map(height="100%")
+
+    ## Resize the map to fit the full browser screen.
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+
+    ## Add all the layers to the map.
     m.add_layer(symbol_layer_small)
     m.add_layer(symbol_layer_medium)
     m.add_layer(symbol_layer_large)
@@ -80,8 +90,13 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
     return m
 
 def generate_heat_map(instructors_affiliations,institutions_coords_df):
+    """
+    Generates a heat map of the number of instructors per affiliation.
+    """
     gmaps.configure(api_key=config.api_key)
 
+    ## Create lat and long list and fill it with the information from the
+    ## dataframe.
     lat_list = []
     long_list = []
     for index, row in instructors_affiliations.iterrows():
@@ -90,10 +105,15 @@ def generate_heat_map(instructors_affiliations,institutions_coords_df):
         if not long_coords.empty and not lat_coords.empty:
             long_list.append(long_coords.iloc[0])
             lat_list.append(lat_coords.iloc[0])
-            
+
+    ## Create a list of tuples with the following format
+    ## [(lat1,long1),(lat2,long2),...,(latx,longx)]      
     locations = zip(lat_list, long_list)
 
-    m = gmaps.Map(height="100%")
+    ## Resize the map to fit the full browser screen.
+    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+    
+    ## Add heatmap layer to the map
     m.add_layer(gmaps.heatmap_layer(locations))
 
     return m
@@ -132,7 +152,7 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            print('Generating a map of instructors per affiliation ...')
+            print('Generating a map and heatmap of instructors per affiliation ...')
             df = helper.drop_null_values_from_columns(df, ['affiliation'])
             df = helper.fix_UK_academic_institutions_names(df)
 
@@ -142,7 +162,7 @@ def main():
             center = helper.get_center(all_uk_institutions_coords_df)
 
             instructors_affiliations = instructors_per_affiliation(df)
-
+            
             maps = generate_map(instructors_affiliations, all_uk_institutions_coords_df, center)
             heat_map = generate_heat_map(instructors_affiliations, all_uk_institutions_coords_df)
 
@@ -168,6 +188,12 @@ def main():
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
                     print('Map uploaded to Google Drive.')
+                    helper.google_drive_upload(html_heatmap_file,
+                                               drive,
+                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                               False)
+                    print('HeatMap uploaded to Google Drive.')
+
                 except Exception:
                     print ("An error occurred while uploading the map to Google Drive ...")
                     print(traceback.format_exc())

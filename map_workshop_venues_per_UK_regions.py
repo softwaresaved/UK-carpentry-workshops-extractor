@@ -17,7 +17,6 @@ from shapely.geometry import shape, Point
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
-#GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
 def create_regions_column(df, regions):
@@ -71,7 +70,8 @@ def define_threshold_scale(df_region):
 
 def generate_map(df, regions, threshold_scale):
     """
-    Generates a map.
+    Generates a choropleth map of the number of workshops that can be found
+    in each UK region based on the venue coordinates of extracted excel file.
     """
     maps = folium.Map(
         location=[54.00366, -2.547855],

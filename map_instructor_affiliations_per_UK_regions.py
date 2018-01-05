@@ -22,15 +22,14 @@ REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
 
 def add_region_column(df, coords_df, regions):
     """
-    Find coordinates and see in which region they fall and create
-    the respective columns.
+    Find coordinates and see in which region they fall and create a column
+    with the correspondig results.
     """
     ## Create latitude and longitude list to create columns
     latitude_list = []
     longitude_list = []
 
-    ## Transform affiliation column into List and find respective coords
-    ##affiliation_list = df['affiliation'].tolist()
+    ## Transform affiliation column into list and find respective coords
     for index, row in df.iterrows():
         long_coords = coords_df[coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
         lat_coords = coords_df[coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
@@ -78,7 +77,7 @@ def instructors_per_region(df):
 
 def define_threshold_scale(df_region):
     """
-    Creates the threshold scale to be visualized in the map
+    Creates the threshold scale to be visualized in the map.
     """
     scale_list = df_region['count'].tolist()
     max_scale = max(scale_list)
@@ -91,7 +90,8 @@ def define_threshold_scale(df_region):
 
 def generate_map(df, regions, threshold_scale):
     """
-    Generates a map.
+    Generates a choropleth map of the number of instructors that can be found
+    in each UK region.
     """
     maps = folium.Map(
         location=[54.00366, -2.547855],

@@ -5,7 +5,6 @@ import traceback
 from openpyxl import load_workbook
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-
 UK_INSTITUTIONS_GEOCODES_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
 def load_geocodes(filename):
@@ -23,7 +22,8 @@ def fix_missing_values(df):
 
 def add_missing_coordinates(df):
     """
-    Adds missing known coordinates (geocodes - latitude and longitude pairs) and make a list of the institutions that have missing coordinates.
+    Adds missing known coordinates (geocodes - latitude and longitude pairs)
+    and makes a list of the institutions that have missing coordinates.
     """
     ## Known missing coordinates
     known_missing_coords = {
