@@ -49,11 +49,11 @@ def parse(args)
 
     opts.on("-c", "--country_code COUNTRY_CODE",
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
-      options.country_code = country_code
+      options.country_code = country_code.upcase # Country codes need to be uppercase so handle lowercase cases
       if ($0.downcase.include?('workshops'))
-        options.workshops_file = File.join(WORKSHOPS_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
+        options.workshops_file = File.join(WORKSHOPS_DIR, "carpentry-workshops_#{options.country_code}_#{date}.csv")
       elsif ($0.downcase.include?('instructors'))
-        options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
+        options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_#{options.country_code}_#{date}.csv")
       end
     end
 
