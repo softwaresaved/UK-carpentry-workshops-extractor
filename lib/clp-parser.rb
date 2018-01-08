@@ -51,9 +51,9 @@ def parse(args)
             "ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.") do |country_code|
       options.country_code = country_code
       if ($0.downcase.include?('workshops'))
-        options.workshops_file = File.join(DATA_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
+        options.workshops_file = File.join(WORKSHOPS_DIR, "carpentry-workshops_#{country_code}_#{date}.csv")
       elsif ($0.downcase.include?('instructors'))
-        options.instructors_file = File.join(DATA_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
+        options.instructors_file = File.join(INSTRUCTORS_DIR, "carpentry-instructors_#{country_code}_#{date}.csv")
       end
     end
 
