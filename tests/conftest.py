@@ -11,7 +11,7 @@ import analyse_workshops as aw
 import analyse_instructors as ai
 import map_workshop_venues_per_UK_regions as mapwvUK
 import map_clustered_workshop_venues as mapcwv
-import map_workshop_institutions as mapwi
+import map_and_heatmap_UK_workshop_institutions as mapwi
 import map_instructor_affiliations_per_UK_regions as mapiaUK
 import map_clustered_UK_instructors_affiliations as mapcia
 import map_and_heatmap_UK_instructors_affiliations as mapia

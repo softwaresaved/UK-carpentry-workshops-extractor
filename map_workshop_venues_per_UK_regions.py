@@ -95,8 +95,8 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping workshop venue geocoordinates into a 'heat map' over UK regions ...")
-    print("Note: this map only makes sense to generate with workshops in the UK as it maps them per UK regions.")
+    print("Mapping workshop venue geocoordinates into a 'heat map' over UK regions ...\n")
+    print("Note: this map only makes sense to generate with workshops in the UK as it maps them per UK regions.\n")
 
     if args.workshops_file:
         workshops_file = args.workshops_file
@@ -125,7 +125,7 @@ def main():
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
             df = create_regions_column(df, regions)
             workshops_per_region_df = workshops_per_region(df)
-            print('Generating a map of workshops per UK regions ...')
+            print('Generating a map of workshop venues per UK regions ...')
             threshold_scale = define_threshold_scale(workshops_per_region_df)
             maps = generate_map(workshops_per_region_df, regions, threshold_scale)
 

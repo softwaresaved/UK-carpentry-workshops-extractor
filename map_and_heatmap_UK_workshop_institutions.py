@@ -60,21 +60,21 @@ def generate_map(workshop_institution_df, workshop_coords_df):
     locations_large = []
 
     for index, row in workshop_institution_df.iterrows():
-        long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LONGITUDE']
-        lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['workshop_institution']]['LATITUDE']
+        long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['institution']]['LONGITUDE']
+        lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['institution']]['LATITUDE']
         if not long_coords.empty and not lat_coords.empty:
             if row['count'] >= min_value and row['count'] < second_value:
                 locations_small.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_small.append(row['workshop_institution'] + ': ' + str(row['count']))
+                names_small.append(row['institution'] + ': ' + str(row['count']))
             elif row['count'] >= second_value and row['count'] < third_value:
                 locations_medium.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_medium.append(row['workshop_institution'] + ': ' + str(row['count']))
+                names_medium.append(row['institution'] + ': ' + str(row['count']))
             elif row['count'] >= third_value and row['count'] <= max_value:
                 locations_large.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_large.append(row['workshop_institution'] + ': ' + str(row['count']))
+                names_large.append(row['institution'] + ': ' + str(row['count']))
         else:
             print('For institution "' + row[
-                'workshop_institution'] + '" we either have not got coordinates or it is not the official name of an UK '
+                'institution'] + '" we either have not got coordinates or it is not the official name of an UK '
                                           'academic institution. Skipping it ...\n')
 
     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
@@ -83,7 +83,8 @@ def generate_map(workshop_institution_df, workshop_coords_df):
                                              scale=6, display_info_box=True, info_box_content=names_medium)
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
                                             scale=8, display_info_box=True, info_box_content=names_large)
-    map = gmaps.Map(height="100%")
+    ## Resize the map to fit the whole screen.
+    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
     map.add_layer(symbol_layer_small)
     map.add_layer(symbol_layer_medium)
     map.add_layer(symbol_layer_large)
@@ -91,7 +92,7 @@ def generate_map(workshop_institution_df, workshop_coords_df):
     return map
 
 
-def generate_heat_map(df):
+def generate_heatmap(df):
     gmaps.configure(api_key=config.api_key)
 
     lat_list = []
@@ -102,10 +103,12 @@ def generate_heat_map(df):
 
     locations = zip(lat_list, long_list)
 
-    m = gmaps.Map(align_self='center', width="100%", height='100%')
-    m.add_layer(gmaps.heatmap_layer(locations))
+    ## Resize the map to fit the whole screen.
+    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
 
-    return m
+    map.add_layer(gmaps.heatmap_layer(locations))
+
+    return map
 
 
 def main():
@@ -113,7 +116,9 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping workshop venue geocoordinates into clusters on an interactive map ...")
+    print("Mapping workshop institution geocoordinates (extracted by cross-referencing workshop venue with its institution) into clusters on an interactive map ...\n")
+
+    print("Note: this map only makes sense to generate with workshops in the UK as it cross references their institutions with geocoordinates of UK institutions.\n")
 
     if args.workshops_file:
         workshops_file = args.workshops_file
@@ -131,7 +136,7 @@ def main():
 
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
-    print("The CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file)
+    print("The CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file + "\n")
 
     try:
         uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
@@ -142,8 +147,8 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
-            print('Generating a map of workshop institutions ...')
-            df = aw.insert_workshop_institution(df, WORKSHOPS_INSTITUTIONS_FILE)
+            print('Generating a map and a heatmap of workshop institutions ...\n')
+            df = aw.insert_workshop_institution(df)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
@@ -151,17 +156,17 @@ def main():
 
             workshops_per_institution_df = workshops_per_institution(df)
 
-            maps = generate_map(workshops_per_institution_df, all_uk_institutions_coords_df)
-            heat_map = generate_heat_map(df)
+            map = generate_map(workshops_per_institution_df, all_uk_institutions_coords_df)
+            heatmap = generate_heatmap(df)
 
             ## Save map to a HTML file
-            html_map_file = WORKSHOP_DATA_DIR + 'map_workshop_institution_' + workshops_file_name_without_extension + '.html'
-            embed_minimal_html(html_map_file, views=[maps])
+            html_map_file = WORKSHOP_DATA_DIR + 'map_workshop_institutions_' + workshops_file_name_without_extension + '.html'
+            embed_minimal_html(html_map_file, views=[map])
             print('Map of workshop institutions saved to HTML file ' + html_map_file + '\n')
 
-            html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
-            embed_minimal_html(html_heatmap_file, views=[heat_map])
-            print('HeatMap of workshop venues saved to HTML file ' + html_map_file + '\n')
+            html_heatmap_file = WORKSHOP_DATA_DIR + 'heatmap_workshop_institutions_' + workshops_file_name_without_extension + '.html'
+            embed_minimal_html(html_heatmap_file, views=[heatmap])
+            print('Heatmap of workshop institutions saved to HTML file ' + html_heatmap_file + '\n')
 
         except:
             print ("An error occurred while creating the map of workshop institutions  ...")

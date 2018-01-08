@@ -109,7 +109,7 @@ def main():
             maps = generate_map(df, all_uk_institutions_coords_df, center)
 
             ## Save map to an HTML file
-            html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructors_per_affiliation_' + instructors_file_name_without_extension + '.html'
+            html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
             maps.save(html_map_file)
             print('Map of instructors affiliations saved to HTML file ' + html_map_file)
         except:

@@ -71,15 +71,15 @@ def generate_map(instructors_affiliations, institutions_coords_df, center):
     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
                                       scale=8, display_info_box = True, info_box_content=names_large)
 
-    ## Resize the map to fit the full browser screen.
-    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+    ## Resize the map to fit the whole screen.
+    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
 
     ## Add all the layers to the map.
-    m.add_layer(symbol_layer_small)
-    m.add_layer(symbol_layer_medium)
-    m.add_layer(symbol_layer_large)
+    map.add_layer(symbol_layer_small)
+    map.add_layer(symbol_layer_medium)
+    map.add_layer(symbol_layer_large)
 
-    return m
+    return map
 
 def generate_heatmap(instructors_affiliations, institutions_coords_df):
     """
@@ -103,12 +103,12 @@ def generate_heatmap(instructors_affiliations, institutions_coords_df):
     locations = zip(lat_list, long_list)
 
     ## Resize the map to fit the full browser screen.
-    m = gmaps.Map(height='100vh', layout={'height': '100vh'})
+    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
     
     ## Add heatmap layer to the map
-    m.add_layer(gmaps.heatmap_layer(locations))
+    map.add_layer(gmaps.heatmap_layer(locations))
 
-    return m
+    return map
     
 def main():
     """

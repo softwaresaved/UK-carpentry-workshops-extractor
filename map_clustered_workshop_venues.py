@@ -64,11 +64,11 @@ def main():
     Main function
     """
     args = helper.parse_command_line_paramters()
-    print("Mapping workshop venue geocoordinates into clusters on an interactive map ...")
+    print("Mapping workshop venue geocoordinates into clusters on an interactive map ...\n")
 
     if args.workshops_file:
         workshops_file = args.workshops_file
-        print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.workshops_file)
+        print("The CSV spreadsheet with Carpentry workshops to be mapped: " + args.workshops_file + "\n")
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to map in " + WORKSHOP_DATA_DIR)
         workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_GB_*.csv")
