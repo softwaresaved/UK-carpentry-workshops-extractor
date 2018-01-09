@@ -19,7 +19,7 @@ import map_and_heatmap_UK_instructors_affiliations as mapia
 sys.path.append('/lib')
 import lib.helper as helper
 
-REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/regions.json'
+UK_REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/regions.json'
 UK_INSTITUTIONS_GEODATA_FILE = PROJECT_ROOT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 WORKSHOPS_INSTITUTIONS_FILE = PROJECT_ROOT_DIR + '/lib/workshop_institutions.yml'
 LIB_DATA_DIR = PROJECT_ROOT_DIR + '/lib/'
@@ -51,7 +51,7 @@ def pytest_namespace():
     writer_instructors = helper.create_excel_analyses_spreadsheet(file_name_instructors_without_extension,
                                                                   df_badges_instructors, "carpentry_instructors")
 
-    regions = json.load(open(REGIONS_FILE, encoding='utf-8-sig'))
+    regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
 
     ## Map workshop venues per UK regions
     df_workshop_venue = helper.load_data_from_csv(file_path_workshops, ['venue', 'latitude', 'longitude'])

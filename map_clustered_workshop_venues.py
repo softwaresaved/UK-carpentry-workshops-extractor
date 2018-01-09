@@ -20,8 +20,7 @@ REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
 
 def generate_map(df):
     """
-    Generates a cluster map of the number of workshops per each venue
-    coordinates in the excel file extracted.
+    Generates a cluster map of the number of workshops for a location's geocoordinates.
     """
     subset = df[['latitude', 'longitude']]
     tuples = [tuple(coords) for coords in subset.values]

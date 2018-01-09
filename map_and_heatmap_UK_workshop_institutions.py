@@ -25,92 +25,6 @@ WORKSHOPS_INSTITUTIONS_FILE = CURRENT_DIR + '/lib/workshop_institutions.yml'
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
 
-def workshops_per_institution(df):
-    """
-    Creates a dataframe with the values of the number of workshops
-    per institution.
-    """
-    ## Removes 'Unkown' values from 'institution' column
-    df = df[df.institution != 'Unkown']
-
-    table = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
-    return table
-
-
-def generate_map(workshop_institution_df, workshop_coords_df):
-    """
-    Generates a map.
-    """
-    gmaps.configure(api_key=config.api_key)
-
-    max_value = workshop_institution_df['count'].max()
-    min_value = workshop_institution_df['count'].min()
-
-    grouping = (max_value - min_value) / 3
-    second_value = min_value + grouping
-    third_value = second_value + grouping
-
-    names_small = []
-    locations_small = []
-
-    names_medium = []
-    locations_medium = []
-
-    names_large = []
-    locations_large = []
-
-    for index, row in workshop_institution_df.iterrows():
-        long_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['institution']]['LONGITUDE']
-        lat_coords = workshop_coords_df[workshop_coords_df['VIEW_NAME'] == row['institution']]['LATITUDE']
-        if not long_coords.empty and not lat_coords.empty:
-            if row['count'] >= min_value and row['count'] < second_value:
-                locations_small.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_small.append(row['institution'] + ': ' + str(row['count']))
-            elif row['count'] >= second_value and row['count'] < third_value:
-                locations_medium.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_medium.append(row['institution'] + ': ' + str(row['count']))
-            elif row['count'] >= third_value and row['count'] <= max_value:
-                locations_large.append((lat_coords.iloc[0], long_coords.iloc[0]))
-                names_large.append(row['institution'] + ': ' + str(row['count']))
-        else:
-            print('For institution "' + row[
-                'institution'] + '" we either have not got coordinates or it is not the official name of an UK '
-                                          'academic institution. Skipping it ...\n')
-
-    symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="green", stroke_color="green",
-                                            scale=3, display_info_box=True, info_box_content=names_small)
-    symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="green", stroke_color="green",
-                                             scale=6, display_info_box=True, info_box_content=names_medium)
-    symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="green", stroke_color="green",
-                                            scale=8, display_info_box=True, info_box_content=names_large)
-    ## Resize the map to fit the whole screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-    map.add_layer(symbol_layer_small)
-    map.add_layer(symbol_layer_medium)
-    map.add_layer(symbol_layer_large)
-
-    return map
-
-
-def generate_heatmap(df):
-    gmaps.configure(api_key=config.api_key)
-
-    lat_list = []
-    long_list = []
-    for index, row in df.iterrows():
-        long_list.append(row['longitude'])
-        lat_list.append(row['latitude'])
-
-    locations = zip(lat_list, long_list)
-
-    ## Resize the map to fit the whole screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-
-    map.add_layer(gmaps.heatmap_layer(locations))
-
-    return map
-
-
 def main():
     """
     Main function
@@ -154,10 +68,14 @@ def main():
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
 
-            workshops_per_institution_df = workshops_per_institution(df)
+            # Remove 'Unknown' values from 'institution' column
+            df = df[df.institution != 'Unknown']
+            workshops_institutions_df = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
+            workshops_institutions_df = helper.insert_institutions_geocoordinates(workshops_institutions_df, all_uk_institutions_coords_df)
 
-            map = generate_map(workshops_per_institution_df, all_uk_institutions_coords_df)
-            heatmap = generate_heatmap(df)
+            print(df)
+            map = helper.generate_circles_map(workshops_institutions_df)
+            heatmap = helper.generate_heatmap(df)
 
             ## Save map to a HTML file
             html_map_file = WORKSHOP_DATA_DIR + 'map_workshop_institutions_' + workshops_file_name_without_extension + '.html'

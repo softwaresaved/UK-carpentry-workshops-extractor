@@ -20,96 +20,6 @@ INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
 
-def generate_map(instructors_affiliations, institutions_coords_df, center):
-    """
-    Generates a map of the number of instructors per affiliation.
-    """
-    gmaps.configure(api_key=config.api_key)
-
-    ## Calculate the values for the circle scalling in the map.
-    max_value = instructors_affiliations['count'].max()
-    min_value = instructors_affiliations['count'].min()
-    grouping = (max_value - min_value)/3
-    second_value = min_value + grouping
-    third_value = second_value + grouping
-
-    ## Create lists that will hold the found values.
-    names_small = []
-    locations_small = []
-    
-    names_medium = []
-    locations_medium = []
-
-    names_large = []
-    locations_large = []
-
-    ## Iterate through the datafrane to found the information needed to fill
-    ## the lists.
-    for index, row in instructors_affiliations.iterrows():
-        long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
-        lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
-        if not long_coords.empty and not lat_coords.empty:
-            if row['count']>=min_value and row['count']<second_value:
-                locations_small.append((lat_coords.iloc[0],long_coords.iloc[0]))
-                names_small.append(row['affiliation'] + ': ' + str(row['count']))
-            elif row['count']>=second_value and row['count']<third_value:
-                locations_medium.append((lat_coords.iloc[0],long_coords.iloc[0]))
-                names_medium.append(row['affiliation'] + ': ' + str(row['count']))
-            elif row['count']>=third_value and row['count']<=max_value:
-                locations_large.append((lat_coords.iloc[0],long_coords.iloc[0]))
-                names_large.append(row['affiliation'] + ': ' + str(row['count']))
-        else:
-            print('For institution "' + row['affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
-                  'academic institution. Skipping it ...\n')
-
-    ## Add the different markers to a different layers corresponding to the
-    ## different amounts of instructors per affiliation.
-    symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
-                                      scale=3, display_info_box = True, info_box_content=names_small)
-    symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="#ff6600", stroke_color="#ff6600",
-                                      scale=6, display_info_box = True, info_box_content=names_medium)
-    symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
-                                      scale=8, display_info_box = True, info_box_content=names_large)
-
-    ## Resize the map to fit the whole screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-
-    ## Add all the layers to the map.
-    map.add_layer(symbol_layer_small)
-    map.add_layer(symbol_layer_medium)
-    map.add_layer(symbol_layer_large)
-
-    return map
-
-def generate_heatmap(instructors_affiliations, institutions_coords_df):
-    """
-    Generates a heatmap of the number of instructors per affiliation.
-    """
-    gmaps.configure(api_key=config.api_key)
-
-    ## Create lat and long list and fill it with the information from the
-    ## dataframe.
-    lat_list = []
-    long_list = []
-    for index, row in instructors_affiliations.iterrows():
-        long_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
-        lat_coords = institutions_coords_df[institutions_coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
-        if not long_coords.empty and not lat_coords.empty:
-            long_list.append(long_coords.iloc[0])
-            lat_list.append(lat_coords.iloc[0])
-
-    ## Create a list of tuples with the following format
-    ## [(lat1,long1),(lat2,long2),...,(latx,longx)]      
-    locations = zip(lat_list, long_list)
-
-    ## Resize the map to fit the full browser screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-    
-    ## Add heatmap layer to the map
-    map.add_layer(gmaps.heatmap_layer(locations))
-
-    return map
-    
 def main():
     """
     Main function
@@ -145,19 +55,25 @@ def main():
     else:
         try:
             df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            print("Generating a map and heatmap of instructors' affiliations ...")
-            df = helper.drop_null_values_from_columns(df, ['affiliation'])
+            # Rename 'affiliation' column to 'institution'
+            df.rename(columns={'affiliation': 'institution'}, inplace=True)
+
+            print("Generating a map and a heatmap of instructors' affiliations ...\n")
+            df = helper.drop_null_values_from_columns(df, ['institution'])
             df = helper.fix_UK_academic_institutions_names(df)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
-            center = helper.get_center(all_uk_institutions_coords_df)
 
-            instructors_affiliations_df = pd.core.frame.DataFrame({'count': df.groupby(['affiliation']).size()}).reset_index()
-            
-            map = generate_map(instructors_affiliations_df, all_uk_institutions_coords_df, center)
-            heatmap = generate_heatmap(instructors_affiliations_df, all_uk_institutions_coords_df)
+            df = helper.insert_institutions_geocoordinates(df, all_uk_institutions_coords_df)
+
+            instructors_institutions_df = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
+            instructors_institutions_df = helper.insert_institutions_geocoordinates(instructors_institutions_df, all_uk_institutions_coords_df)
+
+            print(df)
+            map = helper.generate_circles_map(instructors_institutions_df)
+            heatmap = helper.generate_heatmap(df)
 
             # Save maps to HTML files
             map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
