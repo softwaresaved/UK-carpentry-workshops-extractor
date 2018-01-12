@@ -149,11 +149,11 @@ def main():
         instructors_files = glob.glob(INSTRUCTOR_DATA_DIR + "carpentry-instructors_*.csv")
         instructors_files.sort(key=os.path.getctime) # order by creation date
 
-        if not instructors_files[-1]: # get the last element
+        if not instructors_files:
             print('No CSV file with Carpentry instructors found in ' + INSTRUCTOR_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
-            instructors_file = instructors_files[-1]
+            instructors_file = instructors_files[-1] # get the last element
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())

@@ -10,16 +10,16 @@ os.sys.path.insert(0, PROJECT_ROOT_DIR)
 import analyse_workshops as aw
 import analyse_instructors as ai
 import map_workshop_venues_per_UK_regions as mapwvUK
-import map_clustered_workshop_venues as mapcwv
+import map_with_clustered_markers_workshop_venues as mapcwv
 import map_and_heatmap_UK_workshop_institutions as mapwi
 import map_instructor_affiliations_per_UK_regions as mapiaUK
-import map_clustered_UK_instructors_affiliations as mapcia
+import map_with_clustered_markers_instructor_affiliations as mapcia
 import map_and_heatmap_UK_instructors_affiliations as mapia
 
 sys.path.append('/lib')
 import lib.helper as helper
 
-UK_REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/regions.json'
+UK_REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/UK_regions.json'
 UK_INSTITUTIONS_GEODATA_FILE = PROJECT_ROOT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 WORKSHOPS_INSTITUTIONS_FILE = PROJECT_ROOT_DIR + '/lib/workshop_institutions.yml'
 LIB_DATA_DIR = PROJECT_ROOT_DIR + '/lib/'
@@ -61,7 +61,7 @@ def pytest_namespace():
     maps_wvUK = mapwvUK.generate_map(workshops_per_region_df, regions, threshold_scale_wvUK)
 
     ## Map clustered workshop venue
-    maps_cwv = mapcwv.generate_map(df_workshop_venue)
+    maps_cwv = mapcwv.generate_map_with_clustered_markers(df_workshop_venue)
 
     uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
     uk_academic_institutions_df = uk_academic_institutions_excel_file.parse('UK-academic-institutions')

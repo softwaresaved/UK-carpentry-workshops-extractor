@@ -17,7 +17,7 @@ from shapely.geometry import shape, Point
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-REGIONS_FILE = CURRENT_DIR + '/lib/regions.json'
+REGIONS_FILE = CURRENT_DIR + '/lib/UK_regions.json'
 
 
 def add_region_column(df, coords_df, regions):
@@ -117,7 +117,6 @@ def main():
     """
     args = helper.parse_command_line_paramters()
     print("Mapping instructors affiliation geocoordinates into a 'heat map' over UK regions...\n")
-    print("Note: this map only makes sense to generate with instructors in the UK as it maps them per UK regions.\n")
 
     if args.instructors_file:
         instructors_file = args.instructors_file
@@ -127,11 +126,11 @@ def main():
         instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")
         instructors_files.sort(key=os.path.getctime)  # order by creation date
 
-        if not instructors_files[-1]:  # get the last element
+        if not instructors_files:
             print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
-            instructors_file = instructors_files[-1]
+            instructors_file = instructors_files[-1]  # get the last element
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())

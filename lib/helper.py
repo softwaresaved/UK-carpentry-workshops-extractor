@@ -7,8 +7,13 @@ import sys
 import json
 import gmaps
 import config
+import folium
+from folium.plugins import MarkerCluster
+
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+
+UK_REGIONS_FILE = CURRENT_DIR + '/UK_regions.json'
 
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
@@ -108,14 +113,14 @@ def insert_institutions_geocoordinates(df, affiliations_geocoordinates_df):
     idx = df.columns.get_loc("institution")  # index of column where 'institution' is kept
     df.insert(loc=idx + 1,
                                        column='latitude',
-                                       value=df['institution'])  # copy values from 'institution' column and insert to the right
+                                       value=None)  # copy values from 'institution' column and insert to the right
     df.insert(loc=idx + 2,
                                        column='longitude',
-                                       value=df['institution'])  # copy values from 'institution' column and insert to the right
+                                       value=None)  # copy values from 'institution' column and insert to the right
     # replace with the affiliation's latitude and longitude coordinates
-    df['latitude'] = df['latitude'].map(
+    df['latitude'] = df['institution'].map(
         affiliations_geocoordinates_df.set_index('VIEW_NAME')['LATITUDE'])
-    df['longitude'] = df['longitude'].map(
+    df['longitude'] = df['institution'].map(
         affiliations_geocoordinates_df.set_index('VIEW_NAME')['LONGITUDE'])
 
     return df
@@ -212,5 +217,54 @@ def generate_circles_map(df):
     map.add_layer(symbol_layer_small)
     map.add_layer(symbol_layer_medium)
     map.add_layer(symbol_layer_large)
+
+    return map
+
+
+def generate_map_with_clustered_markers(df, marker_popup_name_column):
+    """
+    Generates a map with clustered markers of a number of locations given in a dataframe.
+    """
+    subset = df[['latitude', 'longitude']]
+    tuples = [tuple(coords) for coords in subset.values]
+    x, y = zip(*tuples)
+    center = (max(x) + min(x)) / 2., (max(y) + min(y)) / 2.
+
+    map = folium.Map(
+        location=[center[0], center[1]],
+        zoom_start=6,
+        tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+
+    marker_cluster = MarkerCluster(name='workshops').add_to(map)
+    for index, row in df.iterrows():
+        popup = folium.Popup(row[marker_popup_name_column], parse_html=True)
+        folium.CircleMarker(
+            radius=5,
+            location=[row['latitude'], row['longitude']],
+            popup=popup,
+            color='#ff6600',
+            fill=True,
+            fill_color='#ff6600').add_to(marker_cluster)
+
+    return map
+
+
+def add_UK_regions_layer(map):
+
+    ## Load UK region information from a json file
+    try:
+        regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+
+        ## Add to a layer
+        folium.GeoJson(regions,
+                       name='regions',
+                       style_function=lambda feature: {
+                           # 'fillColor': '#99ffcc',
+                           'color': '#b7b7b7'
+                       }).add_to(map)
+        folium.LayerControl().add_to(map)
+    except:
+        print ("An error occurred while reading the UK regions file: " + UK_REGIONS_FILE)
+        print(traceback.format_exc())
 
     return map
