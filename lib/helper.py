@@ -9,7 +9,7 @@ import gmaps
 import config
 import folium
 from folium.plugins import MarkerCluster
-
+from folium.plugins import HeatMap
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -140,7 +140,7 @@ def get_center(df):
     return center
 
 
-def generate_heatmap(df):
+def generate_gmaps_heatmap(df):
     gmaps.configure(api_key=config.api_key)
 
     lat_list = []
@@ -155,6 +155,23 @@ def generate_heatmap(df):
     map = gmaps.Map(height='100vh', layout={'height': '100vh'})
 
     map.add_layer(gmaps.heatmap_layer(locations))
+
+    return map
+
+def generate_heatmap(df):
+
+    center = get_center(df)
+
+    map = folium.Map(
+        location=center,
+        zoom_start=6,
+        tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+
+    lat_long = []
+    for index, row in df.iterrows():
+        lat_long.append([row['latitude'], row['longitude']])
+
+    HeatMap(lat_long).add_to(map)
 
     return map
 

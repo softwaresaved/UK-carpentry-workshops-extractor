@@ -110,7 +110,7 @@ def main():
             # Map with clustered markers
             try:
                 print("############################################################################")
-                print("Generating a map of instructor affiliations as clusters of markers ... \n")
+                print("Generating a map of instructor affiliations as clusters of markers ...")
                 print("############################################################################\n")
 
                 map = helper.generate_map_with_clustered_markers(df, "institution")
@@ -144,7 +144,7 @@ def main():
                 df = insert_region_column(df, uk_regions)
 
                 print("#############################################################")
-                print('Generating a choropleth map of instructors over UK regions...\n')
+                print('Generating a choropleth map of instructors over UK regions ...')
                 print("#############################################################\n")
 
                 map = helper.generate_choropleth_map(df, uk_regions)
@@ -170,6 +170,33 @@ def main():
                         print ("An error occurred while uploading the map to Google Drive...\n")
                         print(traceback.format_exc())
 
+            try:
+                print("#############################################################")
+                print('Generating a heatmap of instructor affiliations ...\n')
+                print("#############################################################\n")
+
+                heatmap = helper.generate_heatmap(df)
+
+                # Save heatmap to an HTML file
+                heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+                heatmap.save(heatmap_file)
+                print("Heatmap of instructors' affiliations saved to HTML file " + heatmap_file + "\n")
+            except:
+                print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
+                print(traceback.format_exc())
+            else:
+                if args.google_drive_dir_id:
+                    try:
+                        print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
+                        drive = helper.google_drive_authentication()
+                        helper.google_drive_upload(html_map_file,
+                                                   drive,
+                                                   [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                                   False)
+                        print('Map uploaded to Google Drive.')
+                    except Exception:
+                        print ("An error occurred while uploading the map to Google Drive...\n")
+                        print(traceback.format_exc())
 
 if __name__ == '__main__':
     main()

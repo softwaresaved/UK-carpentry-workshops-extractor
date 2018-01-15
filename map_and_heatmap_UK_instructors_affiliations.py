@@ -75,13 +75,14 @@ def main():
 
             # Drop rows where we do not have longitude and latitude
             df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
+            df = df.reset_index(drop=True)
 
             instructors_institutions_df = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
             instructors_institutions_df = helper.insert_institutions_geocoordinates(instructors_institutions_df, all_uk_institutions_coords_df)
 
             print(df)
             map = helper.generate_circles_map(instructors_institutions_df)
-            heatmap = helper.generate_heatmap(df)
+            heatmap = helper.generate_gmaps_heatmap(df)
 
             # Save maps to HTML files
             map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
