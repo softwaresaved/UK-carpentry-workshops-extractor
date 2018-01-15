@@ -175,8 +175,29 @@ def generate_heatmap(df):
 
     return map
 
+def generate_map_with_circular_markers(df):
 
-def generate_circles_map(df):
+    center = get_center(df)
+
+    map = folium.Map(
+        location=center,
+        zoom_start=6,
+        tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+
+    for index, row in df.iterrows():
+        popup = folium.Popup(row['institution'], parse_html=True)
+        folium.CircleMarker(
+            radius=3,
+            location=[row['latitude'], row['longitude']],
+            popup=popup,
+            color='#ff6600',
+            fill=True,
+            fill_color='#ff6600').add_to(map)
+
+    return map
+
+
+def generate_gmap_map_with_circular_markers(df):
     """
     Generates a map from the dataframe where bigger dots indicate bigger counts for a location's geocoordinates.
     """

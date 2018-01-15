@@ -74,7 +74,7 @@ def main():
             workshops_institutions_df = helper.insert_institutions_geocoordinates(workshops_institutions_df, all_uk_institutions_coords_df)
 
             print(df)
-            map = helper.generate_circles_map(workshops_institutions_df)
+            map = helper.generate_gmap_map_with_circular_markers(workshops_institutions_df)
             heatmap = helper.generate_heatmap(df)
 
             ## Save map to a HTML file

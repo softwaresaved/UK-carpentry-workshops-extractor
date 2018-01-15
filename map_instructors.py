@@ -106,12 +106,11 @@ def main():
             print ("An error occurred while loading instructors' data and preparing it for mapping...\n")
             print(traceback.format_exc())
         else:
-
             # Map with clustered markers
             try:
-                print("############################################################################")
+                print("#######################################################################")
                 print("Generating a map of instructor affiliations as clusters of markers ...")
-                print("############################################################################\n")
+                print("#######################################################################\n")
 
                 map = helper.generate_map_with_clustered_markers(df, "institution")
                 map = helper.add_UK_regions_layer(map)
@@ -170,17 +169,47 @@ def main():
                         print ("An error occurred while uploading the map to Google Drive...\n")
                         print(traceback.format_exc())
 
+            # A map of instructors' affiliations with circula markers.
             try:
-                print("#############################################################")
-                print('Generating a heatmap of instructor affiliations ...\n')
-                print("#############################################################\n")
+                print("####################################################################")
+                print('Generating a map of instructor affiliations with circular markers...')
+                print("####################################################################\n")
 
-                heatmap = helper.generate_heatmap(df)
+                map = helper.generate_map_with_circular_markers(df)
 
                 # Save heatmap to an HTML file
-                heatmap_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
-                heatmap.save(heatmap_file)
-                print("Heatmap of instructors' affiliations saved to HTML file " + heatmap_file + "\n")
+                map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+                map.save(map_file)
+                print("A map of instructors' affiliations with circular markers saved to HTML file " + map_file + "\n")
+            except:
+                print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
+                print(traceback.format_exc())
+            else:
+                if args.google_drive_dir_id:
+                    try:
+                        print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
+                        drive = helper.google_drive_authentication()
+                        helper.google_drive_upload(html_map_file,
+                                                   drive,
+                                                   [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
+                                                   False)
+                        print('Map uploaded to Google Drive.')
+                    except Exception:
+                        print ("An error occurred while uploading the map to Google Drive...\n")
+                        print(traceback.format_exc())
+
+            # A heatmap of instructors' affiliations.
+            try:
+                print("###################################################")
+                print('Generating a heatmap of instructor affiliations ...')
+                print("###################################################\n")
+
+                map = helper.generate_heatmap(df)
+
+                # Save heatmap to an HTML file
+                map_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+                map.save(map_file)
+                print("Heatmap of instructors' affiliations saved to HTML file " + map_file + "\n")
             except:
                 print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
                 print(traceback.format_exc())
