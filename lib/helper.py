@@ -83,6 +83,7 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
 def drop_null_values_from_columns(df, column_list):
     for column in column_list:
         df = df.dropna(subset=[column])
+        df = df.reset_index(drop=True)
     return df
 
 def fix_UK_academic_institutions_names(df):
@@ -126,15 +127,15 @@ def insert_institutions_geocoordinates(df, affiliations_geocoordinates_df):
     return df
 
 
-def get_center(coords_df):
+def get_center(df):
 
     # Extract longitude and latitude columns from the dataframe
-    coords = coords_df[['LATITUDE', 'LONGITUDE']]
+    coords = df[['latitude', 'longitude']]
     tuples = [tuple(coords) for coords in coords.values]
     x, y = zip(*tuples)
 
     ## Find center
-    center = (max(x) + min(x)) / 2., (max(y) + min(y)) / 2.
+    center = [(max(x) + min(x)) / 2., (max(y) + min(y)) / 2.]
 
     return center
 
@@ -225,17 +226,16 @@ def generate_map_with_clustered_markers(df, marker_popup_name_column):
     """
     Generates a map with clustered markers of a number of locations given in a dataframe.
     """
-    subset = df[['latitude', 'longitude']]
-    tuples = [tuple(coords) for coords in subset.values]
-    x, y = zip(*tuples)
-    center = (max(x) + min(x)) / 2., (max(y) + min(y)) / 2.
+
+    center = get_center(df)
 
     map = folium.Map(
-        location=[center[0], center[1]],
+        location=center,
         zoom_start=6,
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     marker_cluster = MarkerCluster(name='workshops').add_to(map)
+
     for index, row in df.iterrows():
         popup = folium.Popup(row[marker_popup_name_column], parse_html=True)
         folium.CircleMarker(
@@ -247,6 +247,42 @@ def generate_map_with_clustered_markers(df, marker_popup_name_column):
             fill_color='#ff6600').add_to(marker_cluster)
 
     return map
+
+
+def generate_choropleth_map(df, regions):
+    """
+    Generates a choropleth map of the number of instructors that can be found
+    in each UK region.
+    """
+
+    instructors_per_region_df = pd.DataFrame({'count': df.groupby(['region']).size()}).reset_index()
+
+    center = get_center(df)
+
+    # Creates the threshold scale to be visualized in the map.
+    scale_list = instructors_per_region_df['count'].tolist()
+    max_scale = max(scale_list)
+    scale = int(max_scale / 5)
+    threshold_scale = []
+    for each in range(0, max_scale + 1, scale):
+        threshold_scale.append(each)
+
+    maps = folium.Map(
+        location = center, #[54.00366, -2.547855],
+        zoom_start = 6,
+        tiles = 'cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+
+    maps.choropleth(
+        geo_data=regions,
+        data=instructors_per_region_df,
+        columns=['region', 'count'],
+        key_on='feature.properties.NAME',
+        fill_color='YlGn',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name='Number of instructors per UK regions',
+        threshold_scale=threshold_scale)
+    return maps
 
 
 def add_UK_regions_layer(map):
