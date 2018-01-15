@@ -197,7 +197,7 @@ def generate_map_with_circular_markers(df):
     return map
 
 
-def generate_gmap_map_with_circular_markers(df):
+def generate_gmaps_map_with_circular_markers(df):
     """
     Generates a map from the dataframe where bigger dots indicate bigger counts for a location's geocoordinates.
     """

@@ -81,7 +81,7 @@ def main():
             instructors_institutions_df = helper.insert_institutions_geocoordinates(instructors_institutions_df, all_uk_institutions_coords_df)
 
             print(df)
-            map = helper.generate_gmap_map_with_circular_markers(instructors_institutions_df)
+            map = helper.generate_gmaps_map_with_circular_markers(instructors_institutions_df)
             heatmap = helper.generate_gmaps_heatmap(df)
 
             # Save maps to HTML files

@@ -109,7 +109,7 @@ def main():
             # Map with clustered markers
             try:
                 print("#######################################################################")
-                print("Generating a map of instructor affiliations as clusters of markers ...")
+                print("Map 1: generating a map of instructor affiliations as clusters of markers ...")
                 print("#######################################################################\n")
 
                 map = helper.generate_map_with_clustered_markers(df, "institution")
@@ -143,7 +143,7 @@ def main():
                 df = insert_region_column(df, uk_regions)
 
                 print("#############################################################")
-                print('Generating a choropleth map of instructors over UK regions ...')
+                print('Map 2: generating a choropleth map of instructors over UK regions ...')
                 print("#############################################################\n")
 
                 map = helper.generate_choropleth_map(df, uk_regions)
@@ -172,15 +172,19 @@ def main():
             # A map of instructors' affiliations with circula markers.
             try:
                 print("####################################################################")
-                print('Generating a map of instructor affiliations with circular markers...')
+                print('Map 3: generating a map of instructor affiliations with circular markers...')
                 print("####################################################################\n")
 
                 map = helper.generate_map_with_circular_markers(df)
 
-                # Save heatmap to an HTML file
+                # Save the map to an HTML file
                 map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
                 map.save(map_file)
                 print("A map of instructors' affiliations with circular markers saved to HTML file " + map_file + "\n")
+
+                # Old code with Google maps that requires Google API key
+                # map = helper.generate_gmap_map_with_circular_markers(workshops_institutions_df)
+                # embed_minimal_html(html_map_file, views=[map])
             except:
                 print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
                 print(traceback.format_exc())
@@ -201,15 +205,19 @@ def main():
             # A heatmap of instructors' affiliations.
             try:
                 print("###################################################")
-                print('Generating a heatmap of instructor affiliations ...')
+                print('Map 4: Generating a heatmap of instructor affiliations ...')
                 print("###################################################\n")
 
                 map = helper.generate_heatmap(df)
 
-                # Save heatmap to an HTML file
+                # Save the heatmap to an HTML file
                 map_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
                 map.save(map_file)
                 print("Heatmap of instructors' affiliations saved to HTML file " + map_file + "\n")
+
+                # Old code with Google maps that requires Google API key
+                # heatmap = helper.generate_gmaps_heatmap(df)
+                # embed_minimal_html(html_heatmap_file, views=[heatmap])
             except:
                 print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
                 print(traceback.format_exc())
