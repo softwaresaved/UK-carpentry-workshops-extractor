@@ -49,10 +49,8 @@ def main():
             "An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
     else:
         try:
-            df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            df = helper.drop_null_values_from_columns(df, ['affiliation'])
-            # Rename 'affiliation' column as 'institution'
-            df.rename(columns={'affiliation': 'institution'}, inplace=True)
+            df = helper.load_data_from_csv(instructors_file, ['institution'])
+            df = helper.drop_null_values_from_columns(df, ['institution'])
             df = helper.fix_UK_academic_institutions_names(df)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
@@ -71,7 +69,7 @@ def main():
             # Drop rows where we do not have longitude and latitude
             df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
 
-            print("Generating a map of instructors' affiliations as clusters of markers that can be zoomed in and out of ... \n")
+            print("Generating a map of instructors' affiliations as clusters of markers ... \n")
 
             map = helper.generate_map_with_clustered_markers(df, "institution")
             map = helper.add_UK_regions_layer(map)

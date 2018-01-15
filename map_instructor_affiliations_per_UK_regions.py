@@ -29,10 +29,10 @@ def add_region_column(df, coords_df, regions):
     latitude_list = []
     longitude_list = []
 
-    ## Transform affiliation column into list and find respective coords
+    ## Transform 'institution' column into list and find respective coords
     for index, row in df.iterrows():
-        long_coords = coords_df[coords_df['VIEW_NAME'] == row['affiliation']]['LONGITUDE']
-        lat_coords = coords_df[coords_df['VIEW_NAME'] == row['affiliation']]['LATITUDE']
+        long_coords = coords_df[coords_df['VIEW_NAME'] == row['institution']]['LONGITUDE']
+        lat_coords = coords_df[coords_df['VIEW_NAME'] == row['institution']]['LATITUDE']
         if lat_coords.empty or long_coords.empty:
             print('\nInstructor in row with index ' + str(index) + ' has affiliation "' + row['affiliation'] +
                   '" which we either have not got coordinates for or it is not the official name of an UK '
@@ -149,8 +149,8 @@ def main():
             print ("An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
         else:
             try:
-                df = helper.load_data_from_csv(instructors_file, ['affiliation', 'nearest_airport_code'])
-                df = helper.drop_null_values_from_columns(df, ['affiliation', 'nearest_airport_code'])
+                df = helper.load_data_from_csv(instructors_file, ['institution', 'nearest_airport_code'])
+                df = helper.drop_null_values_from_columns(df, ['institution', 'nearest_airport_code'])
                 df = helper.fix_UK_academic_institutions_names(df)
 
                 uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]

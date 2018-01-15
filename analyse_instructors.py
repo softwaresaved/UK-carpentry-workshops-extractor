@@ -71,7 +71,7 @@ def instructors_nearest_airport_analysis(df, writer):
     worksheet.insert_chart('D2', chart)
 
     return city_table
-    
+
 def instructors_per_UK_region_analysis(df, writer):
     """
     Number of instructors per UK region (by looking up the nearest airport) - create the corresponding
@@ -162,14 +162,14 @@ def main():
 
     try:
         instructors_df = helper.load_data_from_csv(instructors_file, ['country_code','nearest_airport_name',
-                                        'nearest_airport_code', 'affiliation',
+                                        'nearest_airport_code', 'institution',
                                         'instructor-badges',
                                         'swc-instructor-badge-awarded',
                                         'dc-instructor-badge-awarded',
                                         'trainer-badge-awarded',
                                         'earliest-badge-awarded',
                                         'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
-        instructors_df = helper.drop_null_values_from_columns(instructors_df, ['country_code', 'affiliation'])
+        instructors_df = helper.drop_null_values_from_columns(instructors_df, ['country_code', 'institution'])
         instructors_df = insert_earliest_badge_year(instructors_df)
         instructors_df = insert_airport_region(instructors_df)
 

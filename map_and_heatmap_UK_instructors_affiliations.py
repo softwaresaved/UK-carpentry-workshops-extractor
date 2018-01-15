@@ -44,29 +44,37 @@ def main():
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name)
+    print('CSV file with Carpentry instructors to analyse ' + instructors_file_name + '\n')
 
     try:
-        uk_academic_institutions_excel_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
-        uk_academic_institutions_df = uk_academic_institutions_excel_file.parse('UK-academic-institutions')
+        uk_academic_institutions_geodata_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
+        uk_academic_institutions_geodata_df = uk_academic_institutions_geodata_file.parse('UK-academic-institutions')
     except:
         print (
             "An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
     else:
         try:
-            df = helper.load_data_from_csv(instructors_file, ['affiliation'])
-            # Rename 'affiliation' column to 'institution'
-            df.rename(columns={'affiliation': 'institution'}, inplace=True)
+            df = helper.load_data_from_csv(instructors_file, ['institution'])
 
             print("Generating a map and a heatmap of instructors' affiliations ...\n")
             df = helper.drop_null_values_from_columns(df, ['institution'])
             df = helper.fix_UK_academic_institutions_names(df)
 
-            uk_academic_institutions_coords_df = uk_academic_institutions_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
+            uk_academic_institutions_coords_df = uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
 
             df = helper.insert_institutions_geocoordinates(df, all_uk_institutions_coords_df)
+
+            # Lookup longitude and latitude values for instructors' affiliations
+            for index, row in df.iterrows():
+                if pd.isnull(row['longitude']) or pd.isnull(row['latitude']):
+                    print('For affiliation "' + row[
+                        'institution'] + '" we either have not got coordinates or it is not the official name of an UK '
+                                         'academic institution. Skipping it ...\n')
+
+            # Drop rows where we do not have longitude and latitude
+            df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
 
             instructors_institutions_df = pd.core.frame.DataFrame({'count': df.groupby(['institution']).size()}).reset_index()
             instructors_institutions_df = helper.insert_institutions_geocoordinates(instructors_institutions_df, all_uk_institutions_coords_df)

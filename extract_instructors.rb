@@ -169,7 +169,7 @@ module Instructors
 
     FileUtils.touch(csv_file) unless File.exist?(csv_file)
     # CSV headers
-    csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains",
+    csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "institution", "domains",
                    "instructor-badges", "swc-instructor-badge-awarded", "dc-instructor-badge-awarded", "trainer-badge-awarded", "earliest-badge-awarded",
                    "lessons", "number_of_workshops_taught", "workshops_taught"]
 
