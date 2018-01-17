@@ -6,8 +6,6 @@ import re
 import sys
 import json
 import shapefile
-from shapely.geometry import shape, Point
-
 
 sys.path.append('/lib')
 import lib.helper as helper
@@ -17,32 +15,6 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 UK_REGIONS_FILE = CURRENT_DIR + '/lib/UK_regions.json'
-
-
-def insert_region_column(df, regions):
-    """
-    Lookup coordinates from the dataframe and see in which region they fall. Insert the corresponding 'region' column
-    in the dataframe.
-    """
-
-    region_list = []
-
-    # Find the region for each longitude, latitude pair and add in a new column
-    for index, row in df.iterrows():
-        print('Finding a UK region for institution ' + row['institution'] + ' in row ' + str(index) + ' out of ' +
-              str(len(df.index) - 1) + ". ", "")
-        point = Point(row['longitude'], row['latitude'])
-        for feature in regions['features']:
-            polygon = shape(feature['geometry'])
-            if polygon.contains(point):
-                region_list.append(feature['properties']['NAME'])
-                print("Found region: " + feature['properties']['NAME'])
-
-    print(len(region_list))
-
-    ## Add 'region' column
-    df.insert(len(df.columns), "region", region_list, allow_duplicates=False)
-    return df
 
 
 def main():
@@ -72,7 +44,7 @@ def main():
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-    print('Found CSV file with Carpentry instructors to analyse ' + instructors_file_name + "\n")
+    print('Found CSV file with Carpentry instructors to be mapped: ' + instructors_file_name + "\n")
 
     try:
         uk_academic_institutions_geodata_file = pd.ExcelFile(UK_INSTITUTIONS_GEODATA_FILE)
@@ -82,26 +54,30 @@ def main():
             "An error occurred while reading the UK academic institutions' geodata file " + UK_INSTITUTIONS_GEODATA_FILE)
     else:
         try:
-            df = helper.load_data_from_csv(instructors_file, ['institution'])
-            df = helper.drop_null_values_from_columns(df, ['institution'])
-            df = helper.fix_UK_academic_institutions_names(df)
+            instructors_df = helper.load_data_from_csv(instructors_file, ['institution'])
+            instructors_df = helper.drop_null_values_from_columns(instructors_df, ['institution'])
+            instructors_df = helper.fix_UK_academic_institutions_names(instructors_df)
 
             uk_academic_institutions_coords_df = uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
             all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(
                 helper.get_UK_non_academic_institutions_coords())
 
             # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instrucotrs' data
-            df = helper.insert_institutions_geocoordinates(df, all_uk_institutions_coords_df)
+            instructors_df = helper.insert_institutions_geocoordinates(instructors_df, all_uk_institutions_coords_df)
 
             # Discard all institutions that we do not have longitude and latitude values for, as they cannot be mapped
-            for index, row in df.iterrows():
+            for index, row in instructors_df.iterrows():
                 if pd.isnull(row['longitude']) or pd.isnull(row['latitude']):
                     print('For affiliation "' + row[
                         'institution'] + '" we either have not got coordinates or it is not the official name of an UK '
                                          'academic institution. Skipping it ...\n')
             # Drop rows where we do not have longitude and latitude
-            df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
-            df = df.reset_index(drop=True)
+            instructors_df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
+            instructors_df = instructors_df.reset_index(drop=True)
+
+            # Add column 'description' which is used in popups in maps
+            instructors_df['description'] = instructors_df["institution"]
+
         except:
             print ("An error occurred while loading instructors' data and preparing it for mapping...\n")
             print(traceback.format_exc())
@@ -112,10 +88,10 @@ def main():
                 print("Map 1: generating a map of instructor affiliations as clusters of markers ...")
                 print("#######################################################################\n")
 
-                map = helper.generate_map_with_clustered_markers(df, "institution")
+                map = helper.generate_map_with_clustered_markers(instructors_df)
                 map = helper.add_UK_regions_layer(map)
 
-                ## Save map to an HTML file
+                # Save map to an HTML file
                 html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
                 map.save(html_map_file)
                 print('Map of instructors affiliations saved to HTML file ' + html_map_file + '\n')
@@ -138,18 +114,18 @@ def main():
 
             # Choropleth map over UK regions
             try:
+                print("#####################################################################")
+                print('Map 2: generating a choropleth map of instructors over UK regions ...')
+                print("#####################################################################\n")
+
                 uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
 
-                df = insert_region_column(df, uk_regions)
+                instructors_df = helper.insert_region_column(instructors_df, uk_regions)
 
-                print("#############################################################")
-                print('Map 2: generating a choropleth map of instructors over UK regions ...')
-                print("#############################################################\n")
+                map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
 
-                map = helper.generate_choropleth_map(df, uk_regions)
-
-                ## Save map to a HTML file
-                html_map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
+                # Save map to a HTML file
+                html_map_file = INSTRUCTORS_DATA_DIR + 'choropleth_map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
                 map.save(html_map_file)
                 print('A choropleth map of instructors over UK regions saved to HTML file ' + html_map_file + '\n')
             except:
@@ -169,16 +145,16 @@ def main():
                         print ("An error occurred while uploading the map to Google Drive...\n")
                         print(traceback.format_exc())
 
-            # A map of instructors' affiliations with circula markers.
+            # A map of instructors' affiliations with circular markers.
             try:
                 print("####################################################################")
                 print('Map 3: generating a map of instructor affiliations with circular markers...')
                 print("####################################################################\n")
 
-                map = helper.generate_map_with_circular_markers(df)
+                map = helper.generate_map_with_circular_markers(instructors_df)
 
                 # Save the map to an HTML file
-                map_file = INSTRUCTORS_DATA_DIR + 'map_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+                map_file = INSTRUCTORS_DATA_DIR + 'map_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
                 map.save(map_file)
                 print("A map of instructors' affiliations with circular markers saved to HTML file " + map_file + "\n")
 
@@ -186,7 +162,7 @@ def main():
                 # map = helper.generate_gmap_map_with_circular_markers(workshops_institutions_df)
                 # embed_minimal_html(html_map_file, views=[map])
             except:
-                print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
+                print ("An error occurred while map of instructor affiliations with circular markers ...\n")
                 print(traceback.format_exc())
             else:
                 if args.google_drive_dir_id:
@@ -208,10 +184,10 @@ def main():
                 print('Map 4: Generating a heatmap of instructor affiliations ...')
                 print("###################################################\n")
 
-                map = helper.generate_heatmap(df)
+                map = helper.generate_heatmap(instructors_df)
 
                 # Save the heatmap to an HTML file
-                map_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+                map_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
                 map.save(map_file)
                 print("Heatmap of instructors' affiliations saved to HTML file " + map_file + "\n")
 

@@ -40,9 +40,11 @@ def main():
     print("The CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file + "\n")
 
     try:
-        df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
+        workshops_df = helper.load_data_from_csv(workshops_file, ['venue', 'latitude', 'longitude'])
+        workshops_df.rename(columns={"venue": "institution"}, inplace=True)
+
         print('Generating a map of workshop venues ...\n')
-        map = helper.generate_map_with_clustered_markers(df, "venue")
+        map = helper.generate_map_with_clustered_markers(workshops_df)
         if "GB" in workshops_file:  # if the data is for UK workshops - add layer with UK regions to the map
             map = helper.add_UK_regions_layer(map)
 

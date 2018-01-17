@@ -10,6 +10,8 @@ import config
 import folium
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
+from shapely.geometry import shape, Point
+# import branca
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -24,6 +26,28 @@ def load_data_from_csv(csv_file, columns=None):
     """
     df = pd.read_csv(csv_file, usecols=columns)
     return pd.DataFrame(df)
+
+
+def insert_region_column(df, regions):
+    """
+    Lookup coordinates from the dataframe and see in which region they fall. Insert the corresponding 'region' column
+    in the dataframe.
+    """
+    print("Finding UK regions for locations. This may take a while, depending on the size of your data ...\n")
+
+    region_list = []
+    # Find the region for each longitude, latitude pair and add in a new column
+    for index, row in df.iterrows():
+        point = Point(row['longitude'], row['latitude'])
+        print("Looking for UK region for location " + str(index + 1) + " out of " + str(len(df.index)))
+        for feature in regions['features']:
+            polygon = shape(feature['geometry'])
+            if polygon.contains(point):
+                region_list.append(feature['properties']['NAME'])
+
+    ## Add 'region' column
+    df.insert(len(df.columns), "region", region_list, allow_duplicates=False)
+    return df
 
 
 def google_drive_authentication():
@@ -44,6 +68,8 @@ def google_drive_upload(file, drive, parents_list, convert):
                               'title': os.path.basename(file)})
     gfile.SetContentFile(file)
     gfile.Upload({'convert': convert})
+
+
 
 
 def parse_command_line_paramters():
@@ -185,7 +211,12 @@ def generate_map_with_circular_markers(df):
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     for index, row in df.iterrows():
-        popup = folium.Popup(row['institution'], parse_html=True)
+        print(str(index) + ": "+row['institution'])
+
+        # iframe = branca.element.IFrame(html=row['description'], width=300, height=200)
+        # popup = folium.Popup(iframe, max_width=500)
+
+        popup = folium.Popup(row['description'], parse_html=True)
         folium.CircleMarker(
             radius=3,
             location=[row['latitude'], row['longitude']],
@@ -260,7 +291,7 @@ def generate_gmaps_map_with_circular_markers(df):
     return map
 
 
-def generate_map_with_clustered_markers(df, marker_popup_name_column):
+def generate_map_with_clustered_markers(df):
     """
     Generates a map with clustered markers of a number of locations given in a dataframe.
     """
@@ -275,7 +306,8 @@ def generate_map_with_clustered_markers(df, marker_popup_name_column):
     marker_cluster = MarkerCluster(name='workshops').add_to(map)
 
     for index, row in df.iterrows():
-        popup = folium.Popup(row[marker_popup_name_column], parse_html=True)
+        popup = folium.Popup(row['description'], parse_html=True)
+
         folium.CircleMarker(
             radius=5,
             location=[row['latitude'], row['longitude']],
@@ -287,18 +319,18 @@ def generate_map_with_clustered_markers(df, marker_popup_name_column):
     return map
 
 
-def generate_choropleth_map(df, regions):
+def generate_choropleth_map(df, regions, item_type="workshops"):
     """
-    Generates a choropleth map of the number of instructors that can be found
+    Generates a choropleth map of the number of items (instructors or workshops) that can be found
     in each UK region.
     """
 
-    instructors_per_region_df = pd.DataFrame({'count': df.groupby(['region']).size()}).reset_index()
+    items_per_region_df = pd.DataFrame({'count': df.groupby(['region']).size()}).reset_index()
 
     center = get_center(df)
 
     # Creates the threshold scale to be visualized in the map.
-    scale_list = instructors_per_region_df['count'].tolist()
+    scale_list = items_per_region_df['count'].tolist()
     max_scale = max(scale_list)
     scale = int(max_scale / 5)
     threshold_scale = []
@@ -312,13 +344,13 @@ def generate_choropleth_map(df, regions):
 
     maps.choropleth(
         geo_data=regions,
-        data=instructors_per_region_df,
+        data=items_per_region_df,
         columns=['region', 'count'],
         key_on='feature.properties.NAME',
         fill_color='YlGn',
         fill_opacity=0.7,
         line_opacity=0.2,
-        legend_name='Number of instructors per UK regions',
+        legend_name='Number of ' + item_type + ' per UK regions',
         threshold_scale=threshold_scale)
     return maps
 
