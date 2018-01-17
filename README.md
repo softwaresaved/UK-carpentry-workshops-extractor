@@ -169,18 +169,18 @@ optional arguments:
 
 ### Example maps
 
-####Map of clustered markers
+Map of clustered markers
 
-![map of clustered markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+![map of clustered markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
 
-####Map of markers
+Map of markers
 
-![map of markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+![map of markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
 
-####Choropleth map
+Choropleth map
 
-![choropleth map](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+![choropleth map](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/choropleth_map_instructors_per_UK_regions_carpentry-instructors_GB_2018-01-14.png)
 
-####Heatmap
+Heatmap
 
-![heatmap](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+![heatmap](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/heatmap_instructor_affiliations_carpentry-instructors_GB_2018-01-14)
