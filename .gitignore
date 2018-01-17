@@ -5,3 +5,4 @@ carpentry-workshops*
 carpentry-instructors*
 data
 client_secrets.json
+config.py

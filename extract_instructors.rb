@@ -91,7 +91,7 @@ module Instructors
                   elsif (all_other_tlds.include?(email_tld)) # We know for sure the person is from a different country
                     # Exclude this person
                   else # We cannot conclude anything
-                    # Include this person
+                    # Still include this person
                     instructors << person
                   end
                 end
@@ -106,6 +106,22 @@ module Instructors
             end
           end
         end
+
+        puts "The following instructors have no information on nearest airport and country and should be fixed in AMY:\n"
+        instructors_with_no_country = instructors.select{|person| person["airport_iata_code"] == nil and person["country_code"] == nil}
+        puts "None\n" if instructors_with_no_country.empty?
+        instructors_with_no_country.each do |person|
+          puts "#{person['personal']} #{person['family']} #{person['email']}"
+        end
+
+        puts "\nThe following instructors have the country inferred from the top level domain in email address and should be fixed in AMY:\n"
+        instructors_with_country_from_email_tld = instructors.select{|person| person["airport_iata_code"] == nil and person["country_code"] != nil}
+        puts "None\n" if instructors_with_country_from_email_tld.empty?
+        instructors_with_country_from_email_tld.each do |person|
+          puts "#{person['personal']} #{person['family']} #{person['email']}"
+        end
+
+        puts "\n" + "#" * 80 +"\n\n"
 
         #sleep(3700);
 
@@ -153,7 +169,7 @@ module Instructors
 
     FileUtils.touch(csv_file) unless File.exist?(csv_file)
     # CSV headers
-    csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "affiliation", "domains",
+    csv_headers = ["name", "surname", "email", "amy_username", "country_code", "nearest_airport_name", "nearest_airport_code", "institution", "domains",
                    "instructor-badges", "swc-instructor-badge-awarded", "dc-instructor-badge-awarded", "trainer-badge-awarded", "earliest-badge-awarded",
                    "lessons", "number_of_workshops_taught", "workshops_taught"]
 
