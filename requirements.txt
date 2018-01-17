@@ -7,5 +7,4 @@ pydrive
 shapefile
 traceback
 glob
-gmaps
 config

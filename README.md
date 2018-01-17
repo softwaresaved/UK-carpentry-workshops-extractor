@@ -74,12 +74,16 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
 
 ## Carpentry workshops and instructor analysers and mappers (in python)
 
-The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_*.py`)
+The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_workshops.py` and `map_instructors.py`)
 to map the data from the extraction phase.
 
 Analyser scripts creates resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/workshops` or `data/instructors` folders.
 
-Mapper scripts generate various interactive maps embedded in HTML files and stores them in `data/workshops` or `data/instructors` folders.
+Mapper scripts generate various interactive maps embedded in HTML files and store them in `data/workshops` or `data/instructors` folders. Map types generated include:
+* map of markers (each location is a marker on a map)
+* map of clustered markers (nearby markers are clustered but can be zoomed in and out of)
+* choropleth map (over UK regions only)
+* heatmap
 
 Finally, there is an option to upload the analyses and maps files to Google Drive, which you have to setup prior to running the scripts. By default, the resulting files are
 only saved locally and are not uploaded to Google Drive.
@@ -117,7 +121,7 @@ traceback
 glob
 ```
 ### Running analyser and mapper scripts
-To run the analyser and mapper python scrips, from the project root do, e.g.:
+To run the analyser scripts, from the project root do:
 
 ```$ python analyse_workshops.rb```
 
@@ -125,11 +129,17 @@ or
 
 ```$ python analyse_instructors.rb```
 
-or, to run one of the mappers, do
+To run the mapper scripts, from the project root do:
 
-```$ python map_instructor_affiliations.py```
+```$ python map_workshops.rb```
 
-There are several command line options available for both analyses and mapper scripts, depending on if they are dealing with workshops or instructors. See below for details.
+or
+
+```$ python map_instructors.rb```
+
+*Note that mapping instructors only makes sense for UK instructors at the moment, we we only have geodata for UK institutions.*
+
+There are several command line options available for both analyser and mapper scripts, depending on if they are dealing with workshops or instructors. See below for details.
 ```
 $ python analyse_workshops.py -h
 usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE]
@@ -156,3 +166,21 @@ optional arguments:
                         ID of a Google Drive directory where to upload the
                         analyses and map files to
 ```
+
+### Example maps
+
+####Map of clustered markers
+
+![map of clustered markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+
+####Map of markers
+
+![map of markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+
+####Choropleth map
+
+![choropleth map](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
+
+####Heatmap
+
+![heatmap](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/tree/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)

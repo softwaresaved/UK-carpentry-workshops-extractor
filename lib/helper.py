@@ -5,7 +5,7 @@ from pydrive.drive import GoogleDrive
 import argparse
 import sys
 import json
-import gmaps
+# import gmaps
 import config
 import folium
 from folium.plugins import MarkerCluster
@@ -166,23 +166,26 @@ def get_center(df):
     return center
 
 
-def generate_gmaps_heatmap(df):
-    gmaps.configure(api_key=config.api_key)
+def add_UK_regions_layer(map):
 
-    lat_list = []
-    long_list = []
-    for index, row in df.iterrows():
-        long_list.append(row['longitude'])
-        lat_list.append(row['latitude'])
+    ## Load UK region information from a json file
+    try:
+        regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
 
-    locations = zip(lat_list, long_list)
-
-    ## Resize the map to fit the whole screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-
-    map.add_layer(gmaps.heatmap_layer(locations))
+        ## Add to a layer
+        folium.GeoJson(regions,
+                       name='regions',
+                       style_function=lambda feature: {
+                           # 'fillColor': '#99ffcc',
+                           'color': '#b7b7b7'
+                       }).add_to(map)
+        folium.LayerControl().add_to(map)
+    except:
+        print ("An error occurred while reading the UK regions file: " + UK_REGIONS_FILE)
+        print(traceback.format_exc())
 
     return map
+
 
 def generate_heatmap(df):
 
@@ -224,69 +227,6 @@ def generate_map_with_circular_markers(df):
             color='#ff6600',
             fill=True,
             fill_color='#ff6600').add_to(map)
-
-    return map
-
-
-def generate_gmaps_map_with_circular_markers(df):
-    """
-    Generates a map from the dataframe where bigger dots indicate bigger counts for a location's geocoordinates.
-    """
-    gmaps.configure(api_key=config.api_key)
-
-    ## Calculate the values for the circle scalling in the map.
-    max_value = df['count'].max()
-    min_value = df['count'].min()
-    grouping = (max_value - min_value) / 3
-    second_value = min_value + grouping
-    third_value = second_value + grouping
-
-    ## Create lists that will hold the found values.
-    names_small = []
-    locations_small = []
-
-    names_medium = []
-    locations_medium = []
-
-    names_large = []
-    locations_large = []
-
-    ## Iterate through the dataframe to find the information needed to fill
-    ## the lists.
-    for index, row in df.iterrows():
-        long_coords = df['longitude']
-        lat_coords = df['latitude']
-        if not long_coords.empty and not lat_coords.empty:
-            if row['count'] >= min_value and row['count'] < second_value:
-                locations_small.append((lat_coords.iloc[index], long_coords.iloc[index]))
-                names_small.append(row['institution'] + ': ' + str(row['count']))
-            elif row['count'] >= second_value and row['count'] < third_value:
-                locations_medium.append((lat_coords.iloc[index], long_coords.iloc[index]))
-                names_medium.append(row['institution'] + ': ' + str(row['count']))
-            elif row['count'] >= third_value and row['count'] <= max_value:
-                locations_large.append((lat_coords.iloc[index], long_coords.iloc[index]))
-                names_large.append(row['institution'] + ': ' + str(row['count']))
-        else:
-            print('For institution "' + row[
-                'affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
-                                 'academic institution. Skipping it ...\n')
-
-    ## Add the different markers to different layers corresponding to the
-    ## different amounts of instructors per affiliation.
-    symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
-                                            scale=3, display_info_box=True, info_box_content=names_small)
-    symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="#ff6600", stroke_color="#ff6600",
-                                             scale=6, display_info_box=True, info_box_content=names_medium)
-    symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
-                                            scale=8, display_info_box=True, info_box_content=names_large)
-
-    ## Resize the map to fit the whole screen.
-    map = gmaps.Map(height='100vh', layout={'height': '100vh'})
-
-    ## Add all the layers to the map.
-    map.add_layer(symbol_layer_small)
-    map.add_layer(symbol_layer_medium)
-    map.add_layer(symbol_layer_large)
 
     return map
 
@@ -355,22 +295,83 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
     return maps
 
 
-def add_UK_regions_layer(map):
+# def generate_gmaps_heatmap(df):
+#     gmaps.configure(api_key=config.api_key)
+#
+#     lat_list = []
+#     long_list = []
+#     for index, row in df.iterrows():
+#         long_list.append(row['longitude'])
+#         lat_list.append(row['latitude'])
+#
+#     locations = zip(lat_list, long_list)
+#
+#     ## Resize the map to fit the whole screen.
+#     map = gmaps.Map(height='100vh', layout={'height': '100vh'})
+#
+#     map.add_layer(gmaps.heatmap_layer(locations))
+#
+#     return map
 
-    ## Load UK region information from a json file
-    try:
-        regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+# def generate_gmaps_map_with_circular_markers(df):
+#     """
+#     Generates a map from the dataframe where bigger dots indicate bigger counts for a location's geocoordinates.
+#     """
+#     gmaps.configure(api_key=config.api_key)
+#
+#     ## Calculate the values for the circle scalling in the map.
+#     max_value = df['count'].max()
+#     min_value = df['count'].min()
+#     grouping = (max_value - min_value) / 3
+#     second_value = min_value + grouping
+#     third_value = second_value + grouping
+#
+#     ## Create lists that will hold the found values.
+#     names_small = []
+#     locations_small = []
+#
+#     names_medium = []
+#     locations_medium = []
+#
+#     names_large = []
+#     locations_large = []
+#
+#     ## Iterate through the dataframe to find the information needed to fill
+#     ## the lists.
+#     for index, row in df.iterrows():
+#         long_coords = df['longitude']
+#         lat_coords = df['latitude']
+#         if not long_coords.empty and not lat_coords.empty:
+#             if row['count'] >= min_value and row['count'] < second_value:
+#                 locations_small.append((lat_coords.iloc[index], long_coords.iloc[index]))
+#                 names_small.append(row['institution'] + ': ' + str(row['count']))
+#             elif row['count'] >= second_value and row['count'] < third_value:
+#                 locations_medium.append((lat_coords.iloc[index], long_coords.iloc[index]))
+#                 names_medium.append(row['institution'] + ': ' + str(row['count']))
+#             elif row['count'] >= third_value and row['count'] <= max_value:
+#                 locations_large.append((lat_coords.iloc[index], long_coords.iloc[index]))
+#                 names_large.append(row['institution'] + ': ' + str(row['count']))
+#         else:
+#             print('For institution "' + row[
+#                 'affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
+#                                  'academic institution. Skipping it ...\n')
+#
+#     ## Add the different markers to different layers corresponding to the
+#     ## different amounts of instructors per affiliation.
+#     symbol_layer_small = gmaps.symbol_layer(locations_small, fill_color="#ff6600", stroke_color="#ff6600",
+#                                             scale=3, display_info_box=True, info_box_content=names_small)
+#     symbol_layer_medium = gmaps.symbol_layer(locations_medium, fill_color="#ff6600", stroke_color="#ff6600",
+#                                              scale=6, display_info_box=True, info_box_content=names_medium)
+#     symbol_layer_large = gmaps.symbol_layer(locations_large, fill_color="#ff6600", stroke_color="#ff6600",
+#                                             scale=8, display_info_box=True, info_box_content=names_large)
+#
+#     ## Resize the map to fit the whole screen.
+#     map = gmaps.Map(height='100vh', layout={'height': '100vh'})
+#
+#     ## Add all the layers to the map.
+#     map.add_layer(symbol_layer_small)
+#     map.add_layer(symbol_layer_medium)
+#     map.add_layer(symbol_layer_large)
+#
+#     return map
 
-        ## Add to a layer
-        folium.GeoJson(regions,
-                       name='regions',
-                       style_function=lambda feature: {
-                           # 'fillColor': '#99ffcc',
-                           'color': '#b7b7b7'
-                       }).add_to(map)
-        folium.LayerControl().add_to(map)
-    except:
-        print ("An error occurred while reading the UK regions file: " + UK_REGIONS_FILE)
-        print(traceback.format_exc())
-
-    return map
