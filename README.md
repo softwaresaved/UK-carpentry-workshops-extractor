@@ -75,6 +75,7 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
 ## Carpentry workshops and instructor analysers and mappers (in python)
 
 The project contains 2 python scripts (`analyse_workshops.py` and `analyse_instructors.py`) to analyse the data resulting from the extraction phase and 5 (at the moment) python mapper scripts (`map_workshops.py` and `map_instructors.py`)
+
 to map the data from the extraction phase.
 
 Analyser scripts creates resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/workshops` or `data/instructors` folders.
@@ -105,6 +106,8 @@ Download the generated credentials file and save it as `client_secret.json` in t
  to pass that to the script via the command-line option `-gid` (see below for details). If this option is not specified, by default the scripts will only
  save the generated files to the `data/workshops` or `data/instructors` folders and will not attempt to upload anything to Google Drive.
 
+To visualize the map_workshop_institution.py and map_instructor_affiliations.py you will also need a Google Maps JavaScript API key. In order to get the key you simply need to follow the steps at https://developers.google.com/maps/documentation/javascript/get-api-key and create you own config.py script in the directory. For that you can use the example script config.py.pre.
+
 ### Analyser and mapper scripts' dependencies
 To prepare your python environment for running the python scripts, you need to install some dependencies listed in `requirements.txt`:
 
@@ -123,11 +126,11 @@ glob
 ### Running analyser and mapper scripts
 To run the analyser scripts, from the project root do:
 
-```$ python analyse_workshops.rb```
+```$ python analyse_workshops.py```
 
 or
 
-```$ python analyse_instructors.rb```
+```$ python analyse_instructors.py```
 
 To run the mapper scripts, from the project root do:
 
