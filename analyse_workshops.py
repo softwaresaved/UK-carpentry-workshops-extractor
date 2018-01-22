@@ -13,7 +13,6 @@ import lib.helper as helper
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
-STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 VENUE_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/lib/venue_institution_dictionary.json'
 
 
@@ -375,7 +374,7 @@ def main():
         workshops_df = insert_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
         workshops_df = insert_workshop_institution(workshops_df)
-        workshops_df = helper.remove_stopped_workshops(workshops_df, STOPPED_WORKSHOP_TYPES)
+        workshops_df = helper.remove_stopped_workshops(workshops_df)
 
         print('Creating the analyses Excel spreadsheet ...')
         workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'

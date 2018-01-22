@@ -14,10 +14,11 @@ from shapely.geometry import shape, Point
 # import branca
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-
 UK_REGIONS_FILE = CURRENT_DIR + '/UK_regions.json'
 
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
+
+STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 
 
 def load_data_from_csv(csv_file, columns=None):
@@ -121,8 +122,8 @@ def fix_UK_academic_institutions_names(df):
     df.loc[df.institution == 'Aberystwyth University', 'institution'] = 'Prifysgol Aberystwyth'
     return df
 
-def remove_stopped_workshops(df, tag_list):
-    for tag in tag_list:
+def remove_stopped_workshops(df):
+    for tag in STOPPED_WORKSHOP_TYPES:
         df = df[df.tags != tag]
     return df
 
