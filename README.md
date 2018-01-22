@@ -172,18 +172,20 @@ optional arguments:
 
 ### Example maps
 
-Map of clustered markers (UK instructor affiliations 2018-01-14)
+*Map of clustered markers (UK instructor affiliations 2018-01-14)*
+
+Little orange circles indicate single markers and the numbered clusters indicate the number of markers in each (green show smaller clusters, moving towards bigger yellow clusters). In an interactive version of the map, these can be clicked and zoomed into to expand and reveal the individual markers.
 
 ![map of clustered markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
 
-Map of markers (UK instructor affiliations 2018-01-14)
+*Map of markers (UK instructor affiliations 2018-01-14)*
 
 ![map of markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
 
-Choropleth map (UK instructor affiliations 2018-01-14)
+*Choropleth map (UK instructor affiliations 2018-01-14)*
 
 ![choropleth map](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/choropleth_map_instructors_per_UK_regions_carpentry-instructors_GB_2018-01-14.png)
 
-Heatmap (UK instructor affiliations 2018-01-14)
+*Heatmap (UK instructor affiliations 2018-01-14)*
 
 ![heatmap](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/heatmap_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
