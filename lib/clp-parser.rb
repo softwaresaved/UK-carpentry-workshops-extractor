@@ -59,16 +59,21 @@ def parse(args)
 
     if ($0.downcase.include?('workshops'))
       opts.on("-w", "--workshops_file WORKSHOPS_FILE",
-              "File within 'data/workshops' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
-        options.workshops_file = File.join(WORKSHOPS_DIR, "#{workshops_file}")
+              "Absolute path to a file where to save the workshops extracted from AMY to. Defaults to <PROJECT-ROOT>/data/workshops/carpentry-workshops_COUNTRY_CODE_DATE.csv.") do |workshops_file|
+        options.workshops_file = workshops_file  # expect absolute path
       end
     end
 
     if ($0.downcase.include?('instructors'))
       opts.on("-i", "--instructors_file INSTRUCTORS_FILE",
-              "File within 'data/instructors' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
-        options.instructors_file = File.join(INSTRUCTORS_DIR, "#{instructors_file}")
+              "Absolute path to a file where to save the instructors extracted from AMY to. Defaults to <PROJECT-ROOT>/data/instructors/carpentry-instructors_COUNTRY_CODE_DATE.csv.") do |instructors_file|
+        options.instructors_file = instructors_file # expect absolute path
       end
+    end
+
+    opts.on("-g", "--google_folder_id GOOGLE_FOLDER_ID",
+            "ID of a Google Drive directory where to upload the extracted data to") do |google_folder_id|
+      options.google_folder_id = google_folder_id
     end
 
     # A switch to print the version.

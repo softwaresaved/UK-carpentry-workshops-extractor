@@ -6,8 +6,10 @@ require 'json'
 require 'csv'
 require 'fileutils'
 require 'date'
+
 require_relative "lib/amy.rb"
 require_relative "lib/clp-parser.rb"
+require_relative "lib/google-drive.rb"
 
 VERSION = "1.0.1"
 
@@ -214,6 +216,7 @@ module Instructors
 
 end
 
+
 # Main script body
 if __FILE__ == $0 then
 
@@ -229,5 +232,7 @@ if __FILE__ == $0 then
   instructors = Instructors.get_instructors(options.country_code, session_id, csrf_token)
 
   Instructors.write_instructors_to_csv(instructors, options.instructors_file) unless instructors.empty?
+
+  google_drive_upload(options.instructors_file, options.google_folder_id) unless options.google_folder_id.nil?
 
 end

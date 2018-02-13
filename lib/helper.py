@@ -85,7 +85,7 @@ def parse_command_line_paramters():
         print("You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py.")
         exit(1)
 
-    parser.add_argument('-gid', '--google_drive_dir_id', type=str,
+    parser.add_argument('-g', '--google_drive_dir_id', type=str,
                         help='ID of a Google Drive directory where to upload the analyses and map files to')
     args = parser.parse_args()
     return args

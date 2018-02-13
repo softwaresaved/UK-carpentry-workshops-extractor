@@ -410,9 +410,8 @@ def main():
 
                 parents_list = [{'kind': 'drive#fileLink', 'id': args.google_drive_dir_id}]
 
-                helper.google_drive_upload(workshops_file, drive, parents_list, True)
-                print(
-                    'Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
+                #helper.google_drive_upload(workshops_file, drive, parents_list, True)
+                #print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
 
                 helper.google_drive_upload(workshop_analyses_excel_file, drive, parents_list, True)
                 print(

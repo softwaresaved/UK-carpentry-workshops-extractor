@@ -9,6 +9,7 @@ require 'nokogiri'
 require 'date'
 require_relative "lib/amy.rb"
 require_relative "lib/clp-parser.rb"
+require_relative "lib/google-drive.rb"
 
 VERSION = "1.0.1"
 
@@ -136,5 +137,7 @@ if __FILE__ == $0 then
   workshops = Workshops.get_workshops(options.country_code, session_id, csrf_token)
 
   Workshops.write_workshops_to_csv(workshops, options.workshops_file) unless workshops.empty?
+
+  google_drive_upload(options.workshops_file, options.google_folder_id) unless options.google_folder_id.nil?
 
 end
