@@ -56,6 +56,8 @@ Usage: ruby extract_workshops.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE] [
     -c, --country_code COUNTRY_CODE  ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.
     -w WORKSHOPS_FILE,               File within 'data/workshops' directory where to save the workshops extracted from AMY to. Defaults to carpentry-workshops_COUNTRY_CODE_DATE.csv.
         --workshops_file
+    -g GOOGLE_DRIVE_FOLDER_ID,       ID of a Google Drive folder where to upload the extracted data to
+        --google_folder_id
     -v, --version                    Show version
     -h, --help                       Show this help message
 ```
@@ -68,6 +70,8 @@ Usage: ruby extract_instructors.rb [-u USERNAME] [-p PASSWORD] [-c COUNTRY_CODE]
     -c, --country_code COUNTRY_CODE  ISO-3166-1 two-letter country_code code or 'all' for all countries. Defaults to 'GB'.
     -i INSTRUCTORS_FILE,             File within 'data/instructors' directory where to save the instructors extracted from AMY to. Defaults to carpentry-instructors_COUNTRY_CODE_DATE.csv.
         --instructors_file
+    -g GOOGLE_DRIVE_FOLDER_ID,       ID of a Google Drive folder where to upload the extracted data to
+        --google_folder_id
     -v, --version                    Show version
     -h, --help                       Show this help message
 ```
@@ -102,7 +106,7 @@ should be set to 'Other'). Detailed instructions on how to this are
 [available online](https://developers.google.com/api-client-library/python/samples/samples).
 Download the generated credentials file and save it as `client_secret.json` in the root directory of this project.
 * You will also need the ID of the parent folder in Google Drive where you want the files to be uploaded, and
- to pass that to the script via the command-line option `-gid` (see below for details). If this option is not specified, by default the scripts will only
+ to pass that to the script via the command-line option `-g` (see below for details). If this option is not specified, by default the scripts will only
  save the generated files to the `data/workshops` or `data/instructors` folders and will not attempt to upload anything to Google Drive.
 
 ### Analyser and mapper scripts' dependencies
@@ -143,26 +147,26 @@ There are several command line options available for both analyser and mapper sc
 ```
 $ python analyse_workshops.py -h
 usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE]
-                            [-gid GOOGLE_DRIVE_DIR_ID]
+                            [-g GOOGLE_DRIVE_FOLDER_ID]
 
 optional arguments:
   -h, --help            show this help message and exit
   -w WORKSHOPS_FILE, --workshops_file WORKSHOPS_FILE
                         an absolute path to the workshops CSV file to analyse
-  -gid GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
+  -g GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
                         ID of a Google Drive directory where to upload the
                         analyses and map files to
 ```
 ```
 $ python analyse_instructors.py -h
 usage: analyse_instructors.py [-h] [-i INSTRUCTORS_FILE]
-                              [-gid GOOGLE_DRIVE_DIR_ID]
+                              [-g GOOGLE_DRIVE_FOLDER_ID]
 
 optional arguments:
   -h, --help            show this help message and exit
   -i INSTRUCTORS_FILE, --instructors_file INSTRUCTORS_FILE
                         an absolute path to instructors CSV file to analyse
-  -gid GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
+  -g GOOGLE_DRIVE_DIR_ID, --google_drive_dir_id GOOGLE_DRIVE_DIR_ID
                         ID of a Google Drive directory where to upload the
                         analyses and map files to
 ```
