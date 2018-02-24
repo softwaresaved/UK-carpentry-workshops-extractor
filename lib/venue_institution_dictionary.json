@@ -28,6 +28,7 @@
   "EPCC - The University of Edinburgh": "University of Edinburgh",
   "University of Edinburgh (EPCC)": "University of Edinburgh",
   "University of Edinburgh": "University of Edinburgh",
+  "The University of Edinburgh": "University of Edinburgh",
   "University of Leeds": "University of Leeds",
   "The University of Leeds - Advanced Research Computing": "University of Leeds",
   "NERC / University of Leeds": "University of Leeds",
@@ -57,5 +58,9 @@
   "National Oceanography Centre": "National Oceanography Centre",
   "Digital Greenwich": "Digital Greenwich",
   "University of York": "University of York",
-  "Rutherford Appleton Laboratory": "Rutherford Appleton Laboratory"
+  "Rutherford Appleton Laboratory": "Rutherford Appleton Laboratory",
+  "BDI": "University of Oxford",
+  "Swansea University" : "Swansea University",
+  "University of Swansea" : "Swansea University",
+  "ARCHER Software Carpentry @ The University of Leicester" : "University of Leicester"
 }

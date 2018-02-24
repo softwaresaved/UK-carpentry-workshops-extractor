@@ -12,6 +12,8 @@ require_relative "lib/clp-parser.rb"
 require_relative "lib/google-drive.rb"
 
 VERSION = "1.0.1"
+MISSING_UK_ONLINE_WORKSHOPS = ["2017-07-13-ttt-online", "2018-01-30-ttt-online-UK" ]
+AMY_API_WORKSHOP_URL = "https://amy.software-carpentry.org/api/v1/events/"
 
 module Workshops
 
@@ -32,6 +34,12 @@ module Workshops
       workshops_by_country = all_published_workshops.select{|workshop| workshop["country"] == country_code} unless (country_code.nil? or country_code.downcase == 'all')
       puts "Results: number of workshops for country #{country_code} = #{workshops_by_country.length.to_s}; total number of all workshops = #{all_published_workshops.length.to_s}."
 
+      workshops_by_country.each{|workshop | workshop["tags"] = workshop["tags"].map{|x| x["name"]}.join(", ")}
+
+      if (country_code.downcase == "gb" or country_code.downcase == 'all')
+        workshops_by_country.concat(get_missing_uk_workshops(session_id, csrf_token)) unless (session_id.nil? or csrf_token.nil?)
+      end
+
       # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
       # To do that, we need to extract the HTML table listing people and their roles (e.g. where role == 'learner' or where role == 'instructor').
       # Accessing these pages requires authentication passing session_id and csrf_token obtained previously.
@@ -41,8 +49,53 @@ module Workshops
       puts "Failed to get publicly available workshops info using AMY's API at #{AMY_API_PUBLISHED_WORKSHOPS_URL}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
       puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
     end
-
     return workshops_by_country
+  end
+
+  # Get workshops marked as 'online'(which therefore do not have the country) but we know went ahead in the UK (mainly TTT workshops).
+  def self.get_missing_uk_workshops(session_id, csrf_token)
+    puts "\n" + "#" * 80 +"\n\n"
+    puts "Adding #{MISSING_UK_ONLINE_WORKSHOPS.length} missing UK online workshops #{MISSING_UK_ONLINE_WORKSHOPS.to_s} manually."
+    missing_workshops = []
+    begin
+      MISSING_UK_ONLINE_WORKSHOPS.each do |slug|
+        begin
+          # Retrieve workshop details using AMY's workshop API
+          workshop_url = AMY_API_WORKSHOP_URL + slug
+          puts "Quering AMY's API at #{workshop_url} to get info for workshop #{slug}."
+          headers = HEADERS.merge({"Cookie" => "sessionid=#{session_id}; token=#{csrf_token}", "Accept" => "application/json"})
+          hash = JSON.load(open(workshop_url, headers))
+
+          missing_workshop = {}
+          missing_workshop["slug"] = hash["slug"]
+          missing_workshop["start"] = hash["start"]
+          missing_workshop["end"] = hash["end"]
+          missing_workshop["url"] = hash["website_url"]
+
+          start_month = Date.parse(hash["start"]).strftime("%b")
+          end_month = Date.parse(hash["end"]).strftime("%b")
+          start_day = Date.parse(hash["start"]).strftime("%-d")
+          end_day = Date.parse(hash["end"]).strftime("%-d")
+          end_year = Date.parse(hash["end"]).strftime("%Y")
+          missing_workshop["humandate"] = "#{start_month} #{start_day}-#{(start_month == end_month) ? '' : end_month}#{end_day}, #{end_year}"
+
+          missing_workshop["contact"] = hash["contact"]
+          missing_workshop["country"] = hash["country"]
+          missing_workshop["venue"] = hash["venue"]
+          missing_workshop["address"] = hash["address"]
+          missing_workshop["latitude"] = hash["latitude"]
+          missing_workshop["longitude"] = hash["longitude"]
+          missing_workshop["eventbrite_id"] = ""
+          missing_workshop["tags"] = hash["tags"].join(", ")
+
+          missing_workshops.append(missing_workshop)
+        rescue Exception => ex
+          puts "Failed to get workshop info using AMY's API at #{workshop_url}. An error of type #{ex.class} occurred, the reason being: #{ex.message}."
+          puts "Backtrace:\n\t#{ex.backtrace.join("\n\t")}"
+        end
+      end
+    end
+    return missing_workshops
   end
 
   def self.get_private_workshop_info(workshops, session_id, csrf_token)
@@ -100,7 +153,7 @@ module Workshops
                    workshop["humandate"],
                    (workshop["start"].nil? || workshop["start"] == '') ? DateTime.now.to_date.strftime("%Y-%m-%d") : workshop["start"],
                    (workshop["end"].nil? || workshop["end"] == '') ? ((workshop["start"].nil? || workshop["start"] == '') ? DateTime.now.to_date.next_day.strftime("%Y-%m-%d") : DateTime.strptime(workshop["start"], "%Y-%m-%d").to_date.next_day.strftime("%Y-%m-%d")) : workshop["end"],
-                   workshop["tags"].map{|x| x["name"]}.join(", "),
+                   workshop["tags"],
                    workshop["venue"],
                    workshop["address"],
                    workshop["latitude"],
