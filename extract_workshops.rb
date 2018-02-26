@@ -38,6 +38,7 @@ module Workshops
 
       if (country_code.downcase == "gb" or country_code.downcase == 'all')
         workshops_by_country.concat(get_missing_uk_workshops(session_id, csrf_token)) unless (session_id.nil? or csrf_token.nil?)
+        workshops_by_country = workshops_by_country.sort_by{ |hash| Date.parse(hash["start"])}.reverse
       end
 
       # Figure out some extra details about the workshops - e.g. the number of instructor attendees and instructors from AMY records - by accessing the UI/HTML page of each instructor - since this info is not available via the public API.
@@ -83,8 +84,9 @@ module Workshops
           missing_workshop["country"] = hash["country"]
           missing_workshop["venue"] = hash["venue"]
           missing_workshop["address"] = hash["address"]
-          missing_workshop["latitude"] = hash["latitude"]
-          missing_workshop["longitude"] = hash["longitude"]
+          # add coordinates of the center of the UK as this is an online workshop so we do not have the location
+          missing_workshop["latitude"] = "53.5"
+          missing_workshop["longitude"] = "-1.65"
           missing_workshop["eventbrite_id"] = ""
           missing_workshop["tags"] = hash["tags"].join(", ")
 
