@@ -62,9 +62,9 @@ def main():
                 map = helper.add_UK_regions_layer(map)
 
             # Save map to a HTML file
-            html_map_file = WORKSHOPS_DATA_DIR + 'map_clustered_workshop_venues_' + workshops_file_name_without_extension + '.html'
-            map.save(html_map_file)
-            print('Map of workshop venues saved to HTML file ' + html_map_file + '\n')
+            map_file = WORKSHOPS_DATA_DIR + 'map_clustered_workshop_venues_' + workshops_file_name_without_extension + '.html'
+            map.save(map_file)
+            print('Map of workshop venues saved to HTML file ' + map_file + '\n')
 
         except:
             print ("An error occurred while creating the map of workshop venues  ...")
@@ -72,9 +72,9 @@ def main():
         else:
             if args.google_drive_dir_id:
                 try:
-                    print("Uploading workshop venues map to Google Drive " + html_map_file)
+                    print("Uploading workshop venues map to Google Drive " + map_file)
                     drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
+                    helper.google_drive_upload(map_file,
                                                drive,
                                                [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                False)
@@ -97,9 +97,9 @@ def main():
                 map = helper.generate_choropleth_map(workshops_df, uk_regions, "workshops")
 
                 # Save map to a HTML file
-                html_map_file = WORKSHOPS_DATA_DIR + 'choropleth_map_workshops_per_UK_regions_' + workshops_file_name_without_extension + '.html'
-                map.save(html_map_file)
-                print('A choropleth map of workshops over UK regions saved to HTML file ' + html_map_file + '\n')
+                map_file = WORKSHOPS_DATA_DIR + 'choropleth_map_workshops_per_UK_regions_' + workshops_file_name_without_extension + '.html'
+                map.save(map_file)
+                print('A choropleth map of workshops over UK regions saved to HTML file ' + map_file + '\n')
 
             except:
                 print ("An error occurred while creating a choropleth map of workshops over UK regions...\n")
@@ -108,9 +108,9 @@ def main():
                 if args.google_drive_dir_id:
                     try:
                         print(
-                            "Uploading a choropleth map of workshops over UK regions to Google Drive " + html_map_file)
+                            "Uploading a choropleth map of workshops over UK regions to Google Drive " + map_file)
                         drive = helper.google_drive_authentication()
-                        helper.google_drive_upload(html_map_file,
+                        helper.google_drive_upload(map_file,
                                                    drive,
                                                    [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                    False)
@@ -134,16 +134,16 @@ def main():
 
                 # Old code with Google maps that requires Google API key
                 # map = helper.generate_gmap_map_with_circular_markers(df)
-                # embed_minimal_html(html_map_file, views=[map])
+                # embed_minimal_html(map_file, views=[map])
             except:
                 print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
                 print(traceback.format_exc())
             else:
                 if args.google_drive_dir_id:
                     try:
-                        print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
+                        print("Uploading a heatmap of instructor affiliations to Google Drive " + map_file)
                         drive = helper.google_drive_authentication()
-                        helper.google_drive_upload(html_map_file,
+                        helper.google_drive_upload(map_file,
                                                    drive,
                                                    [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                    False)
@@ -174,9 +174,9 @@ def main():
             else:
                 if args.google_drive_dir_id:
                     try:
-                        print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
+                        print("Uploading a heatmap of instructor affiliations to Google Drive " + map_file)
                         drive = helper.google_drive_authentication()
-                        helper.google_drive_upload(html_map_file,
+                        helper.google_drive_upload(map_file,
                                                    drive,
                                                    [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
                                                    False)
