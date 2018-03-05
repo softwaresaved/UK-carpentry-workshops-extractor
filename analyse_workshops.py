@@ -376,6 +376,11 @@ def main():
         workshops_df = insert_workshop_institution(workshops_df)
         workshops_df = helper.remove_stopped_workshops(workshops_df)
 
+        csv_modified_data_file = WORKSHOP_DATA_DIR + 'modified_' + workshops_file_name_without_extension + '.csv'
+        print('Saving the modified workshop data to a CSV spreadsheet ' + csv_modified_data_file)
+        helper.save_data_to_csv(workshops_df, csv_modified_data_file)
+        print("\n")
+
         print('Creating the analyses Excel spreadsheet ...')
         workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
         excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,
