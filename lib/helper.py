@@ -28,6 +28,8 @@ def load_data_from_csv(csv_file, columns=None):
     df = pd.read_csv(csv_file, usecols=columns)
     return pd.DataFrame(df)
 
+def save_data_to_csv(df, file_name):
+    df.to_csv(file_name, encoding='utf-8')
 
 def insert_region_column(df, regions):
     """
@@ -120,6 +122,8 @@ def fix_UK_academic_institutions_names(df):
     df.loc[df.institution == 'Imperial College London', 'institution'] = 'Imperial College of Science, Technology and Medicine'
     df.loc[df.institution == 'Queen Mary University of London', 'institution'] = 'Queen Mary and Westfield College, University of London'
     df.loc[df.institution == 'Aberystwyth University', 'institution'] = 'Prifysgol Aberystwyth'
+    df.loc[df.institution == 'University of Sheffield; University of Leeds', 'institution'] = 'University of Sheffield'
+
     return df
 
 def remove_stopped_workshops(df):
