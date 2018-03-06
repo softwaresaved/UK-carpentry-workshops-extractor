@@ -123,5 +123,10 @@
     "VIEW_NAME": "The Sir Alister Hardy Foundation for Ocean Science (SAHFOS)",
     "LONGITUDE": -4.138946,
     "LATITUDE": 50.364335
+  },
+    {
+    "VIEW_NAME": "Hartree Centre, STFC",
+    "LONGITUDE": -2.636473,
+    "LATITUDE": 53.348725
   }
 ]

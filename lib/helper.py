@@ -11,6 +11,8 @@ import folium
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
+import traceback
+
 # import branca
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -123,6 +125,11 @@ def fix_UK_academic_institutions_names(df):
     df.loc[df.institution == 'Queen Mary University of London', 'institution'] = 'Queen Mary and Westfield College, University of London'
     df.loc[df.institution == 'Aberystwyth University', 'institution'] = 'Prifysgol Aberystwyth'
     df.loc[df.institution == 'University of Sheffield; University of Leeds', 'institution'] = 'University of Sheffield'
+    df.loc[df.institution == 'CRUK', 'institution'] = 'University of Cambridge'
+    df.loc[df.institution == 'National Heart & Lung Institute, Imperial College', 'institution'] = 'Imperial College of Science, Technology and Medicine'
+    df.loc[df.institution == 'EPCC, The University of Edinburgh', 'institution'] = 'University of Edinburgh'
+    df.loc[df.institution == 'KRISP', 'institution'] = 'University of Keele'
+    df.loc[df.institution == 'InterMine, Cambridge University', 'institution'] = 'University of Cambridge'
 
     return df
 
