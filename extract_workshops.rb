@@ -124,6 +124,12 @@ module Workshops
         workshop['number_of_attendees'] = attendance_number_node.nil? ? 0 : attendance_number_node.content.slice(0, attendance_number_node.content.index("Ask for attendance")).strip.to_i
         puts "Found #{workshop["number_of_attendees"]} attendees for #{workshop["slug"]}."
 
+        # Get the workshop administrator
+        # gets 2nd <td> child of a <tr> node that contains a <td> with the text 'administrator:' in the first <td>. then get the <a> tag inside it
+        administrator = workshop_html_page.at_xpath('//table/tr/td[contains(text(), "administrator:")]/../td[2]/a/text()')
+        workshop['administrator'] = administrator
+        puts "Found #{workshop["administrator"]} as workshop administrator for #{workshop["slug"]}."
+
         # Get instructors that taught at workshops
         instructors = workshop_html_page.xpath('//table/tr/td[contains(text(), "instructor")]/../td[3]')
         workshop['instructors'] = instructors.map(&:text) # Get text value of all instructor nodes as an array
@@ -143,7 +149,7 @@ module Workshops
 
     FileUtils.touch(csv_file) unless File.exist?(csv_file)
     # CSV headers
-    csv_headers = ["slug", "humandate", "start", "end", "tags", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6", "instructor_7", "instructor_8", "instructor_9", "instructor_10"]
+    csv_headers = ["slug", "humandate", "start", "end", "tags", "administrator", "venue", "address", "latitude", "longitude", "eventbrite_id", "contact", "url", "number_of_attendees", "instructor_1", "instructor_2", "instructor_3", "instructor_4", "instructor_5", "instructor_6", "instructor_7", "instructor_8", "instructor_9", "instructor_10"]
 
     begin
       CSV.open(csv_file, 'w',
@@ -156,6 +162,7 @@ module Workshops
                    (workshop["start"].nil? || workshop["start"] == '') ? DateTime.now.to_date.strftime("%Y-%m-%d") : workshop["start"],
                    (workshop["end"].nil? || workshop["end"] == '') ? ((workshop["start"].nil? || workshop["start"] == '') ? DateTime.now.to_date.next_day.strftime("%Y-%m-%d") : DateTime.strptime(workshop["start"], "%Y-%m-%d").to_date.next_day.strftime("%Y-%m-%d")) : workshop["end"],
                    workshop["tags"],
+                   workshop["administrator"],
                    workshop["venue"],
                    workshop["address"],
                    workshop["latitude"],
