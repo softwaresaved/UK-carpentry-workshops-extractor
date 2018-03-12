@@ -12,9 +12,8 @@ import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
+MODIFIED_WORKSHOP_DATA_DIR = WORKSHOP_DATA_DIR + 'data_modified/' # manipulated raw data for the purpose of analyses
 WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
-VENUE_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/lib/venue_institution_dictionary.json'
-
 
 def insert_year(df):
     """
@@ -53,28 +52,6 @@ def insert_workshop_type(df):
     return df
 
 
-def insert_workshop_institution(df):
-    """
-    Find workshop institution by looking it up workshop venue in a yaml file and insert it in a new column 'institution'.
-    """
-    # Index of column 'venue', right of which we want to insert the new column
-    idx = df.columns.get_loc("venue")
-
-    workshop_institutions_dict = json.load(open(VENUE_INSTITUTIONS_DICT_FILE))
-
-    workshop_institutions = []
-    for venue in df['venue']:
-        institution = workshop_institutions_dict.get(venue.strip(), "Unknown")
-        workshop_institutions.append(institution)
-        if institution == "Unknown":
-            print('For workshop venue "' + venue + '" we do not have the institution information. ' +
-                  'Setting the institution to "Unknown" ...\n')
-
-    df.insert(loc=idx + 1, column='institution',
-              value=workshop_institutions)  # insert to the right of the column 'venue'
-    return df
-
-
 def workshops_per_year_analysis(df, writer):
     """
     Number of workshops per year - create the corresponding table and graphs and write to the spreadsheet.
@@ -110,10 +87,10 @@ def workshops_per_institution_analysis(df, writer):
     Number of workshops per institution - create the corresponding table and graph and write to the spreadsheet.
     """
     # Remove rows with 'Unknown' value for the institution
-    df = df[df.institution != 'Unknown']
+    df = df[df.normalised_institution != 'Unknown']
 
     institution_table = pd.core.frame.DataFrame(
-        {'number_of_workshops': df.groupby(['institution']).size().sort_values()}).reset_index()
+        {'number_of_workshops': df.groupby(['normalised_institution']).size().sort_values()}).reset_index()
 
     institution_table.to_excel(writer, sheet_name='workshops_per_institution', index=False)
 
@@ -175,11 +152,11 @@ def workshops_per_institution_over_years_analysis(df, writer):
     Number of workshops per institution over years - create the corresponding table and graph and write to the spreadsheet.
     """
     # Remove rows with 'Unknown' value for the institution
-    df = df[df.institution != 'Unknown']
+    df = df[df.normalised_institution != 'Unknown']
 
     institution_over_years_table = pd.core.frame.DataFrame(
-        {'count': df.groupby(['institution', 'year']).size()}).reset_index()
-    institution_over_years_table = institution_over_years_table.pivot_table(index='institution', columns='year')
+        {'count': df.groupby(['normalised_institution', 'year']).size()}).reset_index()
+    institution_over_years_table = institution_over_years_table.pivot_table(index='normalised_institution', columns='year')
 
     institution_over_years_table.to_excel(writer, sheet_name='workshops_per_institution_over_years')
 
@@ -373,10 +350,13 @@ def main():
         workshops_df = helper.load_data_from_csv(workshops_file)
         workshops_df = insert_year(workshops_df)
         workshops_df = insert_workshop_type(workshops_df)
-        workshops_df = insert_workshop_institution(workshops_df)
+        workshops_df = helper.insert_normalised_institutions_names(workshops_df, "venue")
         workshops_df = helper.remove_stopped_workshops(workshops_df)
 
-        csv_modified_data_file = WORKSHOP_DATA_DIR + 'modified_' + workshops_file_name_without_extension + '.csv'
+        if not os.path.exists(MODIFIED_WORKSHOP_DATA_DIR):
+            os.makedirs(MODIFIED_WORKSHOP_DATA_DIR)
+
+        csv_modified_data_file = MODIFIED_WORKSHOP_DATA_DIR + 'modified_' + workshops_file_name_without_extension + '.csv'
         print('Saving the modified workshop data to a CSV spreadsheet ' + csv_modified_data_file)
         helper.save_data_to_csv(workshops_df, csv_modified_data_file)
         print("\n")

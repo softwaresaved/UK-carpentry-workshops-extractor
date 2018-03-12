@@ -45,11 +45,6 @@
     "LATITUDE": 51.4787438
   },
   {
-    "VIEW_NAME": "The Sainsbury Laboratory",
-    "LONGITUDE": 1.2228880000000117,
-    "LATITUDE": 52.622316
-  },
-  {
     "VIEW_NAME": "James Hutton Institute",
     "LONGITUDE": -2.158366000000001,
     "LATITUDE": 57.133131
@@ -125,7 +120,7 @@
     "LATITUDE": 50.364335
   },
     {
-    "VIEW_NAME": "Hartree Centre, STFC",
+    "VIEW_NAME": "STFC",
     "LONGITUDE": -2.636473,
     "LATITUDE": 53.348725
   }

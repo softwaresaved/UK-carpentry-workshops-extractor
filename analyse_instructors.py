@@ -10,6 +10,7 @@ import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTOR_DATA_DIR = CURRENT_DIR + '/data/instructors/'
+MODIFIED_INSTRUCTOR_DATA_DIR = INSTRUCTOR_DATA_DIR + 'data_modified/' # manipulated raw data for the purpose of analyses
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions-airports.xlsx'
 
 def insert_earliest_badge_year(df):
@@ -158,7 +159,7 @@ def main():
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
 
-    print('CSV file with carpentry instructors to analyse ' + instructors_file)
+    print('CSV file with carpentry instructors to analyse ' + instructors_file + "\n")
 
     try:
         instructors_df = helper.load_data_from_csv(instructors_file, ['country_code','nearest_airport_name',
@@ -170,11 +171,20 @@ def main():
                                         'earliest-badge-awarded',
                                         'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
         instructors_df = helper.drop_null_values_from_columns(instructors_df, ['country_code', 'institution', 'nearest_airport_name'])
+        instructors_df = helper.insert_normalised_institutions_names(instructors_df, "institution")
+
+        # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instructors' data
+        # We are not doing anything with the geo data, just want to save it in the new/modified dataset.
+        instructors_df = helper.insert_institutions_geocoordinates(instructors_df)
+
         instructors_df = insert_earliest_badge_year(instructors_df)
         instructors_df = insert_airport_region(instructors_df)
 
-        csv_modified_data_file = INSTRUCTOR_DATA_DIR + 'modified_' + instructors_file_name_without_extension + '.csv'
-        print('Saving the modified workshop data to a CSV spreadsheet ' + csv_modified_data_file)
+        if not os.path.exists(MODIFIED_INSTRUCTOR_DATA_DIR):
+            os.makedirs(MODIFIED_INSTRUCTOR_DATA_DIR)
+
+        csv_modified_data_file = MODIFIED_INSTRUCTOR_DATA_DIR + 'modified_' + instructors_file_name_without_extension + '.csv'
+        print('Saving the modified instructors data to a CSV spreadsheet ' + csv_modified_data_file)
         helper.save_data_to_csv(instructors_df, csv_modified_data_file)
         print("\n")
 
