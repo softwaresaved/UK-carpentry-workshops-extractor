@@ -47,8 +47,8 @@ def instructors_nearest_airport_analysis(df, writer):
     Number of people per nearest airport - create the corresponding
     table and graph and write to the spreadsheet.
     """
-    city_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_name']).size().sort_values()}).reset_index()
-    city_table.to_excel(writer,
+    airport_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_name']).size().sort_values()}).reset_index()
+    airport_table.to_excel(writer,
                         sheet_name='instructors_airports',
                         index = False)
 
@@ -58,8 +58,8 @@ def instructors_nearest_airport_analysis(df, writer):
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['instructors_airports', 1, 0, len(city_table.index), 0],
-        'values': ['instructors_airports', 1, 1, len(city_table.index), 1],
+        'categories': ['instructors_airports', 1, 0, len(airport_table.index), 0],
+        'values': ['instructors_airports', 1, 1, len(airport_table.index), 1],
         'gap': 2,
     })
 
@@ -71,7 +71,41 @@ def instructors_nearest_airport_analysis(df, writer):
 
     worksheet.insert_chart('D2', chart)
 
-    return city_table
+    return airport_table
+
+
+def instructors_per_institution_analysis(df, writer):
+    """
+       Number of instructors per institution (using normalised institution name).
+
+       """
+    institution_table = pd.core.frame.DataFrame(
+        {'number_of_instructors': df.groupby(['normalised_institution']).size().sort_values()}).reset_index()
+    institution_table.to_excel(writer,
+                          sheet_name='instructors_per_institution',
+                          index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['instructors_per_institution']
+
+    chart = workbook.add_chart({'type': 'column'})
+
+    chart.add_series({
+        'categories': ['instructors_per_institution', 1, 0, len(institution_table.index), 0],
+        'values': ['instructors_per_institution', 1, 1, len(institution_table.index), 1],
+        'gap': 2,
+    })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Region'})
+    chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of instructors per institution'})
+
+    worksheet.insert_chart('D2', chart)
+
+    return institution_table
+
 
 def instructors_per_UK_region_analysis(df, writer):
     """
@@ -200,6 +234,7 @@ def main():
              +   "a new column 'earliest-badge-awarded-year' was added, which contains extracted year from column 'earliest-badge-awarded'.")
 
         instructors_nearest_airport_analysis(instructors_df, excel_writer)
+        instructors_per_institution_analysis(instructors_df, excel_writer)
         instructors_per_UK_region_analysis(instructors_df, excel_writer)
         instructors_per_year_analysis(instructors_df, excel_writer)
 
