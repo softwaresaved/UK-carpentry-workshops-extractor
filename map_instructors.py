@@ -6,7 +6,7 @@ import re
 import sys
 import json
 import shapefile
-
+# import selenium
 sys.path.append('/lib')
 import lib.helper as helper
 
@@ -77,6 +77,16 @@ def main():
             html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
             map.save(html_map_file)
             print('Map of instructors affiliations saved to HTML file ' + html_map_file + '\n')
+
+            # Requires phantomjs to be installed separaetly, so will continue to save pngs manually.
+            # Code to save map as a png
+            # png_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.png'
+            # map.png_enabled = True
+            # png_image = map._repr_png_()
+            # fh = open(png_map_file, 'w')
+            # fh.write(png_image)
+            # fh.close()
+
         except:
             print ("An error occurred while creating a clustered map of instructor affiliations ...")
             print(traceback.format_exc())
