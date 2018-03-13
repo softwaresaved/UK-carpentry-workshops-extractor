@@ -11,10 +11,15 @@ import folium
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
+import traceback
+
 # import branca
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK_regions.json'
+NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
+UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.xlsx'
+UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
 # GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
 
@@ -28,6 +33,8 @@ def load_data_from_csv(csv_file, columns=None):
     df = pd.read_csv(csv_file, usecols=columns)
     return pd.DataFrame(df)
 
+def save_data_to_csv(df, file_name):
+    df.to_csv(file_name, encoding='utf-8')
 
 def insert_region_column(df, regions):
     """
@@ -71,8 +78,6 @@ def google_drive_upload(file, drive, parents_list, convert):
     gfile.Upload({'convert': convert})
 
 
-
-
 def parse_command_line_paramters():
     parser = argparse.ArgumentParser()
     if "workshop" in os.path.basename(sys.argv[0]): # e.g. the name of the script is 'analyse_workshops'
@@ -107,25 +112,54 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     df.to_excel(writer, sheet_name=sheet_name, index = False)
     return writer
 
+
 def drop_null_values_from_columns(df, column_list):
     for column in column_list:
         df = df.dropna(subset=[column])
         df = df.reset_index(drop=True)
     return df
 
-def fix_UK_academic_institutions_names(df):
+
+def insert_normalised_institutions_names(df, non_normalised_institution_column):
     """
-    Fix names of academic institutions to be the official names, so we can cross reference them with their geocodes later on.
+    Fix names of UK institutions to be the official names, so we can cross reference them with their geocodes later on.
+    Use column 'institution' and create new column 'normalised_institution' based off it. For institutions that we do not have
+    normanised names, just keep it as is.
     """
-    df.loc[df.institution == 'Imperial College London', 'institution'] = 'Imperial College of Science, Technology and Medicine'
-    df.loc[df.institution == 'Queen Mary University of London', 'institution'] = 'Queen Mary and Westfield College, University of London'
-    df.loc[df.institution == 'Aberystwyth University', 'institution'] = 'Prifysgol Aberystwyth'
+
+    # Index of column 'venue'/'institution' (with workshop venue/not normalised instructor institution), right of which we want to
+    # insert the new column containing normalised institution name
+    idx = df.columns.get_loc(non_normalised_institution_column)
+
+    normalised_institutions_dict = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
+
+    uk_academic_institutions_df = get_UK_academic_institutions_coords()
+    all_uk_institutions_df = uk_academic_institutions_df.append(get_UK_non_academic_institutions_coords()).reset_index(drop=True)
+
+    normalised_institutions = []
+    for institution in df[non_normalised_institution_column]:
+
+        if institution in all_uk_institutions_df['VIEW_NAME'].values:
+            normalised_institution = institution
+        else:
+            normalised_institution = normalised_institutions_dict.get(institution.strip(), "Unknown") # Replace with 'Unknown' if you cannot find the mapping
+
+        normalised_institutions.append(normalised_institution)
+        if normalised_institution == "Unknown":
+            print('For institution "' + institution + '" we do not have the normalised name information. ' +
+                  'Setting the institution to "Unknown" ...\n')
+
+    df.insert(loc=idx + 1, column='normalised_institution',
+              value=normalised_institutions)  # insert to the right of the column 'venue'/'institution'
+
     return df
+
 
 def remove_stopped_workshops(df):
     for tag in STOPPED_WORKSHOP_TYPES:
         df = df[df.tags != tag]
     return df
+
 
 def get_UK_non_academic_institutions_coords():
     """
@@ -133,23 +167,35 @@ def get_UK_non_academic_institutions_coords():
     (so are not in the official academic institutions list), but appear in AMY as affiliations of UK instructors.
     This list needs to be periodically updated as more non-academic affiliations appear in AMY.
     """
-    non_academic_UK_institutions_coords = json.load(open(CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'))
+    non_academic_UK_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE))
     return pd.DataFrame(non_academic_UK_institutions_coords)
 
-def insert_institutions_geocoordinates(df, affiliations_geocoordinates_df):
+
+def get_UK_academic_institutions_coords():
+    uk_academic_institutions_geodata_file = pd.ExcelFile(UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE)
+    uk_academic_institutions_geodata_df = uk_academic_institutions_geodata_file.parse('UK-academic-institutions')
+    return uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
+
+def insert_institutions_geocoordinates(df):
+
+    # Get coords for UK academic institutions
+    uk_academic_institutions_coords_df = get_UK_academic_institutions_coords()
+    # Add coords for UK non academic institutions and academis ones that are not in the official list
+    all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(get_UK_non_academic_institutions_coords()).reset_index(drop=True)
+
     # Insert latitude and longitude for affiliations, by looking up the all_uk_institutions_coords_df
-    idx = df.columns.get_loc("institution")  # index of column where 'institution' is kept
+    idx = df.columns.get_loc("normalised_institution")  # index of column where normalised institution is kept
     df.insert(loc=idx + 1,
                                        column='latitude',
-                                       value=None)  # copy values from 'institution' column and insert to the right
+                                       value=None)
     df.insert(loc=idx + 2,
                                        column='longitude',
-                                       value=None)  # copy values from 'institution' column and insert to the right
+                                       value=None)
     # replace with the affiliation's latitude and longitude coordinates
-    df['latitude'] = df['institution'].map(
-        affiliations_geocoordinates_df.set_index('VIEW_NAME')['LATITUDE'])
-    df['longitude'] = df['institution'].map(
-        affiliations_geocoordinates_df.set_index('VIEW_NAME')['LONGITUDE'])
+    df['latitude'] = df['normalised_institution'].map(
+        all_uk_institutions_coords_df.set_index('VIEW_NAME')['LATITUDE'])
+    df['longitude'] = df['normalised_institution'].map(
+        all_uk_institutions_coords_df.set_index('VIEW_NAME')['LONGITUDE'])
 
     return df
 
@@ -345,13 +391,13 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
 #         if not long_coords.empty and not lat_coords.empty:
 #             if row['count'] >= min_value and row['count'] < second_value:
 #                 locations_small.append((lat_coords.iloc[index], long_coords.iloc[index]))
-#                 names_small.append(row['institution'] + ': ' + str(row['count']))
+#                 names_small.append(row['normalised_institution'] + ': ' + str(row['count']))
 #             elif row['count'] >= second_value and row['count'] < third_value:
 #                 locations_medium.append((lat_coords.iloc[index], long_coords.iloc[index]))
-#                 names_medium.append(row['institution'] + ': ' + str(row['count']))
+#                 names_medium.append(row['normalised_institution'] + ': ' + str(row['count']))
 #             elif row['count'] >= third_value and row['count'] <= max_value:
 #                 locations_large.append((lat_coords.iloc[index], long_coords.iloc[index]))
-#                 names_large.append(row['institution'] + ': ' + str(row['count']))
+#                 names_large.append(row['normalised_institution'] + ': ' + str(row['count']))
 #         else:
 #             print('For institution "' + row[
 #                 'affiliation'] + '" we either have not got coordinates or it is not the official name of an UK '
