@@ -49,17 +49,17 @@ def instructors_nearest_airport_analysis(df, writer):
     """
     airport_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_name']).size().sort_values()}).reset_index()
     airport_table.to_excel(writer,
-                        sheet_name='instructors_airports',
+                        sheet_name='instructors_per_nearest_airport',
                         index = False)
 
     workbook  = writer.book
-    worksheet = writer.sheets['instructors_airports']
+    worksheet = writer.sheets['instructors_per_nearest_airport']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['instructors_airports', 1, 0, len(airport_table.index), 0],
-        'values': ['instructors_airports', 1, 1, len(airport_table.index), 1],
+        'categories': ['instructors_per_nearest_airport', 1, 0, len(airport_table.index), 0],
+        'values': ['instructors_per_nearest_airport', 1, 1, len(airport_table.index), 1],
         'gap': 2,
     })
 
@@ -98,7 +98,7 @@ def instructors_per_institution_analysis(df, writer):
 
     chart.set_y_axis({'major_gridlines': {'visible': False}})
     chart.set_legend({'position': 'none'})
-    chart.set_x_axis({'name': 'Region'})
+    chart.set_x_axis({'name': 'Institution'})
     chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
     chart.set_title({'name': 'Number of instructors per institution'})
 
