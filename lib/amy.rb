@@ -38,7 +38,7 @@ COUNTRIES_FILE = File.dirname(__FILE__) + "/countries.json"
 # Additional US top-level domains
 ADDITIONAL_US_DOMAINS = [".edu", ".gov"]
 
-# Authenticate with AMY using username and password.
+# Authenticate with AMY using username and password and Basic AuthN.
 # Returns (session_id, csrf_token) that can be reused for the duration of session.
 def authenticate_with_amy(username = nil, password = nil)
 

@@ -26,15 +26,15 @@ UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-inst
 STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 
 
-def load_data_from_csv(csv_file, columns=None):
+def load_data_from_csv(file_path, columns=None):
     """
     Loads data from a CSV file into a dataframe with an optional list of columns to load.
     """
-    df = pd.read_csv(csv_file, usecols=columns)
+    df = pd.read_csv(file_path, usecols=columns)
     return pd.DataFrame(df)
 
-def save_data_to_csv(df, file_name):
-    df.to_csv(file_name, encoding='utf-8')
+def save_data_to_csv(df, file_path):
+    df.to_csv(file_path, encoding='utf-8')
 
 def insert_region_column(df, regions):
     """
@@ -80,18 +80,9 @@ def google_drive_upload(file, drive, parents_list, convert):
 
 def parse_command_line_paramters():
     parser = argparse.ArgumentParser()
-    if "workshop" in os.path.basename(sys.argv[0]): # e.g. the name of the script is 'analyse_workshops'
-        parser.add_argument('-w', '--workshops_file', type=str, default=None,
-                            help='an absolute path to the workshops CSV file to analyse/map')
-    elif "instructor" in os.path.basename(sys.argv[0]):
-        parser.add_argument('-i', '--instructors_file', type=str, default=None,
-                            help='an absolute path to instructors CSV file to analyse/map')
-    else:
-        print("You are possibly not invoking the correct python script - analyse_workshops.py or analyse_instructors.py.")
-        exit(1)
-
-    parser.add_argument('-g', '--google_drive_dir_id', type=str,
-                        help='ID of a Google Drive directory where to upload the analyses and map files to')
+    parser.add_argument('-c', '--country_code', type=str, help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
+    parser.add_argument('-u', '--username', type=str, help="Username for logging to AMY")
+    parser.add_argument('-p', '--password', type=str, help="Password for logging to AMY")
     args = parser.parse_args()
     return args
 
