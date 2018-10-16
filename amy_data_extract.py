@@ -3,6 +3,7 @@ import pandas
 import datetime
 import yaml
 import traceback
+import json
 
 import sys
 import os
@@ -29,6 +30,25 @@ AMY_AIRPORTS_API_URL = "https://amy.software-carpentry.org/api/v1/airports/"
 
 AIRPORTS_FILE = DATA_DIR + "/airports.csv"
 
+COUNTRIES_FILE = CURRENT_DIR + "/lib/countries.json"
+
+def get_countries(countries_file):
+    countries = None
+    if os.path.isfile(countries_file):
+        with open(countries_file, 'r') as stream:
+            try:
+                countries = json.load(stream)
+            except Exception as exc:
+                print ("An error occurred while reading countries JSON file " + countries_file)
+                print(traceback.format_exc())
+    else:
+        print ("Countries JSON file does not exist " + countries_file)
+    return countries
+
+
+COUNTRIES = get_countries(COUNTRIES_FILE)
+
+
 def main():
     """
     Main function
@@ -37,7 +57,7 @@ def main():
     args = helper.parse_command_line_paramters()
 
     url_parameters = {
-        "country": None, # by default we are for workshops in all countries
+        "country": None, # by default we look for workshops in all countries
         "is_instructor": "true"
     }
 
@@ -45,13 +65,13 @@ def main():
         url_parameters["country"] = args.country_code
 
     if args.username is None and args.password is None:
-        args.username, args.password = read_credentials(AMY_CREDENTIALS_FILE)
+        args.username, args.password = get_credentials(AMY_CREDENTIALS_FILE)
 
     workshops = get_workshops(url_parameters, args.username, args.password)
     print("Extracted " + str(workshops.index.size) + " workshops.")
     workshops_file = RAW_DATA_DIR + "/raw_carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
-    workshops.to_csv(workshops_file, encoding = "utf-8")
+    workshops.to_csv(workshops_file, encoding = "utf-8", index = False)
     print("Saved workshops to " + workshops_file)
 
     # url_parameters["is_instructor"] = "true"  # We are interested in instructors only
@@ -59,7 +79,7 @@ def main():
     print("Extracted " + str(instructors.index.size) + " instructors.")
     instructors_file = RAW_DATA_DIR + "/raw_carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
-    instructors.to_csv(instructors_file, encoding = "utf-8")
+    instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
     print("Saved instructors to " + workshops_file)
 
 
@@ -71,6 +91,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY
     :return: published workshops as Pandas DataFrame
     """
+    print("Extracting workshops from AMY ...")
     # Response is a JSON list of objects containing all published workshops
     response = requests.get(AMY_PUBLISHED_WORKSHOPS_API_URL, headers=HEADERS, auth=(username, password),
                             params=url_parameters)
@@ -80,12 +101,14 @@ def get_workshops(url_parameters=None, username=None, password=None):
         workshops = response.json()
 
     # We can translate a list of JSON objects/dictionaries directly into a DataFrame
-    workshops_df = pandas.DataFrame(workshops)
+    workshops_df = pandas.DataFrame(workshops,
+                                    columns=["slug", "start", "end", "humandate", "venue", "address",
+                                             "latitude", "longitude", "tags", "url", "contact", "eventbrite_id", "country"])
 
-    #Filter workshops by country - this should be done via URL parameters in the call to the AMY API but it is not implemented in the API yet
-    # so we filter them out here
-    if url_parameters["country"] is not None:
-        workshops_df = workshops_df.loc[workshops_df["country"] == url_parameters["country"]]
+    idx = workshops_df.columns.get_loc("country")
+    workshops_df.insert(loc=idx, column='country_code',
+              value=workshops_df["country"])
+    workshops_df["country"] = workshops_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
 
     return workshops_df
 
@@ -98,6 +121,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY
     :return: instructors as Pandas DataFrame
     """
+    print("Extracting instructors from AMY ...")
     # Response is a JSON object containing paged result with info on total number of all results and pointers to previous and next page of results,
     # as well as a list of results for the current page
     response = requests.get(AMY_PERSONS_API_URL, headers=HEADERS, auth=(username, password),
@@ -111,31 +135,23 @@ def get_instructors(url_parameters=None, username=None, password=None):
             if response.status_code == 200:
                 next_url = response.json()["next"]
                 persons.extend(response.json()["results"])
-    #
-    # instructors = []
-    # for person in persons:
-    #     for badge in person["badges"]:
-    #         if "instructor" in badge:
-    #             instructors.expand(person)  # find instructors only
-    # return pandas.load_json(instructors)
 
     # We can translate a list of JSON objects/dictionaries directly into a DataFrame
-    instructors_df = pandas.DataFrame(persons)
+    instructors_df = pandas.DataFrame(persons,
+                                      columns=["personal", "middle", "family", "email", "gender", "affiliation",
+                                               "awards", "badges", "domains", "github", "orcid", "twitter",
+                                               "url", "username", "publish_profile", "tasks", "lessons", "may_contact", "notes", "airport"])
 
     airports_df = get_airports(None, username, password) # Get all airports
     airports_dict = get_airports_dict(airports_df) # airports as a dictionary for easier mapping
 
     # Airport field contains URIs like 'https://amy.software-carpentry.org/api/v1/airports/MAN/' so we need to extract the 3-letter airport code out of it (e.g. 'MAN')
     instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
-    instructors_df["airport_name"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][1], na_action = "ignore")
+    instructors_df["airport"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][1], na_action = "ignore")
     instructors_df["airport_longitude"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][2], na_action = "ignore")
     instructors_df["airport_latitude"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][3], na_action = "ignore")
     instructors_df["country_code"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][0] , na_action = "ignore")
-
-    #Filter instructors by country - this should be done via URL parameters in the call to the AMY API but it is not implemented in the API yet
-    # so we filter them out here
-    if url_parameters is not None and url_parameters["country"] is not None:
-        instructors_df = instructors_df[instructors_df["country_code"] == url_parameters["country"]]
+    instructors_df["country"] = instructors_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
 
     return instructors_df
 
@@ -193,7 +209,7 @@ def get_airports_dict(airports_df):
     """
     return airports_df.set_index('iata').transpose().to_dict('list')
 
-def read_credentials(file_path):
+def get_credentials(file_path):
 
     username = None
     password = None
@@ -212,6 +228,13 @@ def read_credentials(file_path):
         print ("AMY credentials YAML file does not exist " + file_path)
 
     return username, password
+
+def get_country(country_code):
+    '''
+    :param country_code: 2-letter ISO Alpha 2 country code, e.g. 'GB' for United Kingdom
+    :return: country's common name
+    '''
+    return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
 
 if __name__ == '__main__':
     main()
