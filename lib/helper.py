@@ -5,15 +5,12 @@ from pydrive.drive import GoogleDrive
 import argparse
 import sys
 import json
-# import gmaps
-import config
 import folium
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
 import traceback
 
-# import branca
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK_regions.json'
@@ -78,7 +75,7 @@ def google_drive_upload(file, drive, parents_list, convert):
     gfile.Upload({'convert': convert})
 
 
-def parse_command_line_paramters():
+def parse_command_line_parameters():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--country_code', type=str, help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
     parser.add_argument('-u', '--username', type=str, help="Username for logging to AMY")

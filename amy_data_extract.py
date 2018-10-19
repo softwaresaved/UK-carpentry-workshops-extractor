@@ -32,6 +32,8 @@ AIRPORTS_FILE = DATA_DIR + "/airports.csv"
 
 COUNTRIES_FILE = CURRENT_DIR + "/lib/countries.json"
 
+WORKSHOP_TYPES = ["SWC", "DC", "LC", "TTT"]
+
 def get_countries(countries_file):
     countries = None
     if os.path.isfile(countries_file):
@@ -54,7 +56,7 @@ def main():
     Main function
     """
 
-    args = helper.parse_command_line_paramters()
+    args = helper.parse_command_line_parameters()
 
     url_parameters = {
         "country": None, # by default we look for workshops in all countries
@@ -74,13 +76,12 @@ def main():
     workshops.to_csv(workshops_file, encoding = "utf-8", index = False)
     print("Saved workshops to " + workshops_file)
 
-    # url_parameters["is_instructor"] = "true"  # We are interested in instructors only
     instructors = get_instructors(url_parameters, args.username, args.password)
     print("Extracted " + str(instructors.index.size) + " instructors.")
     instructors_file = RAW_DATA_DIR + "/raw_carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
     instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
-    print("Saved instructors to " + workshops_file)
+    print("Saved instructors to " + instructors_file)
 
 
 def get_workshops(url_parameters=None, username=None, password=None):
@@ -109,6 +110,12 @@ def get_workshops(url_parameters=None, username=None, password=None):
     workshops_df.insert(loc=idx, column='country_code',
               value=workshops_df["country"])
     workshops_df["country"] = workshops_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
+
+    # Extract workshop type and add as a new column
+    workshops_df["workshop_type"] = workshops_df["tags"].map(extract_workshop_type, na_action="ignore")
+
+    # Extract workshop year and add as a new column
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
 
     return workshops_df
 
@@ -153,6 +160,40 @@ def get_instructors(url_parameters=None, username=None, password=None):
     instructors_df["country_code"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][0] , na_action = "ignore")
     instructors_df["country"] = instructors_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
 
+    # Extract year when instructor badges were awarded and add them as new columns
+    swc_instructor_badge_awarded = []
+    dc_instructor_badge_awarded = []
+    lc_instructor_badge_awarded = []
+    trainer_badge_awarded = []
+    year_earliest_instructor_badge_awarded = []
+    for awards_uri in instructors_df["awards"]:
+        if response.status_code == 200:
+            response = requests.get(awards_uri, headers=HEADERS, auth=(username, password))
+            awards = response.json()
+
+            swc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "swc-instructor"), None)
+            dc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "dc-instructor"), None)
+            lc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "lc-instructor"), None)
+            trainer_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "trainer"), None)
+
+            swc_instructor_badge_awarded.append(swc_instructor_badge_awarded_date)
+            dc_instructor_badge_awarded.append(dc_instructor_badge_awarded_date)
+            lc_instructor_badge_awarded.append(lc_instructor_badge_awarded_date)
+            trainer_badge_awarded.append(trainer_badge_awarded_date)
+
+            dates = [swc_instructor_badge_awarded_date, dc_instructor_badge_awarded_date, lc_instructor_badge_awarded_date, trainer_badge_awarded_date]
+            dates = filter(None, dates)
+            dates = map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d"), dates)
+
+
+            year_earliest_instructor_badge_awarded.append(sorted(dates)[0].year if dates != [] else None)
+
+    instructors_df["swc-instructor-badge-awarded"] = pandas.Series(swc_instructor_badge_awarded).values
+    instructors_df["dc-instructor-badge-awarded"] = pandas.Series(dc_instructor_badge_awarded).values
+    instructors_df["lc-instructor-badge-awarded"] = pandas.Series(lc_instructor_badge_awarded).values
+    instructors_df["trainer-badge-awarded"] = pandas.Series(trainer_badge_awarded).values
+    instructors_df["year-earliest-instructor-badge-awarded"] = pandas.Series(year_earliest_instructor_badge_awarded).values
+
     return instructors_df
 
 def get_airports(url_parameters=None, username=None, password=None):
@@ -171,12 +212,15 @@ def get_airports(url_parameters=None, username=None, password=None):
                     next_url = response.json()["next"]
                     airports.extend(response.json()["results"])
 
-        # We can translate a list of JSON objects/dictionaries directly into a DataFrame
-        airports_df = pandas.DataFrame(airports)
+            # We can translate a list of JSON objects/dictionaries directly into a DataFrame
+            airports_df = pandas.DataFrame(airports)
 
-        # Save them to file in the case they are not available online on-demand for some reason.
-        # Overwrite the old airports with more up-to-date data.
-        airports_df.to_csv(AIRPORTS_FILE, encoding = "utf-8")
+            # Save them to file in the case they are not available online on-demand for some reason.
+            # Overwrite the old airports with more up-to-date data.
+            airports_df.to_csv(AIRPORTS_FILE, encoding = "utf-8", index = False)
+        else:
+            # Load data from the saved airports file
+            airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
     except Exception as exc:
         print ("An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
         print(traceback.format_exc())
@@ -235,6 +279,17 @@ def get_country(country_code):
     :return: country's common name
     '''
     return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
+
+def extract_workshop_type(workshop_tags):
+    """
+    Extract workshop type from a list of workshop tag dictionaries.
+    :param workshop_tags:
+    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT")
+    """
+    tags = map(lambda tag: tag["name"], workshop_tags)
+
+    workshop_tag = next(tag for tag in tags if tag in WORKSHOP_TYPES)
+    return workshop_tag
 
 if __name__ == '__main__':
     main()
