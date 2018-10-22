@@ -4,7 +4,6 @@ import datetime
 import yaml
 import traceback
 import json
-
 import sys
 import os
 
@@ -33,6 +32,7 @@ AIRPORTS_FILE = DATA_DIR + "/airports.csv"
 COUNTRIES_FILE = CURRENT_DIR + "/lib/countries.json"
 
 WORKSHOP_TYPES = ["SWC", "DC", "LC", "TTT"]
+STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 
 def get_countries(countries_file):
     countries = None
@@ -56,7 +56,7 @@ def main():
     Main function
     """
 
-    args = helper.parse_command_line_parameters()
+    args = helper.parse_command_line_parameters(["-c", "-u", "-p"])
 
     url_parameters = {
         "country": None, # by default we look for workshops in all countries
@@ -71,14 +71,14 @@ def main():
 
     workshops = get_workshops(url_parameters, args.username, args.password)
     print("Extracted " + str(workshops.index.size) + " workshops.")
-    workshops_file = RAW_DATA_DIR + "/raw_carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+    workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
     workshops.to_csv(workshops_file, encoding = "utf-8", index = False)
     print("Saved workshops to " + workshops_file)
 
     instructors = get_instructors(url_parameters, args.username, args.password)
     print("Extracted " + str(instructors.index.size) + " instructors.")
-    instructors_file = RAW_DATA_DIR + "/raw_carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+    instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
     instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
     print("Saved instructors to " + instructors_file)
@@ -88,8 +88,8 @@ def get_workshops(url_parameters=None, username=None, password=None):
     """
     Get 'published' Carpentry workshop events from AMY. 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country_code, address, start date, end date, latitude and longitude, etc.)
     :param url_parameters: URL parameters to filter results, e.g. by country.
-    :param username: AMY username used to authenticate the user accessing AMY
-    :param password: AMY password to authenticate the user accessing AMY
+    :param username: AMY username used to authenticate the user accessing AMY's API
+    :param password: AMY password to authenticate the user accessing AMY's API
     :return: published workshops as Pandas DataFrame
     """
     print("Extracting workshops from AMY ...")
@@ -114,6 +114,9 @@ def get_workshops(url_parameters=None, username=None, password=None):
     # Extract workshop type and add as a new column
     workshops_df["workshop_type"] = workshops_df["tags"].map(extract_workshop_type, na_action="ignore")
 
+    # Remove workshops that have been stopped
+    workshops_df = workshops_df[workshops_df["workshop_type"].isin(WORKSHOP_TYPES)]
+
     # Extract workshop year and add as a new column
     workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
 
@@ -124,8 +127,8 @@ def get_instructors(url_parameters=None, username=None, password=None):
     """
     Get Carpentry instructors registered in AMY.
     :param url_parameters: URL parameters to filter results, e.g. by country.
-    :param username: AMY username used to authenticate the user accessing AMY
-    :param password: AMY password to authenticate the user accessing AMY
+    :param username: AMY username used to authenticate the user accessing AMY's API
+    :param password: AMY password to authenticate the user accessing AMY's API
     :return: instructors as Pandas DataFrame
     """
     print("Extracting instructors from AMY ...")
@@ -197,6 +200,13 @@ def get_instructors(url_parameters=None, username=None, password=None):
     return instructors_df
 
 def get_airports(url_parameters=None, username=None, password=None):
+    """
+    Gets airport info from AMY
+    :param url_parameters: URL parameter dictionary to use when querying AMY (e.g. airports per country)
+    :param username: username used to acces AMY's API
+    :param password: password used to acces AMY's API
+    :return:
+    """
 
     response = requests.get(AMY_AIRPORTS_API_URL, headers=HEADERS, auth=(username, password),
                             params=url_parameters)
@@ -236,7 +246,7 @@ def get_airports(url_parameters=None, username=None, password=None):
 
 def extract_airport_code(str):
     """
-    Extract the 3-letter IATA airport code from str of the form of URI 'https://amy.software-carpentry.org/api/v1/airports/MAN/'
+    Extract the 3-letter IATA airport code from the URI (e.g. the last 3 letters from 'https://amy.software-carpentry.org/api/v1/airports/MAN/')
     :param str: Airport URI string
     :return: 3-letter airport code extracted from the str
     """
@@ -254,7 +264,11 @@ def get_airports_dict(airports_df):
     return airports_df.set_index('iata').transpose().to_dict('list')
 
 def get_credentials(file_path):
-
+    """
+    Extract username and password from a YML file used for authentication with AMY
+    :param file_path: YML file with credentials
+    :return: username and password
+    """
     username = None
     password = None
 
@@ -286,10 +300,19 @@ def extract_workshop_type(workshop_tags):
     :param workshop_tags:
     :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT")
     """
-    tags = map(lambda tag: tag["name"], workshop_tags)
+    tags = list(map(lambda tag: tag["name"], workshop_tags)) # Get the list of tags from the list of dictionaries
 
-    workshop_tag = next(tag for tag in tags if tag in WORKSHOP_TYPES)
-    return workshop_tag
+     # Is this a stopped workshop (it may not have a type in this case)?
+    is_stopped = list(set(tags) & set(STOPPED_WORKSHOP_TYPES))
+
+    workshop_tags = list(set(tags) & set(WORKSHOP_TYPES))
+
+    if is_stopped != []:
+        return is_stopped[0]
+    elif workshop_tags != []:
+        return workshop_tags[0]
+    else:
+        return ""
 
 if __name__ == '__main__':
     main()
