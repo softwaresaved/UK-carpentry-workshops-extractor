@@ -139,6 +139,13 @@ def get_workshops(url_parameters=None, username=None, password=None):
     workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
                                                      na_action="ignore")
 
+    # Extract hosts' domains from host URIs
+    idx = workshops_df.columns.get_loc("host")
+    workshops_df.insert(loc=idx, column='host_domain',
+                        value=workshops_df["host"])
+    workshops_df["host_domain"] = workshops_df["host"].map(lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
+                                                     na_action="ignore")
+
     # Get instructors for workshops
     workshops_df["instructors"] = workshops_df["tasks"].map(
         lambda tasks_url: extract_workshop_instructors(tasks_url, username, password), na_action="ignore")
