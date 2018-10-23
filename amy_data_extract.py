@@ -6,6 +6,7 @@ import traceback
 import json
 import sys
 import os
+import re
 
 sys.path.append('/lib')
 import lib.helper as helper
@@ -23,7 +24,7 @@ AMY_CREDENTIALS_FILE = CURRENT_DIR + '/amy_login.yml'
 if not os.path.exists(RAW_DATA_DIR):
     os.makedirs(RAW_DATA_DIR)
 
-AMY_PUBLISHED_WORKSHOPS_API_URL = "https://amy.software-carpentry.org/api/v1/events/published"  # 'Published' workshops are those that went ahead or are likely to go ahead (i.e. have country_code, address, start date, end date, latitude and longitude, etc.)
+AMY_EVENTS_API_URL = "https://amy.software-carpentry.org/api/v1/events/"
 AMY_PERSONS_API_URL = "https://amy.software-carpentry.org/api/v1/persons/"
 AMY_AIRPORTS_API_URL = "https://amy.software-carpentry.org/api/v1/airports/"
 
@@ -32,7 +33,8 @@ AIRPORTS_FILE = DATA_DIR + "/airports.csv"
 COUNTRIES_FILE = CURRENT_DIR + "/lib/countries.json"
 
 WORKSHOP_TYPES = ["SWC", "DC", "LC", "TTT"]
-STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
+STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']
+
 
 def get_countries(countries_file):
     countries = None
@@ -59,7 +61,7 @@ def main():
     args = helper.parse_command_line_parameters(["-c", "-u", "-p"])
 
     url_parameters = {
-        "country": None, # by default we look for workshops in all countries
+        "country": None,  # by default we look for workshops in all countries
         "is_instructor": "true"
     }
 
@@ -71,17 +73,18 @@ def main():
 
     workshops = get_workshops(url_parameters, args.username, args.password)
     print("Extracted " + str(workshops.index.size) + " workshops.")
-    workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+    workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters[
+                                                                                                     "country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
-    workshops.to_csv(workshops_file, encoding = "utf-8", index = False)
+    workshops.to_csv(workshops_file, encoding="utf-8", index=False)
     print("Saved workshops to " + workshops_file)
 
-    instructors = get_instructors(url_parameters, args.username, args.password)
-    print("Extracted " + str(instructors.index.size) + " instructors.")
-    instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
-        '%Y-%m-%d') + ".csv"
-    instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
-    print("Saved instructors to " + instructors_file)
+    # instructors = get_instructors(url_parameters, args.username, args.password)
+    # print("Extracted " + str(instructors.index.size) + " instructors.")
+    # instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+    #     '%Y-%m-%d') + ".csv"
+    # instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
+    # print("Saved instructors to " + instructors_file)
 
 
 def get_workshops(url_parameters=None, username=None, password=None):
@@ -94,31 +97,51 @@ def get_workshops(url_parameters=None, username=None, password=None):
     """
     print("Extracting workshops from AMY ...")
     # Response is a JSON list of objects containing all published workshops
-    response = requests.get(AMY_PUBLISHED_WORKSHOPS_API_URL, headers=HEADERS, auth=(username, password),
+    response = requests.get(AMY_EVENTS_API_URL, headers=HEADERS, auth=(username, password),
                             params=url_parameters)
 
     workshops = []
     if response.status_code == 200:
-        workshops = response.json()
+        next_url = response.json()["next"]
+        workshops = response.json()["results"]  # a list extracted from JSON response
+        while next_url is not None:
+            response = requests.get(next_url, headers=HEADERS, auth=(username, password))
+            if response.status_code == 200:
+                next_url = response.json()["next"]
+                workshops.extend(response.json()["results"])
 
     # We can translate a list of JSON objects/dictionaries directly into a DataFrame
     workshops_df = pandas.DataFrame(workshops,
-                                    columns=["slug", "start", "end", "humandate", "venue", "address",
-                                             "latitude", "longitude", "tags", "url", "contact", "eventbrite_id", "country"])
+                                    columns=["slug", "start", "end", "attendance", "country", "host", "venue",
+                                             "address",
+                                             "latitude", "longitude", "tags", "website_url", "contact", "tasks"])
+
+    # Remove workshops that do not have latitude/longitude (as they do not count as 'published' workshops)
+    workshops_df.dropna(subset=["latitude", "longitude"], inplace=True)
 
     idx = workshops_df.columns.get_loc("country")
-    workshops_df.insert(loc=idx, column='country_code',
-              value=workshops_df["country"])
-    workshops_df["country"] = workshops_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
+    workshops_df.insert(loc=idx + 1, column='country_code',
+                        value=workshops_df["country"])
+    workshops_df["country"] = workshops_df["country_code"].map(get_country, na_action="ignore")
 
     # Extract workshop type and add as a new column
+    idx = workshops_df.columns.get_loc("attendance")
+    workshops_df.insert(loc=idx, column='workshop_type',
+                        value=workshops_df["tags"])
     workshops_df["workshop_type"] = workshops_df["tags"].map(extract_workshop_type, na_action="ignore")
 
     # Remove workshops that have been stopped
     workshops_df = workshops_df[workshops_df["workshop_type"].isin(WORKSHOP_TYPES)]
 
     # Extract workshop year and add as a new column
-    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
+    workshops_df.insert(loc=idx, column='year',
+                        value=workshops_df["start"])
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
+                                                     na_action="ignore")
+
+    # Get instructors for workshops
+    workshops_df["instructors"] = workshops_df["tasks"].map(
+        lambda tasks_url: extract_workshop_instructors(tasks_url, username, password), na_action="ignore")
 
     return workshops_df
 
@@ -150,18 +173,24 @@ def get_instructors(url_parameters=None, username=None, password=None):
     instructors_df = pandas.DataFrame(persons,
                                       columns=["personal", "middle", "family", "email", "gender", "affiliation",
                                                "awards", "badges", "domains", "github", "orcid", "twitter",
-                                               "url", "username", "publish_profile", "tasks", "lessons", "may_contact", "notes", "airport"])
+                                               "url", "username", "publish_profile", "tasks", "lessons", "may_contact",
+                                               "notes", "airport"])
 
-    airports_df = get_airports(None, username, password) # Get all airports
-    airports_dict = get_airports_dict(airports_df) # airports as a dictionary for easier mapping
+    airports_df = get_airports(None, username, password)  # Get all airports
+    airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
 
     # Airport field contains URIs like 'https://amy.software-carpentry.org/api/v1/airports/MAN/' so we need to extract the 3-letter airport code out of it (e.g. 'MAN')
     instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
-    instructors_df["airport"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][1], na_action = "ignore")
-    instructors_df["airport_longitude"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][2], na_action = "ignore")
-    instructors_df["airport_latitude"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][3], na_action = "ignore")
-    instructors_df["country_code"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][0] , na_action = "ignore")
-    instructors_df["country"] = instructors_df["country_code"].map(lambda country_code: get_country(country_code), na_action = "ignore")
+    instructors_df["airport"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][1],
+                                                                   na_action="ignore")
+    instructors_df["airport_longitude"] = instructors_df["airport_code"].map(
+        lambda airport_code: airports_dict[airport_code][2], na_action="ignore")
+    instructors_df["airport_latitude"] = instructors_df["airport_code"].map(
+        lambda airport_code: airports_dict[airport_code][3], na_action="ignore")
+    instructors_df["country_code"] = instructors_df["airport_code"].map(
+        lambda airport_code: airports_dict[airport_code][0], na_action="ignore")
+    instructors_df["country"] = instructors_df["country_code"].map(lambda country_code: get_country(country_code),
+                                                                   na_action="ignore")
 
     # Extract year when instructor badges were awarded and add them as new columns
     swc_instructor_badge_awarded = []
@@ -174,20 +203,24 @@ def get_instructors(url_parameters=None, username=None, password=None):
             response = requests.get(awards_uri, headers=HEADERS, auth=(username, password))
             awards = response.json()
 
-            swc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "swc-instructor"), None)
-            dc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "dc-instructor"), None)
-            lc_instructor_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "lc-instructor"), None)
-            trainer_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "trainer"), None)
+            swc_instructor_badge_awarded_date = next(
+                (award["awarded"] for award in awards if award["badge"] == "swc-instructor"), None)
+            dc_instructor_badge_awarded_date = next(
+                (award["awarded"] for award in awards if award["badge"] == "dc-instructor"), None)
+            lc_instructor_badge_awarded_date = next(
+                (award["awarded"] for award in awards if award["badge"] == "lc-instructor"), None)
+            trainer_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "trainer"),
+                                              None)
 
             swc_instructor_badge_awarded.append(swc_instructor_badge_awarded_date)
             dc_instructor_badge_awarded.append(dc_instructor_badge_awarded_date)
             lc_instructor_badge_awarded.append(lc_instructor_badge_awarded_date)
             trainer_badge_awarded.append(trainer_badge_awarded_date)
 
-            dates = [swc_instructor_badge_awarded_date, dc_instructor_badge_awarded_date, lc_instructor_badge_awarded_date, trainer_badge_awarded_date]
+            dates = [swc_instructor_badge_awarded_date, dc_instructor_badge_awarded_date,
+                     lc_instructor_badge_awarded_date, trainer_badge_awarded_date]
             dates = filter(None, dates)
             dates = map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d"), dates)
-
 
             year_earliest_instructor_badge_awarded.append(sorted(dates)[0].year if dates != [] else None)
 
@@ -195,9 +228,11 @@ def get_instructors(url_parameters=None, username=None, password=None):
     instructors_df["dc-instructor-badge-awarded"] = pandas.Series(dc_instructor_badge_awarded).values
     instructors_df["lc-instructor-badge-awarded"] = pandas.Series(lc_instructor_badge_awarded).values
     instructors_df["trainer-badge-awarded"] = pandas.Series(trainer_badge_awarded).values
-    instructors_df["year-earliest-instructor-badge-awarded"] = pandas.Series(year_earliest_instructor_badge_awarded).values
+    instructors_df["year-earliest-instructor-badge-awarded"] = pandas.Series(
+        year_earliest_instructor_badge_awarded).values
 
     return instructors_df
+
 
 def get_airports(url_parameters=None, username=None, password=None):
     """
@@ -227,22 +262,25 @@ def get_airports(url_parameters=None, username=None, password=None):
 
             # Save them to file in the case they are not available online on-demand for some reason.
             # Overwrite the old airports with more up-to-date data.
-            airports_df.to_csv(AIRPORTS_FILE, encoding = "utf-8", index = False)
+            airports_df.to_csv(AIRPORTS_FILE, encoding="utf-8", index=False)
         else:
             # Load data from the saved airports file
             airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
     except Exception as exc:
-        print ("An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
+        print (
+                    "An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
         print(traceback.format_exc())
         # Load data from the saved airports file
-        airports_df = pandas.read_csv(AIRPORTS_FILE, encoding = "utf-8")
+        airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
 
-    #Filter instructors by country - this should be done via URL parameters in the call to the AMY API but it is not implemented in the API yet
+    # Filter instructors by country - this should be done via URL parameters in the call to the AMY API but it is not implemented in the API yet
     # so we filter them out here
-    if (url_parameters is not None and url_parameters["country"] is not None and url_parameters["country"].lower != "all"):
+    if (url_parameters is not None and url_parameters["country"] is not None and url_parameters[
+        "country"].lower != "all"):
         airports_df = airports_df.loc[airports_df["country"] == url_parameters["country"]]
 
     return airports_df
+
 
 def extract_airport_code(str):
     """
@@ -253,8 +291,9 @@ def extract_airport_code(str):
     if str is not None:
         i = str.rfind("/")
         if i != -1:
-            return str[i - 3 : i]
+            return str[i - 3: i]
     return None
+
 
 def get_airports_dict(airports_df):
     """
@@ -262,6 +301,7 @@ def get_airports_dict(airports_df):
     :return: dictionary of airports where column "iata" is the key and value is list ['country', 'fullname', 'latitude', 'longitude']
     """
     return airports_df.set_index('iata').transpose().to_dict('list')
+
 
 def get_credentials(file_path):
     """
@@ -287,6 +327,7 @@ def get_credentials(file_path):
 
     return username, password
 
+
 def get_country(country_code):
     '''
     :param country_code: 2-letter ISO Alpha 2 country code, e.g. 'GB' for United Kingdom
@@ -294,25 +335,45 @@ def get_country(country_code):
     '''
     return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
 
+
 def extract_workshop_type(workshop_tags):
     """
-    Extract workshop type from a list of workshop tag dictionaries.
+    Extract workshop type from a list of workshop tags.
     :param workshop_tags:
-    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT")
+    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", or "" if none of the recognised tags is found)
     """
-    tags = list(map(lambda tag: tag["name"], workshop_tags)) # Get the list of tags from the list of dictionaries
+    # Is this a stopped workshop (it may not have a type in this case)?
+    is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_TYPES))
 
-     # Is this a stopped workshop (it may not have a type in this case)?
-    is_stopped = list(set(tags) & set(STOPPED_WORKSHOP_TYPES))
-
-    workshop_tags = list(set(tags) & set(WORKSHOP_TYPES))
+    tags = list(set(workshop_tags) & set(WORKSHOP_TYPES))  # intersection of 2 sets
 
     if is_stopped != []:
         return is_stopped[0]
-    elif workshop_tags != []:
-        return workshop_tags[0]
+    elif tags != []:
+        return tags[0]
     else:
         return ""
+
+
+def extract_workshop_instructors(workshop_tasks_url, username, password):
+    instructors_urls = []
+    instructors = []
+    # Get the tasks, then extract all person URLs who were "instructors"
+    response = requests.get(workshop_tasks_url, auth=(username, password))
+    if response.status_code == 200:
+        print("Getting instructors from tasks at " + workshop_tasks_url)
+        tasks = response.json()["results"]
+        instructors_urls = [task['person'] for task in tasks if task['role'] == 'instructor']
+
+    # Follow each of the instructors' URLs and extract their names
+    for instructors_url in instructors_urls:
+        response = requests.get(instructors_url, auth=(username, password))
+        if response.status_code == 200:
+            instructor = response.json()
+            instructor_name = instructor["personal"] + " " + instructor["middle"] + " " + instructor["family"]
+            instructors.append(re.sub(" +", " ", instructor_name))
+    return instructors
+
 
 if __name__ == '__main__':
     main()
