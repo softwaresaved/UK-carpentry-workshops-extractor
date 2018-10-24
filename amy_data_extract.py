@@ -144,7 +144,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
     workshops_df.insert(loc=idx, column='host_domain',
                         value=workshops_df["host"])
     workshops_df["host_domain"] = workshops_df["host"].map(lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-                                                     na_action="ignore")
+                                                     na_action="ignore") # extract host's domain from URIs like 'https://amy.software-carpentry.org/api/v1/organizations/earlham.ac.uk/'
 
     # Get instructors for workshops
     workshops_df["instructors"] = workshops_df["tasks"].map(
