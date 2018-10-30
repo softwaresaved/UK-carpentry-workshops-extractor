@@ -1,7 +1,5 @@
 import pandas as pd
 import os
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import argparse
 import sys
 import json
@@ -18,20 +16,26 @@ NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institution
 UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.xlsx'
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
-# GOOGLE_DRIVE_DIR_ID = "0B6P79ipNuR8EdDFraGgxMFJaaVE"
-
 STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 
 
-def load_data_from_csv(file_path, columns=None):
-    """
-    Loads data from a CSV file into a dataframe with an optional list of columns to load.
-    """
-    df = pd.read_csv(file_path, usecols=columns)
-    return pd.DataFrame(df)
+def parse_command_line_parameters(arguments_of_interest):
+    parser = argparse.ArgumentParser()
+    if "-c" in arguments_of_interest:
+        parser.add_argument("-c", "--country_code", type=str, help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
+    if "-u" in arguments_of_interest:
+        parser.add_argument("-u", "--username", type=str, help="Username for logging to AMY")
+    if "-p" in arguments_of_interest:
+        parser.add_argument("-p", "--password", type=str, help="Password for logging to AMY")
+    if "-w" in arguments_of_interest:
+        parser.add_argument("-w", "--workshops_file", type=str, default=None,
+                            help="An absolute path to the workshops CSV file to analyse/map")
+    if "-i" in arguments_of_interest:
+        parser.add_argument("-i", "--instructors_file", type=str, default=None,
+                            help="An absolute path to instructors CSV file to analyse/map")
+    args = parser.parse_args()
+    return args
 
-def save_data_to_csv(df, file_path):
-    df.to_csv(file_path, encoding='utf-8')
 
 def insert_region_column(df, regions):
     """
@@ -53,35 +57,6 @@ def insert_region_column(df, regions):
     ## Add 'region' column
     df.insert(len(df.columns), "region", region_list, allow_duplicates=False)
     return df
-
-
-def google_drive_authentication():
-    """
-    Authentication to a Google Drive account
-    """
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-    return drive
-
-
-def google_drive_upload(file, drive, parents_list, convert):
-    """
-    Upload a file to a folder in Google Drive
-    """
-    gfile = drive.CreateFile({'parents': parents_list,
-                              'title': os.path.basename(file)})
-    gfile.SetContentFile(file)
-    gfile.Upload({'convert': convert})
-
-
-def parse_command_line_parameters():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--country_code', type=str, help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
-    parser.add_argument('-u', '--username', type=str, help="Username for logging to AMY")
-    parser.add_argument('-p', '--password', type=str, help="Password for logging to AMY")
-    args = parser.parse_args()
-    return args
 
 
 def create_readme_tab(writer, readme_text):
@@ -164,7 +139,7 @@ def get_UK_academic_institutions_coords():
     uk_academic_institutions_geodata_df = uk_academic_institutions_geodata_file.parse('UK-academic-institutions')
     return uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
 
-def insert_institutions_geocoordinates(df):
+def insert_institutional_geocoordinates(df):
 
     # Get coords for UK academic institutions
     uk_academic_institutions_coords_df = get_UK_academic_institutions_coords()
