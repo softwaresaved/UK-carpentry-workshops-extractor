@@ -159,7 +159,7 @@ def workshops_per_type_per_year_analysis(df, writer):
         })
 
     chart.set_y_axis({'major_gridlines': {'visible': False}})
-    chart.set_x_axis({'name': 'Workshop type'})
+    chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
     chart.set_title({'name': 'Number of workshops of different types over years'})
 
@@ -173,7 +173,7 @@ def workshops_per_host_analysis(df, writer):
     Number of workshops per host.
     """
 
-    # Remove rows with 'Unknown' value for the institution
+    # Remove rows with NaN value for the institution
     df = df.dropna(subset=['host_domain'])
 
     workshops_per_host = pd.core.frame.DataFrame(
@@ -215,16 +215,16 @@ def attendance_per_year_analysis(df, writer):
     attendance_per_year = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['year'])['attendance'].sum()}).reset_index()
 
-    attendance_per_year.to_excel(writer, sheet_name='estimated_attendance_per_year', index=False)
+    attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
 
     workbook = writer.book
-    worksheet = writer.sheets['estimated_attendance_per_year']
+    worksheet = writer.sheets['attendance_per_year']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['estimated_attendance_per_year', 1, 0, len(attendance_per_year.index), 0],
-        'values': ['estimated_attendance_per_year', 1, 1, len(attendance_per_year.index), 1],
+        'categories': ['attendance_per_year', 1, 0, len(attendance_per_year.index), 0],
+        'values': ['attendance_per_year', 1, 1, len(attendance_per_year.index), 1],
         'gap': 2,
     })
 
@@ -232,7 +232,7 @@ def attendance_per_year_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per year'})
+    chart.set_title({'name': 'Number of attendees per year (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
@@ -251,16 +251,16 @@ def attendance_per_type_analysis(df, writer):
     attendance_per_type = pd.core.frame.DataFrame(
         {'number_of_attendees': df.groupby(['workshop_type'])['attendance'].sum()}).reset_index()
 
-    attendance_per_type.to_excel(writer, sheet_name='estimated_attendance_per_type', index=False)
+    attendance_per_type.to_excel(writer, sheet_name='attendance_per_type', index=False)
 
     workbook = writer.book
-    worksheet = writer.sheets['estimated_attendance_per_type']
+    worksheet = writer.sheets['attendance_per_type']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['estimated_attendance_per_type', 1, 0, len(attendance_per_type.index), 0],
-        'values': ['estimated_attendance_per_type', 1, 1, len(attendance_per_type.index), 1],
+        'categories': ['attendance_per_type', 1, 0, len(attendance_per_type.index), 0],
+        'values': ['attendance_per_type', 1, 1, len(attendance_per_type.index), 1],
         'gap': 2,
     })
 
@@ -268,7 +268,7 @@ def attendance_per_type_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Workshop type'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per workshop type'})
+    chart.set_title({'name': 'Number of attendees per workshop type (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
@@ -289,19 +289,19 @@ def attendance_per_type_per_year_analysis(df, writer):
     attendance_per_type_per_year_pivot = attendance_per_type_per_year.pivot_table(
         index='year', columns='workshop_type')
 
-    attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='estimated_attendance_type_year')
+    attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='attendance_type_year')
 
     workbook = writer.book
-    worksheet = writer.sheets['estimated_attendance_type_year']
+    worksheet = writer.sheets['attendance_type_year']
 
     chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
 
     for i in range(1, len(attendance_per_type_per_year_pivot.columns) + 1):
         chart.add_series({
-            'name': ['estimated_attendance_type_year', 1, i],
-            'categories': ['estimated_attendance_type_year', 3, 0,
+            'name': ['attendance_type_year', 1, i],
+            'categories': ['attendance_type_year', 3, 0,
                            len(attendance_per_type_per_year_pivot.index) + 2, 0],
-            'values': ['estimated_attendance_type_year', 3, i, len(attendance_per_type_per_year_pivot.index) + 2,
+            'values': ['attendance_type_year', 3, i, len(attendance_per_type_per_year_pivot.index) + 2,
                        i],
             'gap': 2,
         })
@@ -309,7 +309,7 @@ def attendance_per_type_per_year_analysis(df, writer):
     chart.set_y_axis({'major_gridlines': {'visible': False}})
     chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees for different workshop types over years'})
+    chart.set_title({'name': 'Number of attendees for different workshop types over years (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
