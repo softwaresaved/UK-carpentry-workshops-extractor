@@ -72,19 +72,19 @@ def main():
         args.username, args.password = get_credentials(AMY_CREDENTIALS_FILE)
 
     workshops = get_workshops(url_parameters, args.username, args.password)
-    print("Extracted " + str(workshops.index.size) + " workshops.")
     workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters[
                                                                                                      "country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
     workshops.to_csv(workshops_file, encoding="utf-8", index=False)
-    print("Saved workshops to " + workshops_file)
+    print("Saved a total of " + str(workshops.index.size) + " workshops to " + workshops_file)
 
-    # instructors = get_instructors(url_parameters, args.username, args.password)
-    # print("Extracted " + str(instructors.index.size) + " instructors.")
-    # instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
-    #     '%Y-%m-%d') + ".csv"
-    # instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
-    # print("Saved instructors to " + instructors_file)
+    print("\n\n")
+
+    instructors = get_instructors(url_parameters, args.username, args.password)
+    instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+        '%Y-%m-%d') + ".csv"
+    instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
+    print("Saved a total of " + str(instructors.index.size) + " instructors to " + instructors_file)
 
 
 def get_workshops(url_parameters=None, username=None, password=None):
@@ -95,18 +95,21 @@ def get_workshops(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY's API
     :return: published workshops as Pandas DataFrame
     """
-    print("Extracting workshops from AMY ...")
+    print("\nExtracting workshops from AMY ...")
     # Response is a JSON list of objects containing all published workshops
     response = requests.get(AMY_EVENTS_API_URL, headers=HEADERS, auth=(username, password),
                             params=url_parameters)
 
     workshops = []
     if response.status_code == 200:
+        print("Total workshops expected: " + str(response.json()["count"]))
         next_url = response.json()["next"]
+        print("Getting paged workshop data from " + AMY_EVENTS_API_URL)
         workshops = response.json()["results"]  # a list extracted from JSON response
         while next_url is not None:
             response = requests.get(next_url, headers=HEADERS, auth=(username, password))
             if response.status_code == 200:
+                print("Getting paged workshop data from " + str(next_url))
                 next_url = response.json()["next"]
                 workshops.extend(response.json()["results"])
 
@@ -115,6 +118,8 @@ def get_workshops(url_parameters=None, username=None, password=None):
                                     columns=["slug", "start", "end", "attendance", "country", "host", "venue",
                                              "address",
                                              "latitude", "longitude", "tags", "website_url", "contact", "tasks"])
+
+    print("\n####### Extracted " + str(workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
 
     # Remove workshops that do not have latitude/longitude (as they do not count as 'published' workshops)
     workshops_df.dropna(subset=["latitude", "longitude"], inplace=True)
@@ -161,18 +166,21 @@ def get_instructors(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY's API
     :return: instructors as Pandas DataFrame
     """
-    print("Extracting instructors from AMY ...")
+    print("\nExtracting instructors from AMY ...")
     # Response is a JSON object containing paged result with info on total number of all results and pointers to previous and next page of results,
     # as well as a list of results for the current page
     response = requests.get(AMY_PERSONS_API_URL, headers=HEADERS, auth=(username, password),
                             params=url_parameters)
     persons = []
     if response.status_code == 200:
+        print("Total instructors expected: " + str(response.json()["count"]))
         next_url = response.json()["next"]
+        print("Getting paged instructor data from " + AMY_PERSONS_API_URL)
         persons = response.json()["results"]  # a list extracted from JSON response
         while next_url is not None:
             response = requests.get(next_url, headers=HEADERS, auth=(username, password))
             if response.status_code == 200:
+                print("Getting paged instructor data from " + str(next_url))
                 next_url = response.json()["next"]
                 persons.extend(response.json()["results"])
 
@@ -182,6 +190,8 @@ def get_instructors(url_parameters=None, username=None, password=None):
                                                "awards", "badges", "domains", "github", "orcid", "twitter",
                                                "url", "username", "publish_profile", "tasks", "lessons", "may_contact",
                                                "notes", "airport"])
+
+    print("\n####### Extracted " + str(instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
 
     airports_df = get_airports(None, username, password)  # Get all airports
     airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
@@ -206,6 +216,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
     trainer_badge_awarded = []
     year_earliest_instructor_badge_awarded = []
     for awards_uri in instructors_df["awards"]:
+        print("Getting instructor's badges from " + awards_uri)
         if response.status_code == 200:
             response = requests.get(awards_uri, headers=HEADERS, auth=(username, password))
             awards = response.json()
@@ -274,8 +285,7 @@ def get_airports(url_parameters=None, username=None, password=None):
             # Load data from the saved airports file
             airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
     except Exception as exc:
-        print (
-                    "An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
+        print ("An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
         print(traceback.format_exc())
         # Load data from the saved airports file
         airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
@@ -368,7 +378,7 @@ def extract_workshop_instructors(workshop_tasks_url, username, password):
     # Get the tasks, then extract all person URLs who were "instructors"
     response = requests.get(workshop_tasks_url, auth=(username, password))
     if response.status_code == 200:
-        print("Getting instructors from tasks at " + workshop_tasks_url)
+        print("Getting workshop instructors from " + workshop_tasks_url)
         tasks = response.json()["results"]
         instructors_urls = [task['person'] for task in tasks if task['role'] == 'instructor']
 
