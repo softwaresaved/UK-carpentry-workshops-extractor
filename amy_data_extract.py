@@ -81,9 +81,10 @@ def main():
     print("\n\n")
 
     instructors = get_instructors(url_parameters, args.username, args.password)
-    instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters["country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+    instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters[
+                                                                                                         "country"] is not None else "") + "_" + datetime.datetime.today().strftime(
         '%Y-%m-%d') + ".csv"
-    instructors.to_csv(instructors_file, encoding = "utf-8", index = False)
+    instructors.to_csv(instructors_file, encoding="utf-8", index=False)
     print("Saved a total of " + str(instructors.index.size) + " instructors to " + instructors_file)
 
 
@@ -119,7 +120,8 @@ def get_workshops(url_parameters=None, username=None, password=None):
                                              "address",
                                              "latitude", "longitude", "tags", "website_url", "contact", "tasks"])
 
-    print("\n####### Extracted " + str(workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
+    print("\n####### Extracted " + str(
+        workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
 
     # Remove workshops that do not have latitude/longitude (as they do not count as 'published' workshops)
     workshops_df.dropna(subset=["latitude", "longitude"], inplace=True)
@@ -143,7 +145,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
                         value=workshops_df["start"])
     workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
                                                      na_action="ignore")
-    # Add AMY URL to the workshop event
+    # Add AMY URL to the workshop event record
     idx = workshops_df.columns.get_loc("slug")
     workshops_df.insert(loc=idx + 1, column='amy_url',
                         value="https://amy.software-carpentry.org/workshops/event/" + workshops_df["slug"])
@@ -152,8 +154,9 @@ def get_workshops(url_parameters=None, username=None, password=None):
     idx = workshops_df.columns.get_loc("host")
     workshops_df.insert(loc=idx, column='host_domain',
                         value=workshops_df["host"])
-    workshops_df["host_domain"] = workshops_df["host"].map(lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-                                                     na_action="ignore") # extract host's domain from URIs like 'https://amy.software-carpentry.org/api/v1/organizations/earlham.ac.uk/'
+    workshops_df["host_domain"] = workshops_df["host"].map(
+        lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
+        na_action="ignore")  # extract host's domain from URIs like 'https://amy.software-carpentry.org/api/v1/organizations/earlham.ac.uk/'
 
     # Get instructors for workshops
     workshops_df["instructors"] = workshops_df["tasks"].map(
@@ -195,7 +198,11 @@ def get_instructors(url_parameters=None, username=None, password=None):
                                                "url", "username", "publish_profile", "tasks", "lessons", "may_contact",
                                                "notes", "airport"])
 
-    print("\n####### Extracted " + str(instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
+    print("\n####### Extracted " + str(
+        instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
+
+    # Insert AMY URL to the person record
+    instructors_df.insert(loc=0, column='amy_url', value=instructors_df["tasks"].apply(lambda x: x[0:-7]))
 
     airports_df = get_airports(None, username, password)  # Get all airports
     airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
@@ -289,7 +296,8 @@ def get_airports(url_parameters=None, username=None, password=None):
             # Load data from the saved airports file
             airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
     except Exception as exc:
-        print ("An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
+        print (
+                    "An error occurred while getting airports data from AMY. Loading airports data from a local file " + AIRPORTS_FILE + "...")
         print(traceback.format_exc())
         # Load data from the saved airports file
         airports_df = pandas.read_csv(AIRPORTS_FILE, encoding="utf-8")
