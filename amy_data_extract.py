@@ -143,6 +143,10 @@ def get_workshops(url_parameters=None, username=None, password=None):
                         value=workshops_df["start"])
     workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
                                                      na_action="ignore")
+    # Add AMY URL to the workshop event
+    idx = workshops_df.columns.get_loc("slug")
+    workshops_df.insert(loc=idx + 1, column='amy_url',
+                        value="https://amy.software-carpentry.org/workshops/event/" + workshops_df["slug"])
 
     # Extract hosts' domains from host URIs
     idx = workshops_df.columns.get_loc("host")
