@@ -9,9 +9,9 @@ sys.path.append('/lib')
 import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = CURRENT_DIR + '/data/'
-RAW_DATA_DIR = DATA_DIR + '/raw/'
-ANALYSES_DIR = DATA_DIR + "/analyses/"
+DATA_DIR = CURRENT_DIR + '/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+ANALYSES_DIR = DATA_DIR + "/analyses"
 
 
 def main():
@@ -22,7 +22,6 @@ def main():
 
     if args.workshops_file:
         workshops_file = args.workshops_file
-        print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + RAW_DATA_DIR)
         workshops_files = glob.glob(RAW_DATA_DIR + "carpentry-workshops_*.csv")
@@ -37,24 +36,24 @@ def main():
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    print('CSV file with Carpentry workshops to analyse ' + workshops_file)
+    print('CSV spreadsheet with Carpentry workshops to be analysed: ' + workshops_file)
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
+        workshops_df.drop(labels=["contact", "tasks"], axis=1, inplace=True)
 
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
 
         print('Creating the analyses Excel spreadsheet ...')
-        workshop_analyses_excel_file = ANALYSES_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
+        workshop_analyses_excel_file = ANALYSES_DIR + '/analysed_' + workshops_file_name_without_extension + '.xlsx'
         excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,
                                                                 "carpentry_workshops")
 
         date = workshops_file_name_without_extension.split("_")  # Extract date from the file name in YYYY-MM-DD format
         helper.create_readme_tab(excel_writer,
-                                 "Data in sheet 'carpentry_workshops' was extracted on " + date[
-                                     2] + " using amy_data_extract.py script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. " \
-                                          "It contains info on Carpentry workshops in a specified country (or all countries) recorded in the Carpentry's record keeping system AMY until the date it was extracted on.")
+                                 "Data in sheet 'carpentry_workshops' contains Carpentry workshop data recorded in AMY extracted on " + date[
+                                     2] + " using amy_data_extract.py script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. Contact details have been removed.")
 
         workshops_per_year_analysis(workshops_df, excel_writer)
         workshops_per_type_analysis(workshops_df, excel_writer)
