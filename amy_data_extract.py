@@ -201,9 +201,6 @@ def get_instructors(url_parameters=None, username=None, password=None):
     print("\n####### Extracted " + str(
         instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
 
-    # Insert AMY URL to the person record
-    instructors_df.insert(loc=0, column='amy_url', value=instructors_df["tasks"].apply(lambda x: x[0:-7]))
-
     airports_df = get_airports(None, username, password)  # Get all airports
     airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
 
@@ -211,9 +208,9 @@ def get_instructors(url_parameters=None, username=None, password=None):
     instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
     instructors_df["airport"] = instructors_df["airport_code"].map(lambda airport_code: airports_dict[airport_code][1],
                                                                    na_action="ignore")
-    instructors_df["airport_longitude"] = instructors_df["airport_code"].map(
-        lambda airport_code: airports_dict[airport_code][2], na_action="ignore")
     instructors_df["airport_latitude"] = instructors_df["airport_code"].map(
+        lambda airport_code: airports_dict[airport_code][2], na_action="ignore")
+    instructors_df["airport_longitude"] = instructors_df["airport_code"].map(
         lambda airport_code: airports_dict[airport_code][3], na_action="ignore")
     instructors_df["country_code"] = instructors_df["airport_code"].map(
         lambda airport_code: airports_dict[airport_code][0], na_action="ignore")
