@@ -9,81 +9,118 @@ sys.path.append('/lib')
 import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-INSTRUCTOR_DATA_DIR = CURRENT_DIR + '/data/instructors/'
-MODIFIED_INSTRUCTOR_DATA_DIR = INSTRUCTOR_DATA_DIR + 'data_modified/' # manipulated raw data for the purpose of analyses
-UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions-airports.xlsx'
+DATA_DIR = CURRENT_DIR + '/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+ANALYSES_DIR = DATA_DIR + '/analyses'
 
-def insert_earliest_badge_year(df):
-    """
-    Insert the earliest-badge-awarded-year column using the date
-    in the 'earliest-badge-awarded' column in YYYY-MM-DD format
-    """
-    idx = df.columns.get_loc('earliest-badge-awarded') # index of column 'earliest-badge-awarded'
-    earliest_badge_awarded_years = pd.to_datetime(df['earliest-badge-awarded']).dt.year # get the year from the date in YYYY-MM-DD format
-    df.insert(loc=idx + 1,
-              column='earliest-badge-awarded-year',
-              value=earliest_badge_awarded_years) # insert to the right of the column 'earliest-badge-awarded'
-    return df
+UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
 
-def insert_airport_region(df):
-    """
-    Insert the new column that corresponds to the UK region for the
-    nearest_airport of the instructor.
-    """
-    regions_excel_file = pd.ExcelFile(UK_AIRPORTS_REGIONS_FILE)
-    regions = regions_excel_file.parse('UK-regions-airports')
-    airports_regions_dict = dict(zip(regions['Airport_code'],
-                                    regions['UK_region']))
 
-    idx = df.columns.get_loc('nearest_airport_code') # index of column 'nearest_airport_code'
-    df.insert(loc=idx + 1,
-              column='nearest_airport_region',
-              value=df.nearest_airport_code) # copy values from 'nearest_airport_code' column and insert to the right of the column 'nearest_airport_code'
-    df['nearest_airport_region'].replace(airports_regions_dict, inplace=True) # replace the airport with its UK region
-    return df
-
-def instructors_nearest_airport_analysis(df, writer):
+def main():
     """
-    Number of people per nearest airport - create the corresponding
-    table and graph and write to the spreadsheet.
+    Main function
     """
-    airport_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_name']).size().sort_values()}).reset_index()
-    airport_table.to_excel(writer,
-                        sheet_name='instructors_per_nearest_airport',
-                        index = False)
+    args = helper.parse_command_line_parameters(["-i"])
 
-    workbook  = writer.book
-    worksheet = writer.sheets['instructors_per_nearest_airport']
+    if args.instructors_file:
+        instructors_file = args.instructors_file
+        print("The CSV spreadsheet with Carpentry instructors to be analysed: " + args.instructors_file)
+    else:
+        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + RAW_DATA_DIR)
+        instructors_files = glob.glob(RAW_DATA_DIR + "carpentry-instructors_*.csv")
+        instructors_files.sort(key=os.path.getctime)  # order files by creation date
+
+        if not instructors_files:
+            print('No CSV file with Carpentry instructors found in ' + RAW_DATA_DIR + ". Exiting ...")
+            sys.exit(1)
+        else:
+            instructors_file = instructors_files[-1]  # get the last file
+
+    instructors_file_name = os.path.basename(instructors_file)
+    instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
+
+    print('CSV file with Carpentry instructors to analyse ' + instructors_file)
+
+    try:
+        instructors_df = pd.read_csv(instructors_file, encoding="utf-8")
+        instructors_df.drop(labels="email", axis=1, inplace=True)
+
+        # Insert normalised/official names for institutions (for UK academic institutions)
+        instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
+
+        # Insert latitude, longitude pairs for instructors' institutions
+        instructors_df = helper.insert_institutional_geocoordinates(instructors_df)
+
+        # Insert UK regional info based on instructors's affiliations or nearest airport
+        instructors_df = helper.insert_uk_region(instructors_df)
+
+        if not os.path.exists(ANALYSES_DIR):
+            os.makedirs(ANALYSES_DIR)
+
+        print('Creating the analyses Excel spreadsheet ...')
+        instructor_analyses_excel_file = ANALYSES_DIR + '/analysed_' + instructors_file_name_without_extension + '.xlsx'
+        excel_writer = helper.create_excel_analyses_spreadsheet(instructor_analyses_excel_file, instructors_df,
+                                                                "carpentry_instructors")
+
+        date = instructors_file_name_without_extension.split(
+            "_")  # Extract date from the file name in YYYY-MM-DD format
+        helper.create_readme_tab(excel_writer,
+                                 "Data in sheet 'carpentry_instructors' contains Carpentry instructor data recorded in AMY extracted on " +
+                                 date[
+                                     2] + " using amy_data_extract.py script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. Contact details have been removed.")
+
+        instructors_per_year_analysis(instructors_df, excel_writer)
+        instructors_per_country_analysis(instructors_df, excel_writer)
+        instructors_per_institution_analysis(instructors_df, excel_writer)
+        instructors_per_UK_region_analysis(instructors_df, excel_writer)
+
+        excel_writer.save()
+        print("Analyses of Carpentry instructors complete - results saved to " + instructor_analyses_excel_file + "\n")
+    except Exception:
+        print ("An error occurred while creating workshop analyses Excel spreadsheet ...")
+        print(traceback.format_exc())
+
+
+def instructors_per_year_analysis(df, writer):
+    """
+    Number of instructors per year.
+    """
+    instructors_per_year = pd.core.frame.DataFrame(
+        {'number_of_instructors': df.groupby(['year-earliest-instructor-badge-awarded']).size()}).reset_index()
+    instructors_per_year.to_excel(writer,
+                                  sheet_name='instructors_per_year',
+                                  index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['instructors_per_year']
 
     chart = workbook.add_chart({'type': 'column'})
-
     chart.add_series({
-        'categories': ['instructors_per_nearest_airport', 1, 0, len(airport_table.index), 0],
-        'values': ['instructors_per_nearest_airport', 1, 1, len(airport_table.index), 1],
+        'categories': ['instructors_per_year', 1, 0, len(instructors_per_year.index), 0],
+        'values': ['instructors_per_year', 1, 1, len(instructors_per_year.index), 1],
         'gap': 2,
     })
-
     chart.set_y_axis({'major_gridlines': {'visible': False}})
     chart.set_legend({'position': 'none'})
-    chart.set_x_axis({'name': 'Nearest airport'})
+    chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart.set_title ({'name': 'Instructors per (nearest) airport'})
+    chart.set_title({'name': 'Number of instructors per year'})
 
-    worksheet.insert_chart('D2', chart)
+    worksheet.insert_chart('I2', chart)
 
-    return airport_table
+    return instructors_per_year
 
 
 def instructors_per_institution_analysis(df, writer):
     """
-       Number of instructors per institution (using normalised institution name).
+    Number of instructors per institution (using normalised institution name).
 
-       """
-    institution_table = pd.core.frame.DataFrame(
-        {'number_of_instructors': df.groupby(['normalised_institution']).size().sort_values()}).reset_index()
-    institution_table.to_excel(writer,
-                          sheet_name='instructors_per_institution',
-                          index=False)
+    """
+    instructors_per_institution = pd.core.frame.DataFrame(
+        {'number_of_instructors': df.groupby(['normalised_institution_name']).size().sort_values()}).reset_index()
+    instructors_per_institution.to_excel(writer,
+                                         sheet_name='instructors_per_institution',
+                                         index=False)
 
     workbook = writer.book
     worksheet = writer.sheets['instructors_per_institution']
@@ -91,8 +128,8 @@ def instructors_per_institution_analysis(df, writer):
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['instructors_per_institution', 1, 0, len(institution_table.index), 0],
-        'values': ['instructors_per_institution', 1, 1, len(institution_table.index), 1],
+        'categories': ['instructors_per_institution', 1, 0, len(instructors_per_institution.index), 0],
+        'values': ['instructors_per_institution', 1, 1, len(instructors_per_institution.index), 1],
         'gap': 2,
     })
 
@@ -104,27 +141,57 @@ def instructors_per_institution_analysis(df, writer):
 
     worksheet.insert_chart('D2', chart)
 
-    return institution_table
+    return instructors_per_institution
+
+
+def instructors_per_country_analysis(df, writer):
+    """
+    Number of instructors per country.
+    """
+    instructors_per_country = pd.core.frame.DataFrame(
+        {'number_of_instructors': df.groupby(['country']).size()}).reset_index()
+    instructors_per_country.to_excel(writer,
+                                     sheet_name='instructors_per_country',
+                                     index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['instructors_per_country']
+
+    chart = workbook.add_chart({'type': 'column'})
+    chart.add_series({
+        'categories': ['instructors_per_country', 1, 0, len(instructors_per_country.index), 0],
+        'values': ['instructors_per_country', 1, 1, len(instructors_per_country.index), 1],
+        'gap': 2,
+    })
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Year'})
+    chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of instructors per country'})
+
+    worksheet.insert_chart('I2', chart)
+
+    return instructors_per_country
 
 
 def instructors_per_UK_region_analysis(df, writer):
     """
-    Number of instructors per UK region (by looking up the nearest airport) - create the corresponding
-    table and graph and write to the spreadsheet.
+    Number of instructors per UK region.
     """
-    region_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['nearest_airport_region']).size().sort_values()}).reset_index()
-    region_table.to_excel(writer,
+    instructors_per_UK_region = pd.core.frame.DataFrame(
+        {'number_of_instructors': df.groupby(['region']).size().sort_values()}).reset_index()
+    instructors_per_UK_region.to_excel(writer,
                           sheet_name='instructors_per_region',
-                          index = False)
+                          index=False)
 
-    workbook  = writer.book
+    workbook = writer.book
     worksheet = writer.sheets['instructors_per_region']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['instructors_per_region', 1, 0, len(region_table.index), 0],
-        'values': ['instructors_per_region', 1, 1, len(region_table.index), 1],
+        'categories': ['instructors_per_region', 1, 0, len(instructors_per_UK_region.index), 0],
+        'values': ['instructors_per_region', 1, 1, len(instructors_per_UK_region.index), 1],
         'gap': 2,
     })
 
@@ -132,134 +199,11 @@ def instructors_per_UK_region_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Region'})
     chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart.set_title ({'name': 'Number of instructors per region'})
+    chart.set_title({'name': 'Number of instructors per region'})
 
     worksheet.insert_chart('D2', chart)
 
-    return region_table
-
-def instructors_per_year_analysis(df, writer):
-    """
-    Number of instructors over years - create corresponding
-    table and graph and write to the spreadsheet.
-    """
-    year_table = pd.core.frame.DataFrame({'number_of_instructors': df.groupby(['earliest-badge-awarded-year']).size()}).reset_index()
-    year_table.to_excel(writer,
-                        sheet_name='instructors_per_year',
-                        index = False)
-
-    workbook  = writer.book
-    worksheet = writer.sheets['instructors_per_year']
-
-    chart3 = workbook.add_chart({'type': 'column'})
-
-    chart3.add_series({
-        'categories': ['instructors_per_year', 1, 0, len(year_table.index), 0],
-        'values': ['instructors_per_year', 1, 1, len(year_table.index), 1],
-        'gap': 2,
-    })
-
-    chart3.set_y_axis({'major_gridlines': {'visible': False}})
-    chart3.set_legend({'position': 'none'})
-    chart3.set_x_axis({'name': 'Year'})
-    chart3.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
-    chart3.set_title ({'name': 'Number of instructors per year'})
-
-    worksheet.insert_chart('D2', chart3)
-
-    return year_table
-
-
-def main():
-    """
-    Main function
-    """
-    args = helper.parse_command_line_paramters()
-
-    if args.instructors_file:
-        instructors_file = args.instructors_file
-        print("The CSV spreadsheet with Carpentry instructors to be analysed: " + args.instructors_file)
-    else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + INSTRUCTOR_DATA_DIR)
-        instructors_files = glob.glob(INSTRUCTOR_DATA_DIR + "carpentry-instructors_*.csv")
-        instructors_files.sort(key=os.path.getctime) # order by creation date
-
-        if not instructors_files:
-            print('No CSV file with Carpentry instructors found in ' + INSTRUCTOR_DATA_DIR + ". Exiting ...")
-            sys.exit(1)
-        else:
-            instructors_file = instructors_files[-1] # get the last element
-
-    instructors_file_name = os.path.basename(instructors_file)
-    instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-
-    print('CSV file with carpentry instructors to analyse ' + instructors_file + "\n")
-
-    try:
-        instructors_df = helper.load_data_from_csv(instructors_file, ['country_code','nearest_airport_name',
-                                        'nearest_airport_code', 'institution',
-                                        'instructor-badges',
-                                        'swc-instructor-badge-awarded',
-                                        'dc-instructor-badge-awarded',
-                                        'trainer-badge-awarded',
-                                        'earliest-badge-awarded',
-                                        'number_of_workshops_taught']) # anonymise - do not load emails or names or any other personal data
-        instructors_df = helper.drop_null_values_from_columns(instructors_df, ['country_code', 'institution', 'nearest_airport_name'])
-        instructors_df = helper.insert_normalised_institutions_names(instructors_df, "institution")
-
-        # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instructors' data
-        # We are not doing anything with the geo data, just want to save it in the new/modified dataset.
-        instructors_df = helper.insert_institutions_geocoordinates(instructors_df)
-
-        instructors_df = insert_earliest_badge_year(instructors_df)
-        instructors_df = insert_airport_region(instructors_df)
-
-        if not os.path.exists(MODIFIED_INSTRUCTOR_DATA_DIR):
-            os.makedirs(MODIFIED_INSTRUCTOR_DATA_DIR)
-
-        csv_modified_data_file = MODIFIED_INSTRUCTOR_DATA_DIR + 'modified_' + instructors_file_name_without_extension + '.csv'
-        print('Saving the modified instructors data to a CSV spreadsheet ' + csv_modified_data_file)
-        helper.save_data_to_csv(instructors_df, csv_modified_data_file)
-        print("\n")
-
-        print('Creating the instructor analyses Excel spreadsheet ...')
-        instructors_analyses_excel_file = INSTRUCTOR_DATA_DIR + 'analysed_' + instructors_file_name_without_extension + '.xlsx'
-        excel_writer = helper.create_excel_analyses_spreadsheet(instructors_analyses_excel_file, instructors_df, "carpentry_instructors")
-
-        date = instructors_file_name_without_extension.split("_")  # Extract date from the file name in YYYY-MM-DD format
-        helper.create_readme_tab(excel_writer, "Data in sheet 'carpentry_instructors' was extracted on " + date[
-        2] + " using Ruby script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. " \
-             "It contains info on Carpentry instructors in a specified country (or all countries) recorded in the Carpentry's record keeping system AMY until the date it was extracted on. " \
-            "Data has been anomimised (email and name info excluded) and " \
-             +   "a new column 'earliest-badge-awarded-year' was added, which contains extracted year from column 'earliest-badge-awarded'.")
-
-        instructors_nearest_airport_analysis(instructors_df, excel_writer)
-        instructors_per_institution_analysis(instructors_df, excel_writer)
-        instructors_per_UK_region_analysis(instructors_df, excel_writer)
-        instructors_per_year_analysis(instructors_df, excel_writer)
-
-        excel_writer.save()
-        print("Analyses of Carpentry instructors complete - results saved to " + instructors_analyses_excel_file + "\n")
-    except Exception:
-        print ("An error occurred while creating the analyses Excel spreadsheet ...")
-        print(traceback.format_exc())
-    else:
-        if args.google_drive_dir_id:
-            try:
-                print("Uploading instructors analyses to Google Drive ...")
-                drive = helper.google_drive_authentication()
-
-                parents_list = [{'kind': 'drive#fileLink',
-                                 'id': args.google_drive_dir_id}]
-
-                #helper.google_drive_upload(instructors_file, drive, parents_list, True)
-                #print('Original instructors CSV spreadsheet ' + instructors_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-
-                helper.google_drive_upload(instructors_analyses_excel_file, drive, parents_list, True)
-                print('Instructor analyses Excel spreadsheet ' + instructors_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-            except Exception:
-                print ("An error occurred while uploading instructor analyses to Google Drive ...")
-                print(traceback.format_exc())
+    return instructors_per_UK_region
 
 
 if __name__ == '__main__':

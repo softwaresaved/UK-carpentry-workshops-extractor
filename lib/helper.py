@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 import argparse
 import sys
@@ -9,20 +10,44 @@ from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
 import traceback
 
-
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-UK_REGIONS_FILE = CURRENT_DIR + '/UK_regions.json'
+UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
+UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv' # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
-UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.xlsx'
+UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
 STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
+
+UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding = "utf-8")
+UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding = "utf-8")
+
+def get_uk_non_academic_institutions():
+    """
+    Return names and coordinates for UK institutions that are not high education providers
+    (so are not in the official academic institutions list), but appear in AMY as affiliations of UK instructors.
+    This list needs to be periodically updated as more non-academic affiliations appear in AMY.
+    """
+    non_academic_UK_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE))
+    return pd.DataFrame(non_academic_UK_institutions_coords)
+
+
+def get_uk_academic_institutions():
+    uk_academic_institutions_geodata_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE, encoding="utf-8",
+                                                      usecols=['VIEW_NAME', 'LONGITUDE', 'LATITUDE'])
+    return uk_academic_institutions_geodata_df
+
+
+NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
+UK_ACADEMIC_INSTITUTIONS_DF = get_uk_academic_institutions()
+ALL_UK_INSTITUTIONS_DF = UK_ACADEMIC_INSTITUTIONS_DF.append(get_uk_non_academic_institutions())
 
 
 def parse_command_line_parameters(arguments_of_interest):
     parser = argparse.ArgumentParser()
     if "-c" in arguments_of_interest:
-        parser.add_argument("-c", "--country_code", type=str, help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
+        parser.add_argument("-c", "--country_code", type=str,
+                            help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
     if "-u" in arguments_of_interest:
         parser.add_argument("-u", "--username", type=str, help="Username for logging to AMY")
     if "-p" in arguments_of_interest:
@@ -35,28 +60,6 @@ def parse_command_line_parameters(arguments_of_interest):
                             help="An absolute path to instructors CSV file to analyse/map")
     args = parser.parse_args()
     return args
-
-
-def insert_region_column(df, regions):
-    """
-    Lookup coordinates from the dataframe and see in which region they fall. Insert the corresponding 'region' column
-    in the dataframe.
-    """
-    print("Finding UK regions for locations. This may take a while, depending on the size of your data ...\n")
-
-    region_list = []
-    # Find the region for each longitude, latitude pair and add in a new column
-    for index, row in df.iterrows():
-        point = Point(row['longitude'], row['latitude'])
-        print("Looking for UK region for location " + str(index + 1) + " out of " + str(len(df.index)))
-        for feature in regions['features']:
-            polygon = shape(feature['geometry'])
-            if polygon.contains(point):
-                region_list.append(feature['properties']['NAME'])
-
-    ## Add 'region' column
-    df.insert(len(df.columns), "region", region_list, allow_duplicates=False)
-    return df
 
 
 def create_readme_tab(writer, readme_text):
@@ -76,95 +79,88 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     return writer
 
 
-def drop_null_values_from_columns(df, column_list):
-    for column in column_list:
-        df = df.dropna(subset=[column])
-        df = df.reset_index(drop=True)
-    return df
-
-
-def insert_normalised_institutions_names(df, non_normalised_institution_column):
+def insert_normalised_institution(df, non_normalised_institution_column):
     """
     Fix names of UK institutions to be the official names, so we can cross reference them with their geocodes later on.
     Use column 'institution' and create new column 'normalised_institution' based off it. For institutions that we do not have
     normanised names, just keep it as is.
     """
 
-    # Index of column 'venue'/'institution' (with workshop venue/not normalised instructor institution), right of which we want to
-    # insert the new column containing normalised institution name
+    # Get the index of column 'venue'/'institution/affiliation' (with non-normalised workshop venue or instructor's institution/affiliation),
+    # right to which we want to insert the new column containing normalised institution name
     idx = df.columns.get_loc(non_normalised_institution_column)
-
-    normalised_institutions_dict = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
-
-    uk_academic_institutions_df = get_UK_academic_institutions_coords()
-    all_uk_institutions_df = uk_academic_institutions_df.append(get_UK_non_academic_institutions_coords()).reset_index(drop=True)
-
-    normalised_institutions = []
-    for institution in df[non_normalised_institution_column]:
-
-        if institution in all_uk_institutions_df['VIEW_NAME'].values:
-            normalised_institution = institution
-        else:
-            normalised_institution = normalised_institutions_dict.get(institution.strip(), "Unknown") # Replace with 'Unknown' if you cannot find the mapping
-
-        normalised_institutions.append(normalised_institution)
-        if normalised_institution == "Unknown":
-            print('For institution "' + institution + '" we do not have the normalised name information. ' +
-                  'Setting the institution to "Unknown" ...\n')
-
-    df.insert(loc=idx + 1, column='normalised_institution',
-              value=normalised_institutions)  # insert to the right of the column 'venue'/'institution'
-
+    df.insert(loc=idx + 1, column='normalised_institution_name',
+              value=df[
+                  non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
+    df[df["country_code"] == "GB"]["normalised_institution_name"].map(get_normalised_institution_name,
+                                                                      na_action="ignore")
     return df
 
 
-def remove_stopped_workshops(df):
-    for tag in STOPPED_WORKSHOP_TYPES:
-        df = df[df.tags != tag]
-    return df
+def get_normalised_institution_name(non_normalised_institution_name):
+    if non_normalised_institution_name in ALL_UK_INSTITUTIONS_DF['VIEW_NAME'].values:
+        normalised_institution_name = non_normalised_institution_name
+    else:
+        normalised_institution_name = NORMALISED_INSTITUTIONS_DICT.get(non_normalised_institution_name.strip(),
+                                                                       "Unknown")  # Replace with 'Unknown' if you cannot find the mapping
 
+    if normalised_institution_name == "Unknown":
+        print(
+                    'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
+                    'Setting the institution to "Unknown" ...\n')
+    return normalised_institution_name
 
-def get_UK_non_academic_institutions_coords():
-    """
-    Return coordinates for UK institutions that are not high education providers
-    (so are not in the official academic institutions list), but appear in AMY as affiliations of UK instructors.
-    This list needs to be periodically updated as more non-academic affiliations appear in AMY.
-    """
-    non_academic_UK_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE))
-    return pd.DataFrame(non_academic_UK_institutions_coords)
-
-
-def get_UK_academic_institutions_coords():
-    uk_academic_institutions_geodata_file = pd.ExcelFile(UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE)
-    uk_academic_institutions_geodata_df = uk_academic_institutions_geodata_file.parse('UK-academic-institutions')
-    return uk_academic_institutions_geodata_df[['VIEW_NAME', 'LONGITUDE', 'LATITUDE']]
 
 def insert_institutional_geocoordinates(df):
-
-    # Get coords for UK academic institutions
-    uk_academic_institutions_coords_df = get_UK_academic_institutions_coords()
-    # Add coords for UK non academic institutions and academis ones that are not in the official list
-    all_uk_institutions_coords_df = uk_academic_institutions_coords_df.append(get_UK_non_academic_institutions_coords()).reset_index(drop=True)
-
     # Insert latitude and longitude for affiliations, by looking up the all_uk_institutions_coords_df
-    idx = df.columns.get_loc("normalised_institution")  # index of column where normalised institution is kept
+    idx = df.columns.get_loc("normalised_institution_name")  # index of column where normalised institution is kept
     df.insert(loc=idx + 1,
-                                       column='latitude',
-                                       value=None)
+              column='normalised_institution_latitude',
+              value=None)
     df.insert(loc=idx + 2,
-                                       column='longitude',
-                                       value=None)
+              column='normalised_institution_longitude',
+              value=None)
     # replace with the affiliation's latitude and longitude coordinates
-    df['latitude'] = df['normalised_institution'].map(
-        all_uk_institutions_coords_df.set_index('VIEW_NAME')['LATITUDE'])
-    df['longitude'] = df['normalised_institution'].map(
-        all_uk_institutions_coords_df.set_index('VIEW_NAME')['LONGITUDE'])
+    df['normalised_institution_latitude'] = df['normalised_institution_name'].map(
+        ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LATITUDE'])
+    df['normalised_institution_longitude'] = df['normalised_institution_name'].map(
+        ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LONGITUDE'])
 
     return df
+
+
+def insert_uk_region(df):
+    """
+    Insert UK region for instructors' airport geocoordinates into new column 'region'.
+    """
+    df['region'] = df.apply(
+        lambda x: get_uk_region(airport_code=x['airport_code'], latitude=x['normalised_institution_latitude'],
+                                longitude=x['normalised_institution_longitude']), axis=1)
+    return df
+
+
+def get_uk_region(airport_code, latitude, longitude):
+    """
+    Lookup UK region given an airport (IATA) code or (latitude, longitude) coordinates of an institution.
+    """
+    if airport_code is not np.nan:
+        print("Looking up region for airport " + airport_code)
+        region = UK_AIRPORTS_REGIONS_DF.loc[UK_AIRPORTS_REGIONS_DF["airport_code"] == airport_code, 'UK_region']
+        if region is not None and region is not []:
+            return region.values[0] # should only be one element in the array
+    elif latitude is not np.nan and longitude is not np.nan:
+        print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
+            longitude) + ")")
+        point = Point(longitude, latitude)
+        for feature in UK_REGIONS['features']:
+            polygon = shape(feature['geometry'])
+            if polygon.contains(point):
+                return (feature['properties']['NAME'])
+    print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
+    return None
 
 
 def get_center(df):
-
     # Extract longitude and latitude columns from the dataframe
     coords = df[['latitude', 'longitude']]
     tuples = [tuple(coords) for coords in coords.values]
@@ -177,10 +173,9 @@ def get_center(df):
 
 
 def add_UK_regions_layer(map):
-
     ## Load UK region information from a json file
     try:
-        regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+        regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8'))
 
         ## Add to a layer
         folium.GeoJson(regions,
@@ -198,7 +193,6 @@ def add_UK_regions_layer(map):
 
 
 def generate_heatmap(df):
-
     center = get_center(df)
 
     map = folium.Map(
@@ -214,8 +208,8 @@ def generate_heatmap(df):
 
     return map
 
-def generate_map_with_circular_markers(df):
 
+def generate_map_with_circular_markers(df):
     center = get_center(df)
 
     map = folium.Map(
@@ -224,7 +218,7 @@ def generate_map_with_circular_markers(df):
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     for index, row in df.iterrows():
-        print(str(index) + ": "+row['institution'])
+        print(str(index) + ": " + row['institution'])
 
         # iframe = branca.element.IFrame(html=row['description'], width=300, height=200)
         # popup = folium.Popup(iframe, max_width=500)
@@ -288,9 +282,9 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
         threshold_scale.append(each)
 
     maps = folium.Map(
-        location = center, #[54.00366, -2.547855],
-        zoom_start = 6,
-        tiles = 'cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+        location=center,  # [54.00366, -2.547855],
+        zoom_start=6,
+        tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     maps.choropleth(
         geo_data=regions,
@@ -303,7 +297,6 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
         legend_name='Number of ' + item_type + ' per UK regions',
         threshold_scale=threshold_scale)
     return maps
-
 
 # def generate_gmaps_heatmap(df):
 #     gmaps.configure(api_key=config.api_key)
@@ -384,4 +377,3 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
 #     map.add_layer(symbol_layer_large)
 #
 #     return map
-
