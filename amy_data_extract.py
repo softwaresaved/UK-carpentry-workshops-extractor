@@ -196,13 +196,21 @@ def get_instructors(url_parameters=None, username=None, password=None):
                                       columns=["personal", "middle", "family", "email", "gender", "affiliation",
                                                "awards", "badges", "domains", "github", "orcid", "twitter",
                                                "url", "username", "publish_profile", "tasks", "lessons", "may_contact",
-                                               "notes", "airport"])
+                                               "notes", "country", "airport"])
 
     print("\n####### Extracted " + str(
         instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
 
     airports_df = get_airports(None, username, password)  # Get all airports
     airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
+
+    # instructors_df["country_code"] = instructors_df["airport_code"].map(
+    #     lambda airport_code: airports_dict[airport_code][0], na_action="ignore")
+    idx = instructors_df.columns.get_loc("country")
+    instructors_df.insert(loc=idx, column='country_code',
+                        value=instructors_df["country"])
+    instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code),
+                                                                   na_action="ignore")
 
     # Airport field contains URIs like 'https://amy.software-carpentry.org/api/v1/airports/MAN/' so we need to extract the 3-letter airport code out of it (e.g. 'MAN')
     instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
@@ -212,10 +220,6 @@ def get_instructors(url_parameters=None, username=None, password=None):
         lambda airport_code: airports_dict[airport_code][2], na_action="ignore")
     instructors_df["airport_longitude"] = instructors_df["airport_code"].map(
         lambda airport_code: airports_dict[airport_code][3], na_action="ignore")
-    instructors_df["country_code"] = instructors_df["airport_code"].map(
-        lambda airport_code: airports_dict[airport_code][0], na_action="ignore")
-    instructors_df["country"] = instructors_df["country_code"].map(lambda country_code: get_country(country_code),
-                                                                   na_action="ignore")
 
     # Extract year when instructor badges were awarded and add them as new columns
     swc_instructor_badge_awarded = []
