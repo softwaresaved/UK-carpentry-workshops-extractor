@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+import numpy as np
 import traceback
 import glob
 import sys
@@ -41,7 +42,12 @@ def main():
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
         workshops_df.drop(labels=["contact", "tasks"], axis=1, inplace=True)
-
+        idx = workshops_df.columns.get_loc("longitude")
+        workshops_df.insert(loc=idx + 1, column='region',
+                            value=workshops_df["longitude"])
+        workshops_df['region'] = workshops_df.apply(
+            lambda x: helper.get_uk_region(airport_code=np.nan, latitude=x['latitude'],
+                                    longitude=x['longitude']), axis=1)
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
 
@@ -64,6 +70,8 @@ def main():
         attendance_per_year_analysis(workshops_df, excel_writer)
         attendance_per_type_analysis(workshops_df, excel_writer)
         attendance_per_type_per_year_analysis(workshops_df, excel_writer)
+
+        workshops_per_UK_region_analysis(workshops_df, excel_writer)
 
         excel_writer.save()
         print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
@@ -314,6 +322,37 @@ def attendance_per_type_per_year_analysis(df, writer):
 
     return attendance_per_type_per_year_pivot
 
+
+def workshops_per_UK_region_analysis(df, writer):
+    """
+    Number of workshops per UK region.
+    """
+    workshops_per_UK_region = pd.core.frame.DataFrame(
+        {'number_of_workshops': df.groupby(['region']).size().sort_values()}).reset_index()
+    workshops_per_UK_region.to_excel(writer,
+                          sheet_name='workshops_per_region',
+                          index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['workshops_per_region']
+
+    chart = workbook.add_chart({'type': 'column'})
+
+    chart.add_series({
+        'categories': ['workshops_per_region', 1, 0, len(workshops_per_UK_region.index), 0],
+        'values': ['workshops_per_region', 1, 1, len(workshops_per_UK_region.index), 1],
+        'gap': 2,
+    })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Region'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of workshops per region'})
+
+    worksheet.insert_chart('D2', chart)
+
+    return workshops_per_UK_region
 
 if __name__ == '__main__':
     main()
