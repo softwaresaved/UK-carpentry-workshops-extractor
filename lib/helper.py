@@ -143,21 +143,23 @@ def get_uk_region(airport_code, latitude, longitude):
     """
     Lookup UK region given an airport (IATA) code or (latitude, longitude) coordinates of an institution.
     """
-    if airport_code is not np.nan:
+    if airport_code is not None and airport_code is not np.nan:
         print("Looking up region for airport " + airport_code)
         region = UK_AIRPORTS_REGIONS_DF.loc[UK_AIRPORTS_REGIONS_DF["airport_code"] == airport_code, 'UK_region']
         if region is not None and region is not []:
             return region.values[0] # should only be one element in the array
-    elif latitude is not np.nan and longitude is not np.nan:
+    elif latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
         print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
             longitude) + ")")
         point = Point(longitude, latitude)
         for feature in UK_REGIONS['features']:
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
-                return (feature['properties']['NAME'])
-    print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
-    return None
+                return(feature['properties']['NAME'])
+        return("Not in a UK region/online")
+    else:
+        print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
+        return None
 
 
 def get_center(df):
