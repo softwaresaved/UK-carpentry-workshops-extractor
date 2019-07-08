@@ -73,7 +73,7 @@ def main():
         args.username, args.password = get_credentials(AMY_CREDENTIALS_FILE)
 
     if args.username is None or args.password is None:
-        print("Username and password were not provided - cannot authenticate with AMY - exiting.")
+        print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
         workshops = get_workshops(url_parameters, args.username, args.password)
         workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters[
@@ -155,7 +155,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
         # Add AMY URL to the workshop event record
         idx = workshops_df.columns.get_loc("slug")
         workshops_df.insert(loc=idx + 1, column='amy_url',
-                            value="https://amy.software-carpentry.org/workshops/event/" + workshops_df["slug"])
+                            value=AMY_EVENTS_API_URL + workshops_df["slug"])
 
         # Extract hosts' domains from host URIs
         idx = workshops_df.columns.get_loc("host")
@@ -163,7 +163,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
                             value=workshops_df["host"])
         workshops_df["host_domain"] = workshops_df["host"].map(
             lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-            na_action="ignore")  # extract host's domain from URIs like 'https://amy.software-carpentry.org/api/v1/organizations/earlham.ac.uk/'
+            na_action="ignore")  # extract host's domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
         # Get instructors for workshops
         workshops_df["instructors"] = workshops_df["tasks"].map(
@@ -228,7 +228,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
         instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code),
                                                                   na_action="ignore")
 
-        # Airport field contains URIs like 'https://amy.software-carpentry.org/api/v1/airports/MAN/'
+        # Airport field contains URIs like 'https://amy.carpentries.org/api/v1/airports/MAN/'
         # so we need to extract the 3-letter airport code out of it (e.g. 'MAN')
         instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
         instructors_df["airport"] = instructors_df["airport_code"].map(
@@ -335,7 +335,7 @@ def get_airports(url_parameters=None, username=None, password=None):
 
 def extract_airport_code(uri):
     """
-    Extract the 3-letter IATA airport code from the URI (e.g. the last 3 letters from 'https://amy.software-carpentry.org/api/v1/airports/MAN/')
+    Extract the 3-letter IATA airport code from the URI (e.g. the last 3 letters from 'https://amy.carpentries.org/api/v1/airports/MAN/')
     :param uri: Airport URI string
     :return: 3-letter airport code extracted from the str
     """
