@@ -9,6 +9,7 @@ from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
 import traceback
+import getpass
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
@@ -49,9 +50,9 @@ def parse_command_line_parameters(arguments_of_interest):
         parser.add_argument("-c", "--country_code", type=str,
                             help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
     if "-u" in arguments_of_interest:
-        parser.add_argument("-u", "--username", type=str, help="Username for logging to AMY")
+        parser.add_argument("-u", "--username", type=str, help="Username to login to AMY")
     if "-p" in arguments_of_interest:
-        parser.add_argument("-p", "--password", type=str, help="Password for logging to AMY")
+        parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS, help="Password to log in to AMY - you will be prompted for it (do not enter your password on command line)")
     if "-w" in arguments_of_interest:
         parser.add_argument("-w", "--workshops_file", type=str, default=None,
                             help="An absolute path to the workshops CSV file to analyse/map")
@@ -59,6 +60,11 @@ def parse_command_line_parameters(arguments_of_interest):
         parser.add_argument("-i", "--instructors_file", type=str, default=None,
                             help="An absolute path to instructors CSV file to analyse/map")
     args = parser.parse_args()
+    if hasattr(args, "password"): #if the -p switch was set - ask user for a password but do not echo it
+        if args.password is None:
+            args.password = getpass.getpass(prompt='Enter AMY password: ')
+    else:
+        setattr(args, 'password', None) # the -p switch was not used - add the password argument 'manually' but set it to None
     return args
 
 
