@@ -61,7 +61,7 @@ optional arguments:
                         it (do not enter your password on command line even though it is possible)
 ```
 
-## Carpentry workshops and instructor analyser scripts
+## Carpentry workshops and instructors analyser scripts
 
 The project contains 2 python scripts - `analyse_workshops.py` and `analyse_instructors.py` - to analyse the data resulting from the extraction phase.
 to map the data from the extraction phase.
@@ -105,7 +105,7 @@ optional arguments:
 ```
 If you do not specify the files with data to analyse (via `-w` or `-i` options), the scripts will just look for the latest workshop or instructor files found in `data/raw` folder.
 
-## Carpentry workshops and instructor mapper scripts
+## Carpentry workshops and instructors mapper scripts
 
 The project contains 2 python mapper scripts - `map_workshops.py` and `map_instructors.py` - to map the data from the extraction phase.
 
