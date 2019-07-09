@@ -47,7 +47,7 @@ To run the extractor script, from the project root do:
 
 ```$ python amy_data_extract.rb```
 
-There are several command line options available, see below for details.
+You can run the extractor script from the project root using the following command line options.
 ```
 $ python amy_data_extract.py -h
 usage: amy_data_extract.py [-h] [-c COUNTRY_CODE] [-u USERNAME]
@@ -85,7 +85,7 @@ glob
 re
 ```
 
-### Running analyser scripts
+### Running analyser scripts and command line options
 There are several command line options available for analyser scripts, depending on if they are dealing with workshops or instructors. See below for details.
 ```
 $ python analyse_workshops.py -h
@@ -119,7 +119,7 @@ Mapper scripts generate various interactive maps embedded in HTML files and stor
 * choropleth map (over UK regions only)
 * heatmap
 
-### Analyser and mapper scripts' dependencies
+### Mapper scripts' dependencies 
 The following libraries are required by the mapper scripts, so you will have to install them prior to running it (e.g. via `pip install`).
 ```
 json
@@ -132,7 +132,7 @@ glob
 re
 ```
 
-### Running mapper scripts
+### Running mapper scripts and command line options
 
 *Note that mapping instructors only makes sense for UK instructors at the moment, we we only have geodata for UK institutions.*
 
