@@ -43,10 +43,6 @@ getpass
 ```
 
 ### Running extractor script and command line options
-To run the extractor script, from the project root do:
-
-```$ python amy_data_extract.rb```
-
 You can run the extractor script from the project root using the following command line options.
 ```
 $ python amy_data_extract.py -h
