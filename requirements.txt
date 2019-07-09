@@ -3,17 +3,16 @@ json
 matplotlib
 numpy
 pandas
-pydrive
 shapefile
 traceback
 glob
 config
-
-import requests
-import pandas
-import datetime
-import yaml
-import traceback
-import json
-import sys
-import os
+requests
+datetime
+yaml
+traceback
+sys
+os
+re
+argparse
+getpass
