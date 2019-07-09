@@ -52,7 +52,7 @@ def parse_command_line_parameters(arguments_of_interest):
     if "-u" in arguments_of_interest:
         parser.add_argument("-u", "--username", type=str, help="Username to login to AMY")
     if "-p" in arguments_of_interest:
-        parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS, help="Password to log in to AMY - you will be prompted for it (do not enter your password on command line)")
+        parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS, help="Password to log in to AMY - you will be prompted for it (please do not enter your password on command line even though it is possible)")
     if "-w" in arguments_of_interest:
         parser.add_argument("-w", "--workshops_file", type=str, default=None,
                             help="An absolute path to the workshops CSV file to analyse/map")
