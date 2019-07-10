@@ -76,8 +76,8 @@ def main():
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
         workshops = get_workshops(url_parameters, args.username, args.password)
-        workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + ("_" + url_parameters["country"] if url_parameters[
-                                                                                                         "country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+        workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + "_" + (url_parameters["country"] if url_parameters[
+                                                                                                         "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
         workshops.to_csv(workshops_file, encoding="utf-8", index=False)
         print("Saved a total of " + str(workshops.index.size) + " workshops to " + workshops_file)
@@ -85,8 +85,8 @@ def main():
         print("\n\n")
 
         instructors = get_instructors(url_parameters, args.username, args.password)
-        instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + ("_" + url_parameters["country"] if url_parameters[
-                                                                                                             "country"] is not None else "") + "_" + datetime.datetime.today().strftime(
+        instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + "_" + (url_parameters["country"] if url_parameters[
+                                                                                                             "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
         instructors.to_csv(instructors_file, encoding="utf-8", index=False)
         print("Saved a total of " + str(instructors.index.size) + " instructors to " + instructors_file)
@@ -375,7 +375,6 @@ def get_credentials(file_path):
         password = amy_credentials_yaml["amy_credentials"]["password"]
     else:
         print ("AMY credentials YAML file does not exist " + file_path)
-    print(username, password)
     return username, password
 
 
