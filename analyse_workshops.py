@@ -66,6 +66,7 @@ def main():
         workshops_per_type_per_year_analysis(workshops_df, excel_writer)
 
         workshops_per_host_analysis(workshops_df, excel_writer)
+        workshops_per_host_per_year_analysis(workshops_df, excel_writer)
 
         attendance_per_year_analysis(workshops_df, excel_writer)
         attendance_per_type_analysis(workshops_df, excel_writer)
@@ -173,6 +174,43 @@ def workshops_per_type_per_year_analysis(df, writer):
     worksheet.insert_chart('B20', chart)
 
     return workshops_per_type_per_year_pivot
+
+
+def workshops_per_host_per_year_analysis(df, writer):
+    """
+    Number of workshops at different hosts over years.
+    """
+    # Remove rows with NaN value for the institution
+    df = df.dropna(subset=['host_domain'])
+
+    workshops_per_host_per_year = pd.core.frame.DataFrame(
+        {'number_of_workshops': df.groupby(['host_domain', 'year']).size()}).reset_index()
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='host_domain', columns='year')
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year_pivot.fillna(0).astype('int')
+
+    workshops_per_host_per_year_pivot.to_excel(writer, sheet_name='workshops_per_host_per_year')
+
+    workbook = writer.book
+    worksheet = writer.sheets['workshops_per_host_per_year']
+
+    chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
+
+    for i in range(1, len(workshops_per_host_per_year_pivot.columns) + 1):
+        chart.add_series({
+            'name': ['workshops_per_host_per_year', 1, i],
+            'categories': ['workshops_per_host_per_year', 3, 0, len(workshops_per_host_per_year_pivot.index) + 2, 0],
+            'values': ['workshops_per_host_per_year', 3, i, len(workshops_per_host_per_year_pivot.index) + 2, i],
+            'gap': 2,
+        })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_x_axis({'name': 'Year'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of workshops at different hosts over years'})
+
+    worksheet.insert_chart('N20', chart)
+
+    return workshops_per_host_per_year_pivot
 
 
 def workshops_per_host_analysis(df, writer):
