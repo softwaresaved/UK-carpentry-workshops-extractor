@@ -55,10 +55,12 @@ def parse_command_line_parameters(arguments_of_interest):
         parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS, help="Password to log in to AMY - you will be prompted for it (please do not enter your password on command line even though it is possible)")
     if "-w" in arguments_of_interest:
         parser.add_argument("-w", "--workshops_file", type=str, default=None,
-                            help="An absolute path to the workshops CSV file to analyse/map")
+                            help="The path to the workshops CSV file to analyse/map. "
+                                 "If omitted, the latest file with workshops data from data/raw/ directory off project root will be used, if any.")
     if "-i" in arguments_of_interest:
         parser.add_argument("-i", "--instructors_file", type=str, default=None,
-                            help="An absolute path to instructors CSV file to analyse/map")
+                            help="The path to instructors CSV file to analyse/map. "
+                                 "If omitted, the latest file with instructors data from data/raw/ directory off project root will be used, if any.")
     args = parser.parse_args()
     if hasattr(args, "password"): #if the -p switch was set - ask user for a password but do not echo it
         if args.password is None:
