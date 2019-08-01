@@ -1,5 +1,5 @@
 # Carpentry workshops and instructor data extracting, analysing and mapping
-This project contains several python standalone scripts (and accompanying ipython notebooks) to extract, analyse and map the details
+This project contains several Python standalone and equivalent Jupyter Notebook scripts (and accompanying ipython notebooks) to extract, analyse and map the details
 of Carpentry workshops and instructors from The Carpentry's record keeping system AMY using AMY's API.
 
 ## Python version
