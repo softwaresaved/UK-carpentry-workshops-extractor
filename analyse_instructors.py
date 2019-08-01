@@ -27,7 +27,7 @@ def main():
         print("The CSV spreadsheet with Carpentry instructors to be analysed: " + args.instructors_file)
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + RAW_DATA_DIR)
-        instructors_files = glob.glob(RAW_DATA_DIR + "carpentry-instructors_*.csv")
+        instructors_files = glob.glob(RAW_DATA_DIR + "/carpentry-instructors_*.csv")
         instructors_files.sort(key=os.path.getctime)  # order files by creation date
 
         if not instructors_files:
