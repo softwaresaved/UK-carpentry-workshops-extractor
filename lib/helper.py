@@ -76,6 +76,7 @@ def create_readme_tab(writer, readme_text):
     worksheet = workbook.add_worksheet('README')
     worksheet.write(0, 0, readme_text)
 
+
 def create_excel_analyses_spreadsheet(file, df, sheet_name):
     """
     Create an Excel spreadsheet to save the dataframe and various analyses and graphs.
@@ -88,16 +89,16 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
 def insert_normalised_institution(df, non_normalised_institution_column):
     """
     Fix names of UK institutions to be the official names, so we can cross reference them with their geocodes later on.
-    Use column 'institution' and create new column 'normalised_institution' based off it. For institutions that we do not have
-    normanised names, just keep it as is.
+    Use column 'institution' and create new column 'normalised_institution' based off it. For institutions that we do
+    not have normalised names, just keep it as is.
     """
 
-    # Get the index of column 'venue'/'institution/affiliation' (with non-normalised workshop venue or instructor's institution/affiliation),
-    # right to which we want to insert the new column containing normalised institution name
+    # Get the index of column 'venue'/'institution/affiliation' (with non-normalised workshop venue or instructor's
+    # institution/affiliation), right to which we want to insert the new column containing normalised institution name
     idx = df.columns.get_loc(non_normalised_institution_column)
     df.insert(loc=idx + 1, column='normalised_institution_name',
               value=df[
-                  non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
+                  non_normalised_institution_column]) # insert to the right of the column 'venue'/'institution/affiliation'
     df[df["country_code"] == "GB"]["normalised_institution_name"].map(get_normalised_institution_name,
                                                                       na_action="ignore")
     return df
