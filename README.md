@@ -3,7 +3,8 @@ This project contains several Python standalone and equivalent Jupyter Notebook 
 of Carpentry workshops and instructors from The Carpentry's record keeping system AMY using AMY's API.
 
 ## Python version
-Recommended Python version is Python 3. Code was tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`.
+Recommended Python version is Python 3. Code was tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`. 
+Other Python versions may or may not work.
 
 ## Dependencies 
 Dependencies for the scripts are listed in `requirements.txt` in the project root 
