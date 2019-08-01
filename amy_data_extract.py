@@ -122,8 +122,8 @@ def get_workshops(url_parameters=None, username=None, password=None):
         # Translate a list of JSON objects/dictionaries directly into a DataFrame
         workshops_df = pandas.DataFrame(workshops,
                                         columns=["slug", "start", "end", "attendance", "country", "host", "venue",
-                                                 "address",
-                                                 "latitude", "longitude", "tags", "website_url", "contact",
+                                                 "address", "latitude", "longitude", "tags", "website_url",
+                                                 # "contact",
                                                  "tasks"])
 
         print("\n####### Extracted " + str(
@@ -198,7 +198,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
         print("Total instructors expected: " + str(response.json()["count"]))
         next_url = response.json()["next"]
         print("Getting paged instructor data from " + AMY_PERSONS_API_URL)
-        persons = response.json()["results"]  # a list extracted from JSON response
+        persons = response.json()["results"]  # a list of persons (instructors) extracted from JSON response
         while next_url is not None:
             response = requests.get(next_url, headers=HEADERS, auth=(username, password))
             response.raise_for_status()  # check if a request was successful
@@ -208,11 +208,14 @@ def get_instructors(url_parameters=None, username=None, password=None):
 
         # Translate a list of JSON objects/dictionaries directly into a DataFrame
         instructors_df = pandas.DataFrame(persons,
-                                          columns=["personal", "middle", "family", "email", "gender", "affiliation",
-                                                   "awards", "badges", "domains", "github", "orcid", "twitter",
-                                                   "url", "username", "publish_profile", "tasks", "lessons",
-                                                   "may_contact",
-                                                   "notes", "country", "airport"])
+                                          columns=[  # "personal", "middle", "family", "email", "gender",
+                                              "affiliation",
+                                              "awards", "badges", "domains",
+                                              # "github", "orcid", "twitter",
+                                              # "url", "username", "publish_profile",
+                                              "tasks", "lessons",
+                                              # "may_contact", "notes",
+                                              "country", "airport"])
 
         print("\n####### Extracted " + str(
             instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
@@ -328,7 +331,8 @@ def get_airports(url_parameters=None, username=None, password=None):
 
     # Filter airports by country - this should be done via URL parameters in the call to the AMY API
     # but it is not implemented in the API yet so we filter them out here
-    if url_parameters is not None and url_parameters["country"] is not None and url_parameters["country"].lower != "all":
+    if url_parameters is not None and url_parameters["country"] is not None and url_parameters[
+        "country"].lower != "all":
         airports_df = airports_df.loc[airports_df["country"] == url_parameters["country"]]
     return airports_df
 

@@ -43,7 +43,7 @@ def main():
 
     try:
         instructors_df = pd.read_csv(instructors_file, encoding="utf-8")
-        instructors_df.drop(labels="email", axis=1, inplace=True)
+        # instructors_df.drop(labels="email", axis=1, inplace=True) // We do not download personal data from AMY any more so nothing to drop here
 
         # Insert normalised/official names for institutions (for UK academic institutions)
         instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")

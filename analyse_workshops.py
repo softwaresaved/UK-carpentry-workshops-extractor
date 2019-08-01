@@ -41,7 +41,8 @@ def main():
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
-        workshops_df.drop(labels=["contact", "tasks"], axis=1, inplace=True)
+        workshops_df.drop(labels=[#"contact",
+                          "tasks"], axis=1, inplace=True)
         idx = workshops_df.columns.get_loc("longitude")
         workshops_df.insert(loc=idx + 1, column='region',
                             value=workshops_df["longitude"])
