@@ -2,8 +2,12 @@
 This project contains several python standalone scripts (and accompanying ipython notebooks) to extract, analyse and map the details
 of Carpentry workshops and instructors from The Carpentry's record keeping system AMY using AMY's API.
 
-Tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`.
+## Python version
+Recommended Python version is Python 3. Code was tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`.
 
+## Dependencies 
+Dependencies for the scripts are listed in `requirements.txt` in the project root 
+and can be installed via `pip install -r requirements.txt`
 
 ## Carpentry workshops and instructor data extraction
 The scripts `amy_data_extract.py` extracts the details of Carpentry workshops
@@ -26,21 +30,6 @@ Alternatively, you can pass username and password as command line parameters to 
 in command line prompt. 
 You can pass various other command line options to the script as well - see the section below for details.
 
-### Extractor script's dependencies
-The following libraries are required by the extractor script, so you will have to install them prior to running it (e.g. via `pip install`).
-```
-requests
-pandas
-datetime
-yaml
-traceback
-json
-sys
-os
-re
-argparse
-getpass
-```
 
 ### Running extractor script and command line options
 You can run the extractor script from the project root using the following command line options.
@@ -67,19 +56,6 @@ The project contains 2 python scripts - `analyse_workshops.py` and `analyse_inst
 to map the data from the extraction phase.
 
 Analyser scripts create resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/analyses` folders off the project root.
-
-### Analyser and mapper scripts' dependencies
-The following libraries are required by the analyser scripts, so you will have to install them prior to running it (e.g. via `pip install`).
-```
-json
-matplotlib
-numpy
-pandas
-shapefile
-traceback
-glob
-re
-```
 
 ### Running analyser scripts and command line options
 There are several command line options available for analyser scripts, depending on if they are dealing with workshops or instructors. See below for details.
@@ -114,19 +90,6 @@ Mapper scripts generate various interactive maps embedded in HTML files and stor
 * map of clustered markers (nearby markers are clustered but can be zoomed in and out of)
 * choropleth map (over UK regions only)
 * heatmap
-
-### Mapper scripts' dependencies 
-The following libraries are required by the mapper scripts, so you will have to install them prior to running it (e.g. via `pip install`).
-```
-json
-matplotlib
-numpy
-pandas
-shapefile
-traceback
-glob
-re
-```
 
 ### Running mapper scripts and command line options
 
