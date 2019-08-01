@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#
 # Script to run Alek's analysis pipeline.
 
 # Change to the correct directory - change for your system.
