@@ -1,0 +1,337 @@
+[
+  {
+    "normalised_name": "University College London",
+    "common_names": [
+      "University College London, High-Energy Physics Group",
+      "Bill Lyons Informatics Centre, UCL Cancer Institute"
+    ]
+  },
+  {
+    "normalised_name": "Imperial College of Science, Technology and Medicine",
+    "common_names": [
+      "Imperial College London",
+      "G07, Royal School of Mines, Imperial College London",
+      "ARCHER - Imperial College London",
+      "National Heart & Lung Institute, Imperial College"
+    ]
+  },
+  {
+    "normalised_name": "The University of Manchester",
+    "common_names": [
+      "University of Manchester",
+      "Cathie Marsh Institute for Social Research, University of Manchester",
+      "EPSRC & MRC Centre for Doctoral Training in Regenerative Medicine, University of Manchester",
+      "The Nowgen Centre, University of Manchester",
+      "CoDiMa - University of Manchester",
+      "ARCHER and SSI workshop for Women in Science and Engineering"
+    ]
+  },
+  {
+    "normalised_name": "University of Exeter",
+    "common_names": [
+      "Streatham Campus, University of Exeter"
+    ]
+  },
+  {
+    "normalised_name": "University of Oxford",
+    "common_names": [
+      "Oxford University",
+      "Medical Sciences Teaching Centre, University of Oxford",
+      "BDI"
+    ]
+  },
+  {
+    "normalised_name": "University of Cambridge",
+    "common_names": [
+      "Centre for Mathematical Sciences, University of Cambridge",
+      "InterMine, Cambridge University",
+      "CRUK",
+      "Department of Chemistry and Cancer Research UK - Cambridge Institute, University of Cambridge"
+    ]
+  },
+  {
+    "normalised_name": "Queen Mary and Westfield College, University of London",
+    "common_names": [
+      "Queen Mary University London",
+      "Media and Arts Technology CDT, Queen Mary University of London",
+      "Queen Mary University of London"
+    ]
+  },
+  {
+    "normalised_name": "University of Edinburgh",
+    "common_names": [
+      "CoDiMa - International Centre for Mathematical Sciences, Edinburgh",
+      "University of Edinburgh, King's Buildings, JCMB",
+      "EPCC - The University of Edinburgh",
+      "University of Edinburgh (EPCC)",
+      "The University of Edinburgh",
+      "EPCC, The University of Edinburgh",
+      "EPCC, University of Edinburgh",
+      "University of Edinburgh; KTH Stockholm"
+    ]
+  },
+  {
+    "normalised_name": "University of Leeds",
+    "common_names": [
+      "The University of Leeds - Advanced Research Computing",
+      "NERC / University of Leeds"
+    ]
+  },
+  {
+    "normalised_name": "University of Bristol",
+    "common_names": [
+      "NERC / University of Bristol"
+    ]
+  },
+  {
+    "normalised_name": "University of London",
+    "common_names": [
+      "Royal Holloway, University of London"
+    ]
+  },
+  {
+    "normalised_name": "University of Warwick",
+    "common_names": [
+      "GARNet, University of Warwick"
+    ]
+  },
+  {
+    "normalised_name": "University of Glasgow",
+    "common_names": [
+      "University of Glasgow, Future of Computational Science Event"
+    ]
+  },
+  {
+    "normalised_name": "University of Bath (The)",
+    "common_names": [
+      "University of Bath"
+    ]
+  },
+  {
+    "normalised_name": "University of Newcastle Upon Tyne",
+    "common_names": [
+      "Newcastle University"
+    ]
+  },
+  {
+    "normalised_name": "Earlham Institute",
+    "common_names": [
+      "Earlham Institute",
+      "Earlham Institute - Darwin Room"
+    ]
+  },
+  {
+    "normalised_name": "The Francis Crick Institute",
+    "common_names": [
+      "The Francis Crick Institute",
+      "Francis Crick Institute"
+    ]
+  },
+  {
+    "normalised_name": "Met Office",
+    "common_names": [
+      "Met Office College",
+      "Met Office"
+    ]
+  },
+  {
+    "normalised_name": "Natural History Museum",
+    "common_names": [
+      "Natural History Museum"
+    ]
+  },
+  {
+    "normalised_name": "Culham Centre for Fusion Energy",
+    "common_names": [
+      "Culham Centre for Fusion Energy"
+    ]
+  },
+  {
+    "normalised_name": "SAP",
+    "common_names": [
+      "SAP Headquarters near London Heathrow"
+    ]
+  },
+  {
+    "normalised_name": "National Oceanography Centre",
+    "common_names": [
+      "National Oceanography Centre"
+    ]
+  },
+  {
+    "normalised_name": "Digital Greenwich",
+    "common_names": [
+      "Digital Greenwich"
+    ]
+  },
+  {
+    "normalised_name": "Rutherford Appleton Laboratory",
+    "common_names": [
+      "Rutherford Appleton Laboratory"
+    ]
+  },
+  {
+    "normalised_name": "Swansea University",
+    "common_names": [
+      "University of Swansea"
+    ]
+  },
+  {
+    "normalised_name": "University of Leicester",
+    "common_names": [
+      "ARCHER Software Carpentry @ The University of Leicester"
+    ]
+  },
+  {
+    "normalised_name": "Prifysgol Aberystwyth",
+    "common_names": [
+      "Aberystwyth University"
+    ]
+  },
+  {
+    "normalised_name": "Prifysgol Aberystwyth",
+    "common_names": [
+      "Aberystwyth University"
+    ]
+  },
+  {
+    "normalised_name": "University of Sheffield",
+    "common_names": [
+      "University of Sheffield; University of Leeds"
+    ]
+  },
+  {
+    "normalised_name": "Wellcome Trust Sanger Institute",
+    "common_names": [
+      "Wellcome Trust Sanger Institute"
+    ]
+  },
+  {
+    "normalised_name": "Arriva Group",
+    "common_names": [
+      "Arriva Group"
+    ]
+  },
+  {
+    "normalised_name": "Delcam Ltd",
+    "common_names": [
+      "Delcam Ltd"
+    ]
+  },
+  {
+    "normalised_name": "The Sir Alister Hardy Foundation for Ocean Science (SAHFOS)",
+    "common_names": [
+      "The Sir Alister Hardy Foundation for Ocean Science (SAHFOS)"
+    ]
+  },
+  {
+    "normalised_name": "STFC",
+    "common_names": [
+      "Hartree Centre, STFC",
+      "Daresbury Laboratory"
+    ]
+  },
+  {
+    "normalised_name": "Thales",
+    "common_names": [
+      "Thales"
+    ]
+  },
+  {
+    "normalised_name": "The John Innes Centre",
+    "common_names": [
+      "The John Innes Centre"
+    ]
+  },
+  {
+    "normalised_name": "Climate Code Foundation",
+    "common_names": [
+      "Climate Code Foundation"
+    ]
+  },
+  {
+    "normalised_name": "Kew Royal Botanic Gardens",
+    "common_names": [
+      "Kew Royal Botanic Gardens"
+    ]
+  },
+  {
+    "normalised_name": "The Sainsbury Laboratory",
+    "common_names": [
+      "The Sainsbury Laboratory"
+    ]
+  },
+  {
+    "normalised_name": "BBC",
+    "common_names": [
+      "BBC"
+    ]
+  },
+  {
+    "normalised_name": "James Hutton Institute",
+    "common_names": [
+      "James Hutton Institute"
+    ]
+  },
+  {
+    "normalised_name": "Owen Stephens Consulting",
+    "common_names": [
+      "Owen Stephens Consulting"
+    ]
+  },
+  {
+    "normalised_name": "Public Health England",
+    "common_names": [
+      "Public Health England"
+    ]
+  },
+  {
+    "normalised_name": "IBM",
+    "common_names": [
+      "IBM"
+    ]
+  },
+  {
+    "normalised_name": "Media Molecule",
+    "common_names": [
+      "Media Molecule"
+    ]
+  },
+  {
+    "normalised_name": "Oxford Technical Solutions",
+    "common_names": [
+      "Oxford Technical Solutions"
+    ]
+  },
+  {
+    "normalised_name": "University of Birmingham",
+    "common_names": [
+      "Advanced Research Computing, University of Birmingham"
+    ]
+  },
+  {
+    "normalised_name": "British Trust for Ornithology",
+    "common_names": [
+      "British Trust for Ornithology"
+    ]
+  },
+  {
+    "normalised_name": "Microsoft",
+    "common_names": [
+      "Microsoft"
+    ]
+  },
+  {
+    "normalised_name": "British Library",
+    "common_names": [
+      "British Library"
+    ]
+  },
+  {
+    "normalised_name": "The Alan Turing Institute",
+    "common_names": [
+      "The Alan Turing Institute",
+      "Alan Turing Institute"
+    ]
+  }
+]
