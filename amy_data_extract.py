@@ -372,7 +372,7 @@ def get_credentials(file_path):
     if os.path.isfile(file_path):
         with open(file_path, 'r') as stream:
             try:
-                amy_credentials_yaml = yaml.load(stream)
+                amy_credentials_yaml = yaml.load(stream, Loader=yaml.FullLoader)
             except yaml.YAMLError as exc:
                 print ("An error occurred while reading AMY credentials YAML file ...")
                 print(traceback.format_exc())
