@@ -32,7 +32,7 @@ outfile2=analysed_carpentry-instructors_GB_$(date +"%Y-%m-%d").xlsx
 
 # Produce instructor output data.
 echo Analysing the instructor data
-python3 analyse_instructors.py -w data/raw/${infile}
+python3 analyse_instructors.py -i data/raw/${infile}
 echo
 
 # Push the processed data back to GitHub
