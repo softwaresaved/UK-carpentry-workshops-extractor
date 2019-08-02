@@ -23,7 +23,7 @@ outfile1=analysed_carpentry-workshops_GB_$(date +"%Y-%m-%d").xlsx
 
 # Produce workshop output data.
 echo Analysing the workshop data
-python3 analyse_workshops.py -w data/raw/${infile}
+python3 analyse_workshops.py -in data/raw/${infile}
 echo
 
 # Generate the input/output filenames for instructors.
@@ -32,12 +32,12 @@ outfile2=analysed_carpentry-instructors_GB_$(date +"%Y-%m-%d").xlsx
 
 # Produce instructor output data.
 echo Analysing the instructor data
-python3 analyse_instructors.py -i data/raw/${infile}
+python3 analyse_instructors.py -in data/raw/${infile}
 echo
 
 # Push the processed data back to GitHub
 date=$(date +"%Y-%m-%d")
 git add data/analyses/${outfile1} data/analyses/${outfile2}
-git commit -m\"Adding carpentry and workshop data for ${date}.\"
+git commit -m "Adding carpentry and workshop data for ${date}."
 git push
 
