@@ -5,6 +5,7 @@ import numpy as np
 import traceback
 import glob
 import sys
+import datetime
 
 sys.path.append('/lib')
 import lib.helper as helper
@@ -19,17 +20,17 @@ def main():
     """
     Main function
     """
-    args = helper.parse_command_line_parameters(["-w"])
+    args = helper.parse_command_line_parameters_analyses()
 
-    if args.workshops_file:
-        workshops_file = args.workshops_file
+    if args.input_file:
+        workshops_file = args.input_file
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + RAW_DATA_DIR)
         workshops_files = glob.glob(RAW_DATA_DIR + "/carpentry-workshops_*.csv")
         workshops_files.sort(key=os.path.getctime)  # order files by creation date
 
         if not workshops_files:
-            print('No CSV file with Carpentry workshops found in ' + RAW_DATA_DIR + ". Exiting ...")
+            print("No CSV file with Carpentry workshops found in " + RAW_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
             workshops_file = workshops_files[-1]  # get the last file
@@ -37,30 +38,33 @@ def main():
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
-    print('CSV spreadsheet with Carpentry workshops to be analysed: ' + workshops_file)
+    print("CSV spreadsheet with Carpentry workshops to be analysed: " + workshops_file + "\n")
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
-        workshops_df.drop(labels=[#"contact",
-                          "tasks"], axis=1, inplace=True)
+        workshops_df.drop(labels=[  # "contact",
+            "tasks"], axis=1, inplace=True)
         idx = workshops_df.columns.get_loc("longitude")
         workshops_df.insert(loc=idx + 1, column='region',
                             value=workshops_df["longitude"])
         workshops_df['region'] = workshops_df.apply(
             lambda x: helper.get_uk_region(airport_code=np.nan, latitude=x['latitude'],
-                                    longitude=x['longitude']), axis=1)
+                                           longitude=x['longitude']), axis=1)
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
 
         print('Creating the analyses Excel spreadsheet ...')
-        workshop_analyses_excel_file = ANALYSES_DIR + '/analysed_' + workshops_file_name_without_extension + '.xlsx'
-        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,
-                                                                "carpentry_workshops")
+        if args.output_file:
+            workshop_analyses_excel_file = args.output_file
+        else:
+            workshop_analyses_excel_file = ANALYSES_DIR + '/analysed_' + workshops_file_name_without_extension + '.xlsx'
 
-        date = workshops_file_name_without_extension.split("_")  # Extract date from the file name in YYYY-MM-DD format
+        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,"carpentry_workshops")
+
         helper.create_readme_tab(excel_writer,
-                                 "Data in sheet 'carpentry_workshops' contains Carpentry workshop data recorded in AMY extracted on " + date[
-                                     2] + " using amy_data_extract.py script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. Contact details have been removed.")
+                                 "Data in sheet 'carpentry_workshops' contains Carpentry workshop data from " +
+                                 workshop_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") +
+                                 ".")
 
         workshops_per_year_analysis(workshops_df, excel_writer)
         workshops_per_type_analysis(workshops_df, excel_writer)
@@ -355,7 +359,8 @@ def attendance_per_type_per_year_analysis(df, writer):
     chart.set_y_axis({'major_gridlines': {'visible': False}})
     chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees for different workshop types over years (with estimates for missing data)'})
+    chart.set_title(
+        {'name': 'Number of attendees for different workshop types over years (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
@@ -369,8 +374,8 @@ def workshops_per_UK_region_analysis(df, writer):
     workshops_per_UK_region = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['region']).size().sort_values()}).reset_index()
     workshops_per_UK_region.to_excel(writer,
-                          sheet_name='workshops_per_region',
-                          index=False)
+                                     sheet_name='workshops_per_region',
+                                     index=False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshops_per_region']
@@ -392,6 +397,7 @@ def workshops_per_UK_region_analysis(df, writer):
     worksheet.insert_chart('D2', chart)
 
     return workshops_per_UK_region
+
 
 if __name__ == '__main__':
     main()

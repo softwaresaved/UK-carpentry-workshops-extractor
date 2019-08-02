@@ -59,7 +59,7 @@ def main():
     Main function
     """
 
-    args = helper.parse_command_line_parameters(["-c", "-u", "-p"])
+    args = helper.parse_command_line_parameters_amy()
 
     url_parameters = {
         "country": None,  # by default we look for workshops in all countries
@@ -76,7 +76,10 @@ def main():
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
         workshops = get_workshops(url_parameters, args.username, args.password)
-        workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + "_" + (url_parameters["country"] if url_parameters[
+        if args.output_workshops_file:
+            workshops_file = args.output_workshops_file
+        else:
+            workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + "_" + (url_parameters["country"] if url_parameters[
                                                                                                          "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
         workshops.to_csv(workshops_file, encoding="utf-8", index=False)
@@ -85,7 +88,10 @@ def main():
         print("\n\n")
 
         instructors = get_instructors(url_parameters, args.username, args.password)
-        instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + "_" + (url_parameters["country"] if url_parameters[
+        if args.output_instructors_file:
+            instructors_file = args.output_instructors_file
+        else:
+            instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + "_" + (url_parameters["country"] if url_parameters[
                                                                                                              "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
         instructors.to_csv(instructors_file, encoding="utf-8", index=False)

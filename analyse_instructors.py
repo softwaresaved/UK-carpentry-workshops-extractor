@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 import glob
 import traceback
+import datetime
 
 sys.path.append('/lib')
 import lib.helper as helper
@@ -20,11 +21,10 @@ def main():
     """
     Main function
     """
-    args = helper.parse_command_line_parameters(["-i"])
+    args = helper.parse_command_line_parameters_analyses()
 
-    if args.instructors_file:
-        instructors_file = args.instructors_file
-        print("The CSV spreadsheet with Carpentry instructors to be analysed: " + args.instructors_file)
+    if args.input_file:
+        instructors_file = args.input_file
     else:
         print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + RAW_DATA_DIR)
         instructors_files = glob.glob(RAW_DATA_DIR + "/carpentry-instructors_*.csv")
@@ -58,16 +58,18 @@ def main():
             os.makedirs(ANALYSES_DIR)
 
         print('Creating the analyses Excel spreadsheet ...')
-        instructor_analyses_excel_file = ANALYSES_DIR + '/analysed_' + instructors_file_name_without_extension + '.xlsx'
+        if args.output_file:
+            instructor_analyses_excel_file = args.output_file
+        else:
+            instructor_analyses_excel_file = ANALYSES_DIR + '/analysed_' + instructors_file_name_without_extension + '.xlsx'
+
         excel_writer = helper.create_excel_analyses_spreadsheet(instructor_analyses_excel_file, instructors_df,
                                                                 "carpentry_instructors")
 
-        date = instructors_file_name_without_extension.split(
-            "_")  # Extract date from the file name in YYYY-MM-DD format
         helper.create_readme_tab(excel_writer,
-                                 "Data in sheet 'carpentry_instructors' contains Carpentry instructor data recorded in AMY extracted on " +
-                                 date[
-                                     2] + " using amy_data_extract.py script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. Contact details have been removed.")
+                                 "Data in sheet 'carpentry_instructors' contains Carpentry workshop data from " +
+                                 instructor_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") +
+                                 ".")
 
         instructors_per_year_analysis(instructors_df, excel_writer)
         instructors_per_country_analysis(instructors_df, excel_writer)

@@ -18,7 +18,7 @@ The extracted data is saved in 2 separate CSV files in `data/raw` folder off the
 are named after the date they are generated on and the
 country the data relate to, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_AU_2017-06-26.csv` or `carpentry-instructors_ALL_2019-07-08.csv`.
 
-### Extractor script's setup
+### Setup
 The script needs to authenticate to AMY so one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
 You can configure your login details in `amy_login.yml` file in project root or pass them via command line arguments (in which case the user will be prompted for password which 
 will not be echoed - you should never pass password as a command line argument). 
@@ -32,12 +32,14 @@ in command line prompt.
 You can pass various other command line options to the script as well - see the section below for details.
 
 
-### Running extractor script and command line options
+### Command line options
 You can run the extractor script from the project root using the following command line options.
 ```
-$ python amy_data_extract.py -h
+$ python amy_data_extract.py --help
 usage: amy_data_extract.py [-h] [-c COUNTRY_CODE] [-u USERNAME]
                            [-p [PASSWORD]]
+                           [-out_workshops OUTPUT_WORKSHOPS_FILE]
+                           [-out_instructors OUTPUT_INSTRUCTORS_FILE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -48,7 +50,18 @@ optional arguments:
                         Username to login to AMY
   -p [PASSWORD], --password [PASSWORD]
                         Password to log in to AMY - you will be prompted for
-                        it (do not enter your password on command line even though it is possible)
+                        it (please do not enter your password on the command
+                        line even though it is possible)
+  -out_workshops OUTPUT_WORKSHOPS_FILE, --output_workshops_file OUTPUT_WORKSHOPS_FILE
+                        File path where workshops data extracted from AMY will
+                        be saved in CSV format. If omitted, data will be saved
+                        to data/raw/ directory and will be named as
+                        'carpentry_workshops_<COUNTRY_CODE>_<DATE>'.csv.
+  -out_instructors OUTPUT_INSTRUCTORS_FILE, --output_instructors_file OUTPUT_INSTRUCTORS_FILE
+                        File path where instructors data extracted from AMY
+                        will be saved in CSV format. If omitted, data will be
+                        saved to data/raw/ directory and will be named as
+                        'carpentry_instructors_<COUNTRY_CODE>_<DATE>'.csv.
 ```
 
 ## Carpentry workshops and instructors analyser scripts
@@ -58,80 +71,39 @@ to map the data from the extraction phase.
 
 Analyser scripts create resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/analyses` folders off the project root.
 
-### Running analyser scripts and command line options
+### Command line options
 There are several command line options available for analyser scripts, depending on if they are dealing with workshops or instructors. See below for details.
 ```
-$ python analyse_workshops.py -h
-usage: analyse_workshops.py [-h] [-w WORKSHOPS_FILE]
+$ python analyse_workshops.py --help
+usage: analyse_workshops.py [-h] [-in INPUT_FILE] [-out OUTPUT_FILE]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -w WORKSHOPS_FILE, --workshops_file WORKSHOPS_FILE
-                        An absolute path to the workshops CSV file to
-                        analyse/map
+  -in INPUT_FILE, --input_file INPUT_FILE
+                        The path to the input data CSV file to analyse/map. If
+                        omitted, the latest file with workshops/instructors
+                        data from data/raw/ directory off project root will be
+                        used, if such exists.
+  -out OUTPUT_FILE, --output_file OUTPUT_FILE
+                        File path where data analyses will be saved in xslx
+                        Excel format. If omitted, the Excel file will be saved
+                        to data/analyses/ directory and will be named as
+                        'analysed_<INPUT_FILE_NAME>'.
 ```
 ```
-$ python analyse_instructors.py -h
-usage: analyse_instructors.py [-h] [-i INSTRUCTORS_FILE]
+$ python analyse_instructors.py --help
+usage: analyse_instructors.py [-h] [-in INPUT_FILE] [-out OUTPUT_FILE]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -i INSTRUCTORS_FILE, --instructors_file INSTRUCTORS_FILE
-                        An absolute path to instructors CSV file to
-                        analyse/map
+  -in INPUT_FILE, --input_file INPUT_FILE
+                        The path to the input data CSV file to analyse/map. If
+                        omitted, the latest file with workshops/instructors
+                        data from data/raw/ directory off project root will be
+                        used, if such exists.
+  -out OUTPUT_FILE, --output_file OUTPUT_FILE
+                        File path where data analyses will be saved in xslx
+                        Excel format. If omitted, the Excel file will be saved
+                        to data/analyses/ directory and will be named as
+                        'analysed_<INPUT_FILE_NAME>'.
 ```
-If you do not specify the files with data to analyse (via `-w` or `-i` options), the scripts will just look for the latest workshop or instructor files found in `data/raw` folder.
-
-## Carpentry workshops and instructors mapper scripts
-
-The project contains 2 python mapper scripts - `map_workshops.py` and `map_instructors.py` - to map the data from the extraction phase.
-
-Mapper scripts generate various interactive maps embedded in HTML files and store them in `data/maps` folders. Map types generated include:
-* map of markers (each location is a marker on a map)
-* map of clustered markers (nearby markers are clustered but can be zoomed in and out of)
-* choropleth map (over UK regions only)
-* heatmap
-
-### Running mapper scripts and command line options
-
-*Note that mapping instructors only makes sense for UK instructors at the moment, we we only have geodata for UK institutions.*
-
-There are several command line options available for both analyser and mapper scripts, depending on if they are dealing with workshops or instructors. See below for details.
-```
-$ python map_workshops.py -h
-usage: map_workshops.py [-h] [-w WORKSHOPS_FILE]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -w WORKSHOPS_FILE, --workshops_file WORKSHOPS_FILE
-                        an absolute path to the workshops CSV file to map
-```
-```
-$ python map_instructors.py -h
-usage: map_instructors.py [-h] [-i INSTRUCTORS_FILE]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INSTRUCTORS_FILE, --instructors_file INSTRUCTORS_FILE
-                        an absolute path to instructors CSV file to analyse
-```
-If you do not specify the files with data to analyse (via `-w` or `-i` options), the scripts will just look for the latest workshop or instructor files found in `data/raw` folder.
-### Example maps
-
-*Map of clustered markers (UK instructor affiliations 2018-01-14)*
-
-Little orange circles indicate single markers and the numbered clusters indicate the number of markers in each (green show smaller clusters, moving towards bigger yellow clusters). In an interactive version of the map, these can be clicked and zoomed into to expand and reveal the individual markers.
-
-![map of clustered markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_clustered_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
-
-*Map of markers (UK instructor affiliations 2018-01-14)*
-
-![map of markers](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/map_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)
-
-*Choropleth map (UK instructor affiliations 2018-01-14)*
-
-![choropleth map](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/choropleth_map_instructors_per_UK_regions_carpentry-instructors_GB_2018-01-14.png)
-
-*Heatmap (UK instructor affiliations 2018-01-14)*
-
-![heatmap](https://github.com/softwaresaved/carpentry-workshops-instructors-extractor/raw/develop/heatmap_instructor_affiliations_carpentry-instructors_GB_2018-01-14.png)

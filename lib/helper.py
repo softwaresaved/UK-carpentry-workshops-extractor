@@ -13,15 +13,16 @@ import getpass
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
-UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv' # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
+UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
 UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
 STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
 
-UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding = "utf-8")
-UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding = "utf-8")
+UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
+UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
+
 
 def get_uk_non_academic_institutions():
     """
@@ -44,31 +45,43 @@ UK_ACADEMIC_INSTITUTIONS_DF = get_uk_academic_institutions()
 ALL_UK_INSTITUTIONS_DF = UK_ACADEMIC_INSTITUTIONS_DF.append(get_uk_non_academic_institutions())
 
 
-def parse_command_line_parameters(arguments_of_interest):
+def parse_command_line_parameters_amy():
     parser = argparse.ArgumentParser()
-    if "-c" in arguments_of_interest:
-        parser.add_argument("-c", "--country_code", type=str,
-                            help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
-    if "-u" in arguments_of_interest:
-        parser.add_argument("-u", "--username", type=str, help="Username to login to AMY")
-    if "-p" in arguments_of_interest:
-        parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS, help="Password to log in to AMY - you will be prompted for it (please do not enter your password on command line even though it is possible)")
-    if "-w" in arguments_of_interest:
-        parser.add_argument("-w", "--workshops_file", type=str, default=None,
-                            help="The path to the workshops CSV file to analyse/map. "
-                                 "If omitted, the latest file with workshops data from data/raw/ directory off project root will be used, if any.")
-    if "-i" in arguments_of_interest:
-        parser.add_argument("-i", "--instructors_file", type=str, default=None,
-                            help="The path to instructors CSV file to analyse/map. "
-                                 "If omitted, the latest file with instructors data from data/raw/ directory off project root will be used, if any.")
+    parser.add_argument("-c", "--country_code", type=str,
+                        help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
+    parser.add_argument("-u", "--username", type=str, help="Username to login to AMY")
+    parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS,
+                        help="Password to log in to AMY - you will be prompted for it (please do not enter your "
+                             "password on the command line even though it is possible)")
+    parser.add_argument("-out_workshops", "--output_workshops_file", type=str, default=None,
+                        help="File path where workshops data extracted from AMY will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'carpentry_workshops_<COUNTRY_CODE>_<DATE>'.csv.")
+    parser.add_argument("-out_instructors", "--output_instructors_file", type=str, default=None,
+                        help="File path where instructors data extracted from AMY will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'carpentry_instructors_<COUNTRY_CODE>_<DATE>'.csv.")
     args = parser.parse_args()
-    if hasattr(args, "password"): #if the -p switch was set - ask user for a password but do not echo it
+    if hasattr(args, "password"):  # if the -p switch was set - ask user for a password but do not echo it
         if args.password is None:
             args.password = getpass.getpass(prompt='Enter AMY password: ')
     else:
-        setattr(args, 'password', None) # the -p switch was not used - add the password argument 'manually' but set it to None
+        setattr(args, 'password',
+                None)  # the -p switch was not used - add the password argument 'manually' but set it to None
     return args
 
+def parse_command_line_parameters_analyses():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-in", "--input_file", type=str, default=None,
+                        help="The path to the input data CSV file to analyse/map. "
+                             "If omitted, the latest file with workshops/instructors data from data/raw/ directory "
+                             "off project root will be used, if such exists.")
+    parser.add_argument("-out", "--output_file", type=str, default=None,
+                        help="File path where data analyses will be saved in xslx Excel format. "
+                             "If omitted, the Excel file will be saved to "
+                             "data/analyses/ directory and will be named as 'analysed_<INPUT_FILE_NAME>'.")
+    args = parser.parse_args()
+    return args
 
 def create_readme_tab(writer, readme_text):
     """
@@ -84,7 +97,7 @@ def create_excel_analyses_spreadsheet(file, df, sheet_name):
     Create an Excel spreadsheet to save the dataframe and various analyses and graphs.
     """
     writer = pd.ExcelWriter(file, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name=sheet_name, index = False)
+    df.to_excel(writer, sheet_name=sheet_name, index=False)
     return writer
 
 
@@ -100,7 +113,7 @@ def insert_normalised_institution(df, non_normalised_institution_column):
     idx = df.columns.get_loc(non_normalised_institution_column)
     df.insert(loc=idx + 1, column='normalised_institution_name',
               value=df[
-                  non_normalised_institution_column]) # insert to the right of the column 'venue'/'institution/affiliation'
+                  non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
     df[df["country_code"] == "GB"]["normalised_institution_name"].map(get_normalised_institution_name,
                                                                       na_action="ignore")
     return df
@@ -115,8 +128,8 @@ def get_normalised_institution_name(non_normalised_institution_name):
 
     if normalised_institution_name == "Unknown":
         print(
-                    'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
-                    'Setting the institution to "Unknown" ...\n')
+                'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
+                'Setting the institution to "Unknown" ...\n')
     return normalised_institution_name
 
 
@@ -156,7 +169,7 @@ def get_uk_region(airport_code, latitude, longitude):
         print("Looking up region for airport " + airport_code)
         region = UK_AIRPORTS_REGIONS_DF.loc[UK_AIRPORTS_REGIONS_DF["airport_code"] == airport_code, 'UK_region']
         if region is not None and region is not []:
-            return region.values[0] # should only be one element in the array
+            return region.values[0]  # should only be one element in the array
     elif latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
         print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
             longitude) + ")")
@@ -164,8 +177,8 @@ def get_uk_region(airport_code, latitude, longitude):
         for feature in UK_REGIONS['features']:
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
-                return(feature['properties']['NAME'])
-        return("Not in a UK region/online")
+                return (feature['properties']['NAME'])
+        return ("Not in a UK region/online")
     else:
         print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
         return None
