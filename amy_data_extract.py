@@ -161,9 +161,11 @@ def get_workshops(url_parameters=None, username=None, password=None):
         idx = workshops_df.columns.get_loc("host")
         workshops_df.insert(loc=idx, column='host_domain',
                             value=workshops_df["host"])
+        # workshops_df["host_domain"] = workshops_df["host"].map(
+        #     lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
+        #     na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
         workshops_df["host_domain"] = workshops_df["host"].map(
-            lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-            na_action="ignore")  # extract host's domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+            lambda URI: extract_top_level_domain(URI), na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
         # Get instructors for workshops
         workshops_df["instructors"] = workshops_df["tasks"].map(
@@ -407,6 +409,24 @@ def extract_workshop_type(workshop_tags):
         return tags[0]
     else:
         return ""
+
+
+def extract_top_level_domain(URI):
+    """
+    Extract host's top level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/' to 'earlham.ac.uk'.
+    When subdomains are used, as in 'https://amy.carpentries.org/api/v1/organizations/cmist.manchester.ac.uk/' we are only interested in
+    top level domain 'manchester.ac.uk'.
+    :param URI:
+    :return:
+    """
+    host = list(filter(None, re.split("(.+?)/", URI)))[-1] # Get the host from the URI first
+    # Now just get the top level domain of the host
+    domain_parts = list(filter(None, re.split("(.+?)\.", host)))
+    if len(domain_parts) >= 3:
+        domain_parts = domain_parts[-3:]  # Get the past 3 elements of the list only
+    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
+    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
+    return top_level_domain
 
 
 def extract_workshop_instructors(workshop_tasks_url, username, password):
