@@ -3,7 +3,6 @@ _site
 amy_login.yml
 carpentry-workshops*
 carpentry-instructors*
-data
 client_secrets.json
 drive_config.json
 config.py
