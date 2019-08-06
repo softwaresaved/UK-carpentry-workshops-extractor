@@ -1,3 +1,4 @@
+# Files/Directories to ignore
 .idea
 _site
 amy_login.yml

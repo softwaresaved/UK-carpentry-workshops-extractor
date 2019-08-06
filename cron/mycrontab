@@ -11,5 +11,6 @@
 # * * * * * command to execute
 0 5 2 * *  /home/mario/carpentry-workshops-instructors-extractor/cron/RunAnalysis.sh
 
-# To submit this entry: crontab mycrontab 
+# To submit this entry (if you have existing cron jobs use the line below): crontab mycrontab 
+# or if you already have one or more cron jobs already set up use `crontab -e` and add the above entry to existing ones.
 # To check it has been submitted: crontab -l
