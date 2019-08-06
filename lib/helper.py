@@ -178,7 +178,7 @@ def get_uk_region(airport_code, latitude, longitude):
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
                 return (feature['properties']['NAME'])
-        return ("Not in a UK region/online")
+        return ("Not in a UK region or an online workshop")
     else:
         print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
         return None
