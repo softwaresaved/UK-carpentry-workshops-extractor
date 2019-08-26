@@ -1,9 +1,8 @@
 # Carpentry workshops and instructor data extracting, analysing and mapping
-This project contains several Python standalone and equivalent Jupyter Notebook scripts to extract, analyse and map the details
-of Carpentry workshops and instructors from The Carpentry's record keeping system AMY using AMY's API.
+This project contains several Python standalone and equivalent Jupyter Notebook scripts to extract, analyse and map the details of Carpentry workshops and instructors from The Carpentry's record keeping system AMY using AMY's API.
 
 ## Python version
-Recommended Python version is Python 3. Code was tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`. 
+The recommended Python version is Python 3. Code was tested with Mac OS Sierra (10.12), Mac OS High Sierra (10.13), Mac OS Mojave (10.14) and `python 3.6`. 
 Other Python versions may or may not work.
 
 ## Dependencies 
@@ -14,21 +13,17 @@ and can be installed via `pip install -r requirements.txt`
 The scripts `amy_data_extract.py` extracts the details of Carpentry workshops
 and instructors from AMY. It can be configured to extract data for a country or for all countries (which is the default option if none specified).
 
-The extracted data is saved in 2 separate CSV files in `data/raw` folder off the project root - one for instructors and one for workshops. The files
-are named after the date they are generated on and the
-country the data relate to, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_AU_2017-06-26.csv` or `carpentry-instructors_ALL_2019-07-08.csv`.
+The extracted data is saved into 2 separate CSV files in the `data/raw` folder off the project root - one for instructors and one for workshops. The files
+are named using the date they were generated on and the country the data relates to, e.g. `carpentry-workshops_GB_2017-06-26.csv`, `carpentry-instructors_AU_2017-06-26.csv` or `carpentry-instructors_ALL_2019-07-08.csv`.
 
 ### Setup
-The script needs to authenticate to AMY so one needs to have an account in AMY (with a proper username and password, not using AMY's authentication via GitHub).
-You can configure your login details in `amy_login.yml` file in project root or pass them via command line arguments (in which case the user will be prompted for password which 
-will not be echoed - you should never pass password as a command line argument). 
+The script needs to authenticate to AMY so one needs to already have an account on AMY (with a proper username and password, not using AMY's authentication via GitHub).
 
-If using a file to configure credentials, rename the existing `amy_login.yml.pre` config file (located in the project root) 
-to `amy_login.yml` and configure your AMY username and password there accordingly. Make sure you do not share this file with the others or put it in version control 
-as it contains sensitive information.
+You can configure your login details in the `amy_login.yml` file in project root or pass them via command line arguments (in which case the user will be prompted for password which  will not be echoed - you should never pass a bare password as a command line argument nor store credentials in git). 
 
-Alternatively, you can pass username and password as command line parameters to the script via `-u USERNAME -p` command line options, after which you will be prompted to enter your password 
-in command line prompt. 
+If using a file to configure credentials, rename the existing `amy_login.yml.pre` config file (located in the project root)  to `amy_login.yml` and configure your AMY username and password there accordingly. Make sure you do not share this file with the others or put it in version control as it contains sensitive information.
+
+Alternatively, you can pass username and password as command line parameters to the script via `-u USERNAME -p` command line options, after which you will be prompted to enter your password in command line prompt. 
 You can pass various other command line options to the script as well - see the section below for details.
 
 
@@ -66,10 +61,9 @@ optional arguments:
 
 ## Carpentry workshops and instructors analyser scripts
 
-The project contains 2 python scripts - `analyse_workshops.py` and `analyse_instructors.py` - to analyse the data resulting from the extraction phase.
-to map the data from the extraction phase.
+The project contains 2 additional python scripts - `analyse_workshops.py` and `analyse_instructors.py` - to analyse the data resulting from the extraction phase.
 
-Analyser scripts create resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/analyses` folders off the project root.
+The analyser scripts create a resulting Excel spreadsheets with various summary tables and graphs and saves them in `data/analyses` folders off the project root.
 
 ### Command line options
 There are several command line options available for analyser scripts, depending on if they are dealing with workshops or instructors. See below for details.
@@ -107,3 +101,12 @@ optional arguments:
                         to data/analyses/ directory and will be named as
                         'analysed_<INPUT_FILE_NAME>'.
 ```
+
+## Running the job regulary
+
+You can run this job regularly using the files in the `cron` directory. The `mycrontab` provides input to set up a regular cron job (on a Linux based system) to run the script `RunAnalysis.sh` that enacts the workflow described above.
+
+<!-- from https://gist.github.com/lukas-h/2a5d00690736b4c3a7ba -->
+
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
