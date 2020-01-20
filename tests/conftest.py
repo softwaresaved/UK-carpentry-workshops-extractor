@@ -19,7 +19,7 @@ import map_and_heatmap_UK_instructors_affiliations as mapia
 sys.path.append('/lib')
 import lib.helper as helper
 
-UK_REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/UK_regions.json'
+UK_REGIONS_FILE = PROJECT_ROOT_DIR + '/lib/UK-regions.json'
 UK_INSTITUTIONS_GEODATA_FILE = PROJECT_ROOT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 WORKSHOPS_INSTITUTIONS_FILE = PROJECT_ROOT_DIR + '/lib/workshop_institutions.yml'
 LIB_DATA_DIR = PROJECT_ROOT_DIR + '/lib/'

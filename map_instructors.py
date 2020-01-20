@@ -14,14 +14,14 @@ import lib.helper as helper
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
 UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
-UK_REGIONS_FILE = CURRENT_DIR + '/lib/UK_regions.json'
+UK_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions.json'
 
 
 def main():
     """
     Main function
     """
-    args = helper.parse_command_line_paramters()
+    args = helper.parse_command_line_parameters()
     print("Mapping instructor affiliations' into various maps ... \n")
 
     print("#########################################################################################################################################################")
@@ -51,7 +51,7 @@ def main():
         instructors_df = helper.drop_null_values_from_columns(instructors_df, ['institution'])
         instructors_df = helper.insert_normalised_institutions_names(instructors_df, "institution")
         # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instructors' data
-        instructors_df = helper.insert_institutions_geocoordinates(instructors_df)
+        instructors_df = helper.insert_institutional_geocoordinates(instructors_df)
 
         # Drop rows where we do not have longitude and latitude
         instructors_df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)

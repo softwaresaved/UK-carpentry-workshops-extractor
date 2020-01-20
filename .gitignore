@@ -8,3 +8,4 @@ client_secrets.json
 drive_config.json
 config.py
 lib/__pycache__/
+data/*
