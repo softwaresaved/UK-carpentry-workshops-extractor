@@ -41,3 +41,19 @@ git add data/analyses/${outfile1} data/analyses/${outfile2}
 git commit -m "Adding carpentry and workshop data for ${date}."
 git push
 
+# This next bit assumes that there is a clone of the metrics repository
+# hanging off the home directory. We will copy the output files to that
+# repository. Add them, commit them, do a git pull of the repo contents
+# and then push them to the metrics repository.
+cp ./data/analyses/${outfile1} ~/metrics/training/workshops/analyses
+cp ./data/analyses/${outfile2} ~/metrics/training/workshops/analyses
+
+# Go to the repository, add and commit the files.
+cd ~/metrics/training/workshops/analyses
+git add ${outfile1}
+git add ${outfile2}
+git commit -m "Adding carpentry and workshop data for ${date}."
+# Make sure the repo is up to date.
+git pull  
+# Now push the results.
+git push 

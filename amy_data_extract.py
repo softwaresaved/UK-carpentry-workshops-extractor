@@ -1,13 +1,14 @@
-import lib.helper as helper
-import requests
-import pandas
-import datetime
-import yaml
 import traceback
-import json
-import sys
 import os
+import sys
 import re
+import datetime
+import json
+import requests
+import yaml
+import pandas
+import lib.helper as helper
+
 
 sys.path.append('/lib')
 
@@ -44,10 +45,10 @@ def get_countries(countries_file):
             try:
                 countries = json.load(stream)
             except Exception as exc:
-                print ("An error occurred while reading countries JSON file " + countries_file)
+                print("An error occurred while reading countries JSON file " + countries_file)
                 print(traceback.format_exc())
     else:
-        print ("Countries JSON file does not exist " + countries_file)
+        print("Countries JSON file does not exist " + countries_file)
     return countries
 
 
@@ -380,13 +381,13 @@ def get_credentials(file_path):
             try:
                 amy_credentials_yaml = yaml.load(stream, Loader=yaml.FullLoader)
             except yaml.YAMLError as exc:
-                print ("An error occurred while reading AMY credentials YAML file ...")
+                print("An error occurred while reading AMY credentials YAML file ...")
                 print(traceback.format_exc())
 
         username = amy_credentials_yaml["amy_credentials"]["username"]
         password = amy_credentials_yaml["amy_credentials"]["password"]
     else:
-        print ("AMY credentials YAML file does not exist " + file_path)
+        print("AMY credentials YAML file does not exist " + file_path)
     return username, password
 
 
