@@ -123,5 +123,25 @@
     "VIEW_NAME": "STFC",
     "LONGITUDE": -2.636473,
     "LATITUDE": 53.348725
+  },
+  {
+    "VIEW_NAME": "Microsoft",
+    "LONGITUDE": -2.238965,
+    "LATITUDE": 53.479047
+  },
+  {
+    "VIEW_NAME": "British Library",
+    "LONGITUDE": -0.136804,
+    "LATITUDE": 51.584516
+  },
+  {
+    "VIEW_NAME": "The Alan Turing Institute",
+    "LONGITUDE":-0.127673,
+    "LATITUDE": 51.530126
+  },
+  {
+    "VIEW NAME": "The Sainsbury Laboratory",
+    "LONGITUDE": 1.222558,
+    "LATITUDE": 52.624620
   }
 ]

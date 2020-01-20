@@ -1,64 +1,98 @@
 import os
 import re
 import pandas as pd
-import numpy
+import numpy as np
 import traceback
-import json
 import glob
 import sys
+import datetime
 
 sys.path.append('/lib')
 import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-WORKSHOP_DATA_DIR = CURRENT_DIR + '/data/workshops/'
-MODIFIED_WORKSHOP_DATA_DIR = WORKSHOP_DATA_DIR + 'data_modified/' # manipulated raw data for the purpose of analyses
-WORKSHOP_TYPES = ["SWC", "DC", "TTT", "LC"]
-
-def insert_year(df):
-    """
-    Extract the workshop year from the date in YYYY-MM-DD format found
-    in the 'start' column and insert it in a new column 'year'.
-    """
-    idx = df.columns.get_loc('start')  # index of column 'start'
-    workshop_years = pd.to_datetime(df['start']).dt.year  # get the year from the date in YYYY-MM-DD format
-    df.insert(loc=idx + 2, column='year', value=workshop_years)  # insert to the right of the column 'start'
-    return df
+DATA_DIR = CURRENT_DIR + '/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+ANALYSES_DIR = DATA_DIR + "/analyses"
 
 
-def insert_workshop_type(df):
+def main():
     """
-    Extract workshop type from workshop tags (in column 'tags') and insert it in a new column 'workshop_type'.
+    Main function
     """
-    # Index of column 'tags' which contains a list tags for a workshop
-    # (we are just looking to detect one of SWC, DC, LC or TTT)
-    idx = df.columns.get_loc("tags")
+    args = helper.parse_command_line_parameters_analyses()
 
-    df['tags'].apply(str)
-    workshop_types = []
-    for tag in df['tags']:
-        if WORKSHOP_TYPES[0] in tag:
-            workshop_types.append(WORKSHOP_TYPES[0])
-        elif WORKSHOP_TYPES[1] in tag:
-            workshop_types.append(WORKSHOP_TYPES[1])
-        elif WORKSHOP_TYPES[2] in tag:
-            workshop_types.append(WORKSHOP_TYPES[2])
-        elif WORKSHOP_TYPES[3] in tag:
-            workshop_types.append(WORKSHOP_TYPES[3])
+    if args.input_file:
+        workshops_file = args.input_file
+    else:
+        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + RAW_DATA_DIR)
+        workshops_files = glob.glob(RAW_DATA_DIR + "/carpentry-workshops_*.csv")
+        workshops_files.sort(key=os.path.getctime)  # order files by creation date
+
+        if not workshops_files:
+            print("No CSV file with Carpentry workshops found in " + RAW_DATA_DIR + ". Exiting ...")
+            sys.exit(1)
         else:
-            workshop_types.append('Unknown')
+            workshops_file = workshops_files[-1]  # get the last file
 
-    df.insert(loc=idx + 1, column='workshop_type', value=workshop_types)  # insert to the right of the column 'tags'
-    return df
+    workshops_file_name = os.path.basename(workshops_file)
+    workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+
+    print("CSV spreadsheet with Carpentry workshops to be analysed: " + workshops_file + "\n")
+
+    try:
+        workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
+        workshops_df.drop(labels=[  # "contact",
+            "tasks"], axis=1, inplace=True)
+        idx = workshops_df.columns.get_loc("longitude")
+        workshops_df.insert(loc=idx + 1, column='region',
+                            value=workshops_df["longitude"])
+        workshops_df['region'] = workshops_df.apply(
+            lambda x: helper.get_uk_region(airport_code=np.nan, latitude=x['latitude'],
+                                           longitude=x['longitude']), axis=1)
+        if not os.path.exists(ANALYSES_DIR):
+            os.makedirs(ANALYSES_DIR)
+
+        print('Creating the analyses Excel spreadsheet ...')
+        if args.output_file:
+            workshop_analyses_excel_file = args.output_file
+        else:
+            workshop_analyses_excel_file = ANALYSES_DIR + '/analysed_' + workshops_file_name_without_extension + '.xlsx'
+
+        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,"carpentry_workshops")
+
+        helper.create_readme_tab(excel_writer,
+                                 "Data in sheet 'carpentry_workshops' contains Carpentry workshop data from " +
+                                 workshop_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") +
+                                 ".")
+
+        workshops_per_year_analysis(workshops_df, excel_writer)
+        workshops_per_type_analysis(workshops_df, excel_writer)
+        workshops_per_type_per_year_analysis(workshops_df, excel_writer)
+
+        workshops_per_host_analysis(workshops_df, excel_writer)
+        workshops_per_host_per_year_analysis(workshops_df, excel_writer)
+
+        attendance_per_year_analysis(workshops_df, excel_writer)
+        attendance_per_type_analysis(workshops_df, excel_writer)
+        attendance_per_type_per_year_analysis(workshops_df, excel_writer)
+
+        workshops_per_UK_region_analysis(workshops_df, excel_writer)
+
+        excel_writer.save()
+        print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
+    except Exception:
+        print ("An error occurred while creating workshop analyses Excel spreadsheet ...")
+        print(traceback.format_exc())
 
 
 def workshops_per_year_analysis(df, writer):
     """
-    Number of workshops per year - create the corresponding table and graphs and write to the spreadsheet.
+    Number of workshops per year.
     """
-    workshops_per_year_table = pd.core.frame.DataFrame(
+    workshops_per_year = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['year']).size()}).reset_index()
-    workshops_per_year_table.to_excel(writer, sheet_name='workshops_per_year', index=False)
+    workshops_per_year.to_excel(writer, sheet_name='workshops_per_year', index=False)
 
     workbook = writer.book
     worksheet = writer.sheets['workshops_per_year']
@@ -66,8 +100,8 @@ def workshops_per_year_analysis(df, writer):
     chart1 = workbook.add_chart({'type': 'column'})
 
     chart1.add_series({
-        'categories': ['workshops_per_year', 1, 0, len(workshops_per_year_table.index), 0],
-        'values': ['workshops_per_year', 1, 1, len(workshops_per_year_table.index), 1],
+        'categories': ['workshops_per_year', 1, 0, len(workshops_per_year.index), 0],
+        'values': ['workshops_per_year', 1, 1, len(workshops_per_year.index), 1],
         'gap': 2,
     })
 
@@ -79,60 +113,26 @@ def workshops_per_year_analysis(df, writer):
 
     worksheet.insert_chart('I2', chart1)
 
-    return workshops_per_year_table
+    return workshops_per_year
 
 
-def workshops_per_institution_analysis(df, writer):
+def workshops_per_type_analysis(df, writer):
     """
-    Number of workshops per institution - create the corresponding table and graph and write to the spreadsheet.
+    Number of workshops of different type (SWC, DC, LC, TTT).
     """
-    # Remove rows with 'Unknown' value for the institution
-    df = df[df.normalised_institution != 'Unknown']
-
-    institution_table = pd.core.frame.DataFrame(
-        {'number_of_workshops': df.groupby(['normalised_institution']).size().sort_values()}).reset_index()
-
-    institution_table.to_excel(writer, sheet_name='workshops_per_institution', index=False)
-
-    workbook = writer.book
-    worksheet = writer.sheets['workshops_per_institution']
-
-    chart = workbook.add_chart({'type': 'column'})
-
-    chart.add_series({
-        'categories': ['workshops_per_institution', 1, 0, len(institution_table.index), 0],
-        'values': ['workshops_per_institution', 1, 1, len(institution_table.index), 1],
-        'gap': 2,
-    })
-
-    chart.set_y_axis({'major_gridlines': {'visible': False}})
-    chart.set_legend({'position': 'none'})
-    chart.set_x_axis({'name': 'Institution'})
-    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of workshops per institution'})
-
-    worksheet.insert_chart('I2', chart)
-
-    return institution_table
-
-
-def workshop_types_analysis(df, writer):
-    """
-    Number of workshops of different type - create the corresponding table and graph and write to the spreadsheet.
-    """
-    workshop_types_table = pd.core.frame.DataFrame(
+    workshops_per_type = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['workshop_type']).size()}).reset_index()
 
-    workshop_types_table.to_excel(writer, sheet_name='workshop_types', index=False)
+    workshops_per_type.to_excel(writer, sheet_name='workshops_per_type', index=False)
 
     workbook = writer.book
-    worksheet = writer.sheets['workshop_types']
+    worksheet = writer.sheets['workshops_per_type']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['workshop_types', 1, 0, len(workshop_types_table.index), 0],
-        'values': ['workshop_types', 1, 1, len(workshop_types_table.index), 1],
+        'categories': ['workshops_per_type', 1, 0, len(workshops_per_type.index), 0],
+        'values': ['workshops_per_type', 1, 1, len(workshops_per_type.index), 1],
         'gap': 2,
     })
 
@@ -140,106 +140,141 @@ def workshop_types_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Workshop type'})
     chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Workshops types'})
+    chart.set_title({'name': 'Number of workshops of different types'})
 
     worksheet.insert_chart('I2', chart)
 
-    return workshop_types_table
+    return workshops_per_type
 
 
-def workshops_per_institution_over_years_analysis(df, writer):
+def workshops_per_type_per_year_analysis(df, writer):
     """
-    Number of workshops per institution over years - create the corresponding table and graph and write to the spreadsheet.
+    Number of workshops of different types (SWC, DC, LC, TTT) over years.
     """
-    # Remove rows with 'Unknown' value for the institution
-    df = df[df.normalised_institution != 'Unknown']
-
-    institution_over_years_table = pd.core.frame.DataFrame(
-        {'count': df.groupby(['normalised_institution', 'year']).size()}).reset_index()
-    institution_over_years_table = institution_over_years_table.pivot_table(index='normalised_institution', columns='year')
-
-    institution_over_years_table.to_excel(writer, sheet_name='workshops_per_institution_over_years')
-
-    workbook = writer.book
-    worksheet = writer.sheets['workshops_per_institution_over_years']
-
-    chart = workbook.add_chart({'type': 'column'})
-
-    ranged = range(1, len(institution_over_years_table.columns) + 1)
-
-    for number in ranged:
-        chart.add_series({
-            'name': ['workshops_per_institution_over_years', 1, number],
-            'categories': ['workshops_per_institution_over_years', 3, 0, len(institution_over_years_table.index) + 2,
-                           0],
-            'values': ['workshops_per_institution_over_years', 3, number, len(institution_over_years_table.index) + 2,
-                       number],
-            'gap': 2,
-        })
-
-    chart.set_y_axis({'major_gridlines': {'visible': False}})
-    chart.set_x_axis({'name': 'Institution'})
-    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of workshops per institution over years'})
-
-    worksheet.insert_chart('I2', chart)
-
-    return institution_over_years_table
-
-
-def workshops_of_different_types_over_years_analysis(df, writer):
-    """
-    Number of workshops of different types over years - - create the corresponding table and graph and write to the spreadsheet.
-    """
-    workshop_types_over_years_table = pd.core.frame.DataFrame(
+    workshops_per_type_per_year = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['workshop_type', 'year']).size()}).reset_index()
-    workshop_types_over_years_table = workshop_types_over_years_table.pivot_table(index='workshop_type', columns='year')
+    workshops_per_type_per_year_pivot = workshops_per_type_per_year.pivot_table(index='year', columns='workshop_type')
 
-    workshop_types_over_years_table.to_excel(writer, sheet_name='different_ws_types_per_year')
+    workshops_per_type_per_year_pivot.to_excel(writer, sheet_name='workshops_per_type_per_year')
 
     workbook = writer.book
-    worksheet = writer.sheets['different_ws_types_per_year']
+    worksheet = writer.sheets['workshops_per_type_per_year']
 
-    chart = workbook.add_chart({'type': 'column'})
+    chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
 
-    ranged = range(1, len(workshop_types_over_years_table.columns) + 1)
-
-    for number in ranged:
+    for i in range(1, len(workshops_per_type_per_year_pivot.columns) + 1):
         chart.add_series({
-            'name': ['different_ws_types_per_year', 1, number],
-            'categories': ['different_ws_types_per_year', 3, 0, len(workshop_types_over_years_table.index) + 2, 0],
-            'values': ['different_ws_types_per_year', 3, number, len(workshop_types_over_years_table.index) + 2,
-                       number],
+            'name': ['workshops_per_type_per_year', 1, i],
+            'categories': ['workshops_per_type_per_year', 3, 0, len(workshops_per_type_per_year_pivot.index) + 2, 0],
+            'values': ['workshops_per_type_per_year', 3, i, len(workshops_per_type_per_year_pivot.index) + 2,
+                       i],
             'gap': 2,
         })
 
     chart.set_y_axis({'major_gridlines': {'visible': False}})
-    chart.set_x_axis({'name': 'Workshop type'})
+    chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of workshops of different type over years'})
+    chart.set_title({'name': 'Number of workshops of different types over years'})
 
-    worksheet.insert_chart('I2', chart)
+    worksheet.insert_chart('B20', chart)
 
-    return workshop_types_over_years_table
+    return workshops_per_type_per_year_pivot
 
 
-def attendees_per_year_analysis(df, writer):
+def workshops_per_host_per_year_analysis(df, writer):
     """
-    Number of workshop attendees per year - create the corresponding table and graph and write to the spreadsheet.
+    Number of workshops at different hosts over years.
     """
-    attendees_per_year_table = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['year'])['number_of_attendees'].sum()}).reset_index()
+    # Remove rows with NaN value for the institution
+    df = df.dropna(subset=['host_domain'])
 
-    attendees_per_year_table.to_excel(writer, sheet_name='attendees_per_year', index=False)
+    workshops_per_host_per_year = pd.core.frame.DataFrame(
+        {'number_of_workshops': df.groupby(['host_domain', 'year']).size()}).reset_index()
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='host_domain', columns='year')
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year_pivot.fillna(0).astype('int')
+
+    workshops_per_host_per_year_pivot.to_excel(writer, sheet_name='workshops_per_host_per_year')
 
     workbook = writer.book
-    worksheet = writer.sheets['attendees_per_year']
+    worksheet = writer.sheets['workshops_per_host_per_year']
+
+    chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
+
+    for i in range(1, len(workshops_per_host_per_year_pivot.columns) + 1):
+        chart.add_series({
+            'name': ['workshops_per_host_per_year', 1, i],
+            'categories': ['workshops_per_host_per_year', 3, 0, len(workshops_per_host_per_year_pivot.index) + 2, 0],
+            'values': ['workshops_per_host_per_year', 3, i, len(workshops_per_host_per_year_pivot.index) + 2, i],
+            'gap': 2,
+        })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_x_axis({'name': 'Year'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of workshops at different hosts over years'})
+
+    worksheet.insert_chart('N20', chart)
+
+    return workshops_per_host_per_year_pivot
+
+
+def workshops_per_host_analysis(df, writer):
+    """
+    Number of workshops per host.
+    """
+
+    # Remove rows with NaN value for the institution
+    df = df.dropna(subset=['host_domain'])
+
+    workshops_per_host = pd.core.frame.DataFrame(
+        {'workshops_per_host': df.groupby(['host_domain']).size().sort_values()}).reset_index()
+
+    workshops_per_host.to_excel(writer, sheet_name='workshops_per_host', index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['workshops_per_host']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['attendees_per_year', 1, 0, len(attendees_per_year_table.index), 0],
-        'values': ['attendees_per_year', 1, 1, len(attendees_per_year_table.index), 1],
+        'categories': ['workshops_per_host', 1, 0, len(workshops_per_host.index), 0],
+        'values': ['workshops_per_host', 1, 1, len(workshops_per_host.index), 1],
+        'gap': 2,
+    })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Host institution'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of workshops per host institution'})
+
+    worksheet.insert_chart('I2', chart)
+
+    return workshops_per_host
+
+
+def attendance_per_year_analysis(df, writer):
+    """
+    Number of workshop attendees per year.
+    """
+    # Calculate average attendance
+    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+    # Adjust attendance with average where data is missing
+    df["attendance"] = df["attendance"].fillna(average_attendance)
+
+    attendance_per_year = pd.core.frame.DataFrame(
+        {'number_of_attendees': df.groupby(['year'])['attendance'].sum()}).reset_index()
+
+    attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
+
+    workbook = writer.book
+    worksheet = writer.sheets['attendance_per_year']
+
+    chart = workbook.add_chart({'type': 'column'})
+
+    chart.add_series({
+        'categories': ['attendance_per_year', 1, 0, len(attendance_per_year.index), 0],
+        'values': ['attendance_per_year', 1, 1, len(attendance_per_year.index), 1],
         'gap': 2,
     })
 
@@ -247,163 +282,121 @@ def attendees_per_year_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per year'})
+    chart.set_title({'name': 'Number of attendees per year (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
-    return attendees_per_year_table
+    return attendance_per_year
 
 
-def attendees_per_workshop_type_analysis(df, writer):
+def attendance_per_type_analysis(df, writer):
     """
-    Number of attendees for various workshop types - create the corresponding table and graph and write to the spreadsheet.
+    Number of attendees for various workshop types.
     """
-    attendees_per_workshop_type_table = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['workshop_type'])['number_of_attendees'].sum()}).reset_index()
+    # Calculate average attendance
+    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+    # Adjust attendance with average where data is missing
+    df["attendance"] = df["attendance"].fillna(average_attendance)
 
-    attendees_per_workshop_type_table.to_excel(writer, sheet_name='attendees_per_workshop_type', index=False)
+    attendance_per_type = pd.core.frame.DataFrame(
+        {'number_of_attendees': df.groupby(['workshop_type'])['attendance'].sum()}).reset_index()
+
+    attendance_per_type.to_excel(writer, sheet_name='attendance_per_type', index=False)
 
     workbook = writer.book
-    worksheet = writer.sheets['attendees_per_workshop_type']
+    worksheet = writer.sheets['attendance_per_type']
 
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['attendees_per_workshop_type', 1, 0, len(attendees_per_workshop_type_table.index), 0],
-        'values': ['attendees_per_workshop_type', 1, 1, len(attendees_per_workshop_type_table.index), 1],
+        'categories': ['attendance_per_type', 1, 0, len(attendance_per_type.index), 0],
+        'values': ['attendance_per_type', 1, 1, len(attendance_per_type.index), 1],
         'gap': 2,
     })
 
     chart.set_y_axis({'major_gridlines': {'visible': False}})
     chart.set_legend({'position': 'none'})
-    chart.set_x_axis({'name': 'Type of a workshop'})
+    chart.set_x_axis({'name': 'Workshop type'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per workshop type'})
+    chart.set_title({'name': 'Number of attendees per workshop type (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
-    return attendees_per_workshop_type_table
+    return attendance_per_type
 
 
-def attendees_per_workshop_type_over_years_analysis(df, writer):
+def attendance_per_type_per_year_analysis(df, writer):
     """
-    Number of attendees per workshop type over years - create the corresponding table and graph and write to the spreadsheet.
+    Number of attendees per workshop type over years.
     """
-    attendees_per_workshop_type_over_years_table = df.groupby(['workshop_type', 'year'])[
-        'number_of_attendees'].sum().to_frame()
-    attendees_per_workshop_type_over_years_table = attendees_per_workshop_type_over_years_table.pivot_table(
-        index='workshop_type', columns='year')
+    # Calculate average attendance
+    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+    # Adjust attendance with average where data is missing
+    df["attendance"] = df["attendance"].fillna(average_attendance)
 
-    attendees_per_workshop_type_over_years_table.to_excel(writer, sheet_name='attendees_ws_types_per_year')
+    attendance_per_type_per_year = df.groupby(['year', 'workshop_type'])[
+        'attendance'].sum().to_frame()
+    attendance_per_type_per_year_pivot = attendance_per_type_per_year.pivot_table(
+        index='year', columns='workshop_type')
+
+    attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='attendance_type_year')
 
     workbook = writer.book
-    worksheet = writer.sheets['attendees_ws_types_per_year']
+    worksheet = writer.sheets['attendance_type_year']
 
-    chart = workbook.add_chart({'type': 'column'})
+    chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
 
-    for i in range(1, len(attendees_per_workshop_type_over_years_table.columns) + 1):
+    for i in range(1, len(attendance_per_type_per_year_pivot.columns) + 1):
         chart.add_series({
-            'name': ['attendees_ws_types_per_year', 1, i],
-            'categories': ['attendees_ws_types_per_year', 3, 0,
-                           len(attendees_per_workshop_type_over_years_table.index) + 2, 0],
-            'values': ['attendees_ws_types_per_year', 3, i, len(attendees_per_workshop_type_over_years_table.index) + 2,
+            'name': ['attendance_type_year', 1, i],
+            'categories': ['attendance_type_year', 3, 0,
+                           len(attendance_per_type_per_year_pivot.index) + 2, 0],
+            'values': ['attendance_type_year', 3, i, len(attendance_per_type_per_year_pivot.index) + 2,
                        i],
             'gap': 2,
         })
 
     chart.set_y_axis({'major_gridlines': {'visible': False}})
-    chart.set_x_axis({'name': 'Workshop type'})
+    chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees for different workshop types over years'})
+    chart.set_title(
+        {'name': 'Number of attendees for different workshop types over years (with estimates for missing data)'})
 
     worksheet.insert_chart('I2', chart)
 
-    return attendees_per_workshop_type_over_years_table
+    return attendance_per_type_per_year_pivot
 
 
-def main():
+def workshops_per_UK_region_analysis(df, writer):
     """
-    Main function
+    Number of workshops per UK region.
     """
-    args = helper.parse_command_line_paramters()
+    workshops_per_UK_region = pd.core.frame.DataFrame(
+        {'number_of_workshops': df.groupby(['region']).size().sort_values()}).reset_index()
+    workshops_per_UK_region.to_excel(writer,
+                                     sheet_name='workshops_per_region',
+                                     index=False)
 
-    if args.workshops_file:
-        workshops_file = args.workshops_file
-        print("The CSV spreadsheet with Carpentry workshops to be analysed: " + args.workshops_file)
-    else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + WORKSHOP_DATA_DIR)
-        workshops_files = glob.glob(WORKSHOP_DATA_DIR + "carpentry-workshops_*.csv")
-        workshops_files.sort(key=os.path.getctime)  # order files by creation date
+    workbook = writer.book
+    worksheet = writer.sheets['workshops_per_region']
 
-        if not workshops_files:
-            print('No CSV file with Carpentry workshops found in ' + WORKSHOP_DATA_DIR + ". Exiting ...")
-            sys.exit(1)
-        else:
-            workshops_file = workshops_files[-1] # get the last file
+    chart = workbook.add_chart({'type': 'column'})
 
-    workshops_file_name = os.path.basename(workshops_file)
-    workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
+    chart.add_series({
+        'categories': ['workshops_per_region', 1, 0, len(workshops_per_UK_region.index), 0],
+        'values': ['workshops_per_region', 1, 1, len(workshops_per_UK_region.index), 1],
+        'gap': 2,
+    })
 
-    print('CSV file with Carpentry workshops to analyse ' + workshops_file)
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Region'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of workshops per region'})
 
-    try:
-        workshops_df = helper.load_data_from_csv(workshops_file)
-        workshops_df = insert_year(workshops_df)
-        workshops_df = insert_workshop_type(workshops_df)
-        workshops_df = helper.insert_normalised_institutions_names(workshops_df, "venue")
-        workshops_df = helper.remove_stopped_workshops(workshops_df)
+    worksheet.insert_chart('D2', chart)
 
-        if not os.path.exists(MODIFIED_WORKSHOP_DATA_DIR):
-            os.makedirs(MODIFIED_WORKSHOP_DATA_DIR)
-
-        csv_modified_data_file = MODIFIED_WORKSHOP_DATA_DIR + 'modified_' + workshops_file_name_without_extension + '.csv'
-        print('Saving the modified workshop data to a CSV spreadsheet ' + csv_modified_data_file)
-        helper.save_data_to_csv(workshops_df, csv_modified_data_file)
-        print("\n")
-
-        print('Creating the analyses Excel spreadsheet ...')
-        workshop_analyses_excel_file = WORKSHOP_DATA_DIR + 'analysed_' + workshops_file_name_without_extension + '.xlsx'
-        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,
-                                                                "carpentry_workshops")
-
-        date = workshops_file_name_without_extension.split("_")  # Extract date from the file name in YYYY-MM-DD format
-        helper.create_readme_tab(excel_writer,
-                                 "Data in sheet 'carpentry_workshops' was extracted on " + date[
-                                     2] + " using Ruby script from https://github.com/softwaresaved/carpentry-workshops-instructors-extractor. " \
-                                          "It contains info on Carpentry workshops in a specified country (or all countries) recorded in the Carpentry's record keeping system AMY until the date it was extracted on. " \
-                                          "Added columns include 'year', extracted from column 'start' containing workshop start date, and 'workshop_type', extracted from column 'tags'.")
-
-        workshops_per_year_analysis(workshops_df, excel_writer)
-        workshops_per_institution_analysis(workshops_df, excel_writer)
-        workshop_types_analysis(workshops_df, excel_writer)
-        workshops_of_different_types_over_years_analysis(workshops_df, excel_writer)
-
-        attendees_per_year_analysis(workshops_df, excel_writer)
-        attendees_per_workshop_type_analysis(workshops_df, excel_writer)
-        attendees_per_workshop_type_over_years_analysis(workshops_df, excel_writer)
-
-        excel_writer.save()
-        print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
-    except Exception:
-        print ("An error occurred while creating the analyses Excel spreadsheet ...")
-        print(traceback.format_exc())
-    else:
-        if args.google_drive_dir_id:
-            try:
-                print("Uploading workshops analyses to Google Drive ...")
-                drive = helper.google_drive_authentication()
-
-                parents_list = [{'kind': 'drive#fileLink', 'id': args.google_drive_dir_id}]
-
-                #helper.google_drive_upload(workshops_file, drive, parents_list, True)
-                #print('Original workshops CSV spreadsheet ' + workshops_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-
-                helper.google_drive_upload(workshop_analyses_excel_file, drive, parents_list, True)
-                print(
-                    'Workshops analyses Excel spreadsheet ' + workshop_analyses_excel_file + ' uploaded to Google Drive into folder with ID: ' + args.google_drive_dir_id)
-            except Exception:
-                print ("An error occurred while uploading workshops analyses to Google Drive ...")
-                print(traceback.format_exc())
+    return workshops_per_UK_region
 
 
 if __name__ == '__main__':

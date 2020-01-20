@@ -1,10 +1,12 @@
 folium
-json
 matplotlib
 numpy
 pandas
-pydrive
-shapefile
-traceback
-glob
+datashape
+shapely
 config
+requests
+datetime
+PyYAML
+argparse
+xlsxwriter
