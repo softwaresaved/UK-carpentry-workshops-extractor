@@ -242,7 +242,7 @@ def generate_map_with_circular_markers(df):
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     for index, row in df.iterrows():
-        print(str(index) + ": " + row['institution'])
+        print(str(index) + ": " + str(row['institution']))
 
         # iframe = branca.element.IFrame(html=row['description'], width=300, height=200)
         # popup = folium.Popup(iframe, max_width=500)
@@ -287,18 +287,18 @@ def generate_map_with_clustered_markers(df):
     return map
 
 
-def generate_choropleth_map(df, regions, item_type="workshops"):
+def generate_choropleth_map(df, regions, entity_type="workshops"):
     """
-    Generates a choropleth map of the number of items (instructors or workshops) that can be found
+    Generates a choropleth map of the number of entities (instructors or workshops) that can be found
     in each UK region.
     """
 
-    items_per_region_df = pd.DataFrame({'count': df.groupby(['region']).size()}).reset_index()
+    entities_per_region_df = pd.DataFrame({'count': df.groupby(['region']).size()}).reset_index()
 
     center = get_center(df)
 
     # Creates the threshold scale to be visualized in the map.
-    scale_list = items_per_region_df['count'].tolist()
+    scale_list = entities_per_region_df['count'].tolist()
     max_scale = max(scale_list)
     scale = int(max_scale / 5)
     threshold_scale = []
@@ -312,13 +312,13 @@ def generate_choropleth_map(df, regions, item_type="workshops"):
 
     maps.choropleth(
         geo_data=regions,
-        data=items_per_region_df,
+        data=entities_per_region_df,
         columns=['region', 'count'],
         key_on='feature.properties.NAME',
         fill_color='YlGn',
         fill_opacity=0.7,
         line_opacity=0.2,
-        legend_name='Number of ' + item_type + ' per UK regions',
+        legend_name='Number of ' + entity_type + ' per UK regions',
         threshold_scale=threshold_scale)
     return maps
 
