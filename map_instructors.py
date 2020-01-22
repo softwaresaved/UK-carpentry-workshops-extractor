@@ -1,19 +1,23 @@
 import os
 import pandas as pd
+import numpy as np
 import traceback
 import glob
 import re
 import sys
 import json
 import shapefile
+
 # import selenium
 sys.path.append('/lib')
 import lib.helper as helper
 
-
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-INSTRUCTORS_DATA_DIR = CURRENT_DIR + '/data/instructors/'
-UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
+DATA_DIR = CURRENT_DIR + '/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+MAPS_DIR = DATA_DIR + "/maps"
+
+UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.csv'
 UK_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions.json'
 
 
@@ -21,187 +25,127 @@ def main():
     """
     Main function
     """
-    args = helper.parse_command_line_parameters()
-    print("Mapping instructor affiliations' into various maps ... \n")
+    # The maps only make sense for the data in the UK
+    print(
+        "#########################################################################################################################################################")
+    print(
+        "Note: this map only makes sense to generate with instructors from the UK as it cross references their affiliations with geocoordinates of UK institutions.")
+    print(
+        "#########################################################################################################################################################\n")
 
-    print("#########################################################################################################################################################")
-    print("Note: this map only makes sense to generate with instructors from the UK as it cross references their affiliations with geocoordinates of UK institutions.")
-    print("#########################################################################################################################################################\n")
-
-    if args.instructors_file:
-        instructors_file = args.instructors_file
-        print("The CSV spreadsheet with Carpentry instructors to be mapped: " + args.instructors_file)
+    args = helper.parse_command_line_parameters_maps()
+    if args.input_file:
+        instructors_file = args.input_file
     else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to map in " + INSTRUCTORS_DATA_DIR + "\n")
-        instructors_files = glob.glob(INSTRUCTORS_DATA_DIR + "carpentry-instructors_GB_*.csv")
-        instructors_files.sort(key=os.path.getctime)  # order by creation date
+        print("Trying to locate the latest CSV spreadsheet with Carpentry instructors to analyse in " + RAW_DATA_DIR)
+        instructors_files = glob.glob(RAW_DATA_DIR + "/carpentry-instructors_*.csv")
+        instructors_files.sort(key=os.path.getctime)  # order files by creation date
 
         if not instructors_files:
-            print('No CSV file with Carpentry instructors found in ' + INSTRUCTORS_DATA_DIR + ". Exiting ...\n")
+            print("No CSV file with Carpentry instructors found in " + RAW_DATA_DIR + ". Exiting ...")
             sys.exit(1)
         else:
-            instructors_file = instructors_files[-1] # get the last element
+            instructors_file = instructors_files[-1]  # get the last file
 
     instructors_file_name = os.path.basename(instructors_file)
     instructors_file_name_without_extension = re.sub('\.csv$', '', instructors_file_name.strip())
-    print('Found CSV file with Carpentry instructors to be mapped: ' + instructors_file_name + "\n")
+
+    print("CSV spreadsheet with UK Carpentry instructors to be mapped: " + instructors_file + "\n")
 
     try:
-        instructors_df = helper.load_data_from_csv(instructors_file, ['institution'])
-        instructors_df = helper.drop_null_values_from_columns(instructors_df, ['institution'])
-        instructors_df = helper.insert_normalised_institutions_names(instructors_df, "institution")
+        instructors_df = pd.read_csv(instructors_file, encoding="utf-8", usecols=["affiliation", "country_code", "airport_code"])
+        instructors_df.dropna(subset=["affiliation"], inplace=True)
+        instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
+        print(instructors_df.head(5))
+
         # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instructors' data
         instructors_df = helper.insert_institutional_geocoordinates(instructors_df)
 
+        # Insert UK region for the location of the affiliation institution
+        instructors_df = helper.insert_uk_region(instructors_df)
+
         # Drop rows where we do not have longitude and latitude
-        instructors_df.dropna(0, 'any', None, ['latitude', 'longitude'], inplace=True)
+        instructors_df.dropna(0, 'any', None, ['normalised_institution_latitude', 'normalised_institution_longitude'],
+                              inplace=True)
+        instructors_df.rename(
+            columns={"normalised_institution_latitude": "latitude", "normalised_institution_longitude": "longitude",
+                     "affiliation" : "institution"},
+            inplace=True)
         instructors_df = instructors_df.reset_index(drop=True)
 
-        # Add column 'description' which is used in popups in maps
+        # Add column 'description' which is used for popups in maps
         instructors_df['description'] = instructors_df["institution"]
+        print(instructors_df.head(5))
 
-    except:
-        print ("An error occurred while loading instructors' data and preparing it for mapping...\n")
+        # Save instructors locations table, it may come in handy
+        instructors_file = MAPS_DIR + "/locations_" + instructors_file_name_without_extension + ".csv"
+        instructors_df.to_csv(instructors_file, encoding="utf-8", index=False)
+        print("\nSaved instructors locations to " + instructors_file + "\n")
+
+    except Exception:
+        print ("An error occurred while loading Carpentry instructors ...")
         print(traceback.format_exc())
-    else:
-        # Map with clustered markers
-        try:
-            print("#######################################################################")
-            print("Map 1: generating a map of instructor affiliations as clusters of markers ...")
-            print("#######################################################################\n")
+        sys.exit(1)
 
-            map = helper.generate_map_with_clustered_markers(instructors_df)
-            map = helper.add_UK_regions_layer(map)
+    # Map with clustered markers
+    try:
+        print("#########################################################################")
+        print("Map 1: Generating a map of instructor affiliations as clusters of markers")
+        print("#########################################################################\n")
+        instructors_map = helper.generate_map_with_clustered_markers(instructors_df)
+        instructors_map = helper.add_UK_regions_layer(instructors_map)
+        # Save map to a HTML file
+        map_file = MAPS_DIR + '/map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
+        instructors_map.save(map_file)
+        print('Map of instructor affiliations saved to HTML file ' + map_file + '\n')
+    except Exception:
+        print ("An error occurred while creating the map of instructors affiliations as clusters of markers.")
+        print(traceback.format_exc())
 
-            # Save map to an HTML file
-            html_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
-            map.save(html_map_file)
-            print('Map of instructors affiliations saved to HTML file ' + html_map_file + '\n')
+    # A map of instructors affiliations with circular markers
+    try:
+        print("########################################################################")
+        print("Map 2: Generating a map of instructor affiliations with circular markers")
+        print("########################################################################\n")
+        instructors_map = helper.generate_map_with_circular_markers(instructors_df)
+        # Save the map to an HTML file
+        map_file = MAPS_DIR + '/map_individual_markers_instructor_affiliations_' + \
+                   instructors_file_name_without_extension + '.html'
+        instructors_map.save(map_file)
+        print("A map of instructor affiliations with circular markers saved to HTML file " + map_file + "\n")
+    except Exception:
+        print ("An error occurred while creating a map of instructor affiliations with circular markers.\n")
+        print(traceback.format_exc())
 
-            # Requires phantomjs to be installed separaetly, so will continue to save pngs manually.
-            # Code to save map as a png
-            # png_map_file = INSTRUCTORS_DATA_DIR + 'map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.png'
-            # map.png_enabled = True
-            # png_image = map._repr_png_()
-            # fh = open(png_map_file, 'w')
-            # fh.write(png_image)
-            # fh.close()
+    # A heatmap of instructors affiliations
+    try:
+        print("#######################################################")
+        print("Map 3: Generating a heatmap of instructors affiliations")
+        print("#######################################################\n")
+        instructors_map = helper.generate_heatmap(instructors_df)
+        # Save the heatmap to an HTML file
+        map_file = MAPS_DIR + '/heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+        instructors_map.save(map_file)
+        print("Heatmap of instructors affiliations saved to HTML file " + map_file + "\n")
+    except Exception:
+        print ("An error occurred while creating a heatmap of instructors affiliations.\n")
+        print(traceback.format_exc())
 
-        except:
-            print ("An error occurred while creating a clustered map of instructor affiliations ...")
-            print(traceback.format_exc())
-        else:
-            if args.google_drive_dir_id:
-                try:
-                    print("Uploading instructor affiliations map to Google Drive " + html_map_file)
-                    drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
-                                               drive,
-                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
-                                               False)
-                    print('Map uploaded to Google Drive.')
-                except Exception:
-                    print ("An error occurred while uploading the map to Google Drive...\n")
-                    print(traceback.format_exc())
+    # Choropleth map over UK regions
+    try:
+        print("##############################################################################")
+        print('Map 4: Generating a choropleth map of instructors affiliations over UK regions')
+        print("##############################################################################\n")
+        uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+        instructors_map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
+        # Save map to a HTML file
+        map_file = MAPS_DIR + '/choropleth_map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
+        instructors_map.save(map_file)
+        print('A choropleth map of instructors affiliations over UK regions saved to HTML file ' + map_file + '\n')
+    except Exception:
+        print ("An error occurred while creating a choropleth map of instructors affiliations over UK regions.\n")
+        print(traceback.format_exc())
 
-        # Choropleth map over UK regions
-        try:
-            print("#####################################################################")
-            print('Map 2: generating a choropleth map of instructors over UK regions ...')
-            print("#####################################################################\n")
-
-            uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
-
-            instructors_df = helper.insert_region_column(instructors_df, uk_regions)
-
-            map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
-
-            # Save map to a HTML file
-            html_map_file = INSTRUCTORS_DATA_DIR + 'choropleth_map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
-            map.save(html_map_file)
-            print('A choropleth map of instructors over UK regions saved to HTML file ' + html_map_file + '\n')
-        except:
-            print ("An error occurred while creating a choropleth map of instructors over UK regions...\n")
-            print(traceback.format_exc())
-        else:
-            if args.google_drive_dir_id:
-                try:
-                    print("Uploading a choropleth map of instructors over UK regions to Google Drive " + html_map_file)
-                    drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
-                                               drive,
-                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
-                                               False)
-                    print('Map uploaded to Google Drive.')
-                except Exception:
-                    print ("An error occurred while uploading the map to Google Drive...\n")
-                    print(traceback.format_exc())
-
-        # A map of instructors' affiliations with circular markers.
-        try:
-            print("####################################################################")
-            print('Map 3: generating a map of instructor affiliations with circular markers...')
-            print("####################################################################\n")
-
-            map = helper.generate_map_with_circular_markers(instructors_df)
-
-            # Save the map to an HTML file
-            map_file = INSTRUCTORS_DATA_DIR + 'map_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
-            map.save(map_file)
-            print("A map of instructors' affiliations with circular markers saved to HTML file " + map_file + "\n")
-
-            # Old code with Google maps that requires Google API key
-            # map = helper.generate_gmap_map_with_circular_markers(workshops_institutions_df)
-            # embed_minimal_html(html_map_file, views=[map])
-        except:
-            print ("An error occurred while map of instructor affiliations with circular markers ...\n")
-            print(traceback.format_exc())
-        else:
-            if args.google_drive_dir_id:
-                try:
-                    print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
-                    drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
-                                               drive,
-                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
-                                               False)
-                    print('Map uploaded to Google Drive.')
-                except Exception:
-                    print ("An error occurred while uploading the map to Google Drive...\n")
-                    print(traceback.format_exc())
-
-        # A heatmap of instructors' affiliations.
-        try:
-            print("###################################################")
-            print('Map 4: Generating a heatmap of instructor affiliations ...')
-            print("###################################################\n")
-
-            map = helper.generate_heatmap(instructors_df)
-
-            # Save the heatmap to an HTML file
-            map_file = INSTRUCTORS_DATA_DIR + 'heatmap_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
-            map.save(map_file)
-            print("Heatmap of instructors' affiliations saved to HTML file " + map_file + "\n")
-
-            # Old code with Google maps that requires Google API key
-            # heatmap = helper.generate_gmaps_heatmap(df)
-            # embed_minimal_html(html_heatmap_file, views=[heatmap])
-        except:
-            print ("An error occurred while creating a heatmap of instructor affiliations ...\n")
-            print(traceback.format_exc())
-        else:
-            if args.google_drive_dir_id:
-                try:
-                    print("Uploading a heatmap of instructor affiliations to Google Drive " + html_map_file)
-                    drive = helper.google_drive_authentication()
-                    helper.google_drive_upload(html_map_file,
-                                               drive,
-                                               [{'mimeType': 'text/plain', 'id': args.google_drive_dir_id}],
-                                               False)
-                    print('Map uploaded to Google Drive.')
-                except Exception:
-                    print ("An error occurred while uploading the map to Google Drive...\n")
-                    print(traceback.format_exc())
 
 if __name__ == '__main__':
     main()

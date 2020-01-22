@@ -70,10 +70,11 @@ def parse_command_line_parameters_amy():
                 None)  # the -p switch was not used - add the password argument 'manually' but set it to None
     return args
 
+
 def parse_command_line_parameters_analyses():
     parser = argparse.ArgumentParser()
     parser.add_argument("-in", "--input_file", type=str, default=None,
-                        help="The path to the input data CSV file to analyse/map. "
+                        help="The path to the input data CSV file to analyse. "
                              "If omitted, the latest file with workshops/instructors data from data/raw/ directory "
                              "off project root will be used, if such exists.")
     parser.add_argument("-out", "--output_file", type=str, default=None,
@@ -82,6 +83,17 @@ def parse_command_line_parameters_analyses():
                              "data/analyses/ directory and will be named as 'analysed_<INPUT_FILE_NAME>'.")
     args = parser.parse_args()
     return args
+
+
+def parse_command_line_parameters_maps():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-in", "--input_file", type=str, default=None,
+                        help="The path to the input data CSV file to map. "
+                             "If omitted, the latest file with workshops/instructors data from data/raw/ directory "
+                             "off project root will be used, if such exists.")
+    args = parser.parse_args()
+    return args
+
 
 def create_readme_tab(writer, readme_text):
     """
@@ -190,18 +202,18 @@ def get_center(df):
     tuples = [tuple(coords) for coords in coords.values]
     x, y = zip(*tuples)
 
-    ## Find center
+    # Find center
     center = [(max(x) + min(x)) / 2., (max(y) + min(y)) / 2.]
 
     return center
 
 
 def add_UK_regions_layer(map):
-    ## Load UK region information from a json file
+    # Load UK region information from a json file
     try:
         regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8'))
 
-        ## Add to a layer
+        # Add to a layer
         folium.GeoJson(regions,
                        name='regions',
                        style_function=lambda feature: {
