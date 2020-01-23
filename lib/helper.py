@@ -145,19 +145,19 @@ def get_normalised_institution_name(non_normalised_institution_name):
     return normalised_institution_name
 
 
-def insert_institutional_geocoordinates(df):
+def insert_institutional_geocoordinates(df, institution_column_name, latitude_column_name, longitude_column_name):
     # Insert latitude and longitude for affiliations, by looking up the all_uk_institutions_coords_df
-    idx = df.columns.get_loc("normalised_institution_name")  # index of column where normalised institution is kept
+    idx = df.columns.get_loc(institution_column_name)  # index of column where (normalised) institution is kept
     df.insert(loc=idx + 1,
-              column='normalised_institution_latitude',
+              column=latitude_column_name,
               value=None)
     df.insert(loc=idx + 2,
-              column='normalised_institution_longitude',
+              column=longitude_column_name,
               value=None)
     # replace with the affiliation's latitude and longitude coordinates
-    df['normalised_institution_latitude'] = df['normalised_institution_name'].map(
+    df[latitude_column_name] = df[institution_column_name].map(
         ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LATITUDE'])
-    df['normalised_institution_longitude'] = df['normalised_institution_name'].map(
+    df[longitude_column_name] = df[institution_column_name].map(
         ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LONGITUDE'])
 
     return df
@@ -168,21 +168,16 @@ def insert_uk_region(df):
     Insert UK region for instructors' airport geocoordinates into new column 'region'.
     """
     df['region'] = df.apply(
-        lambda x: get_uk_region(airport_code=x['airport_code'], latitude=x['normalised_institution_latitude'],
-                                longitude=x['normalised_institution_longitude']), axis=1)
+        lambda x: get_uk_region(latitude=x['latitude'],
+                                longitude=x['longitude']), axis=1)
     return df
 
 
-def get_uk_region(airport_code, latitude, longitude):
+def get_uk_region(latitude, longitude):
     """
-    Lookup UK region given an airport (IATA) code or (latitude, longitude) coordinates of an institution.
+    Lookup UK region given the (latitude, longitude) coordinates.
     """
-    if airport_code is not None and airport_code is not np.nan:
-        print("Looking up region for airport " + airport_code)
-        region = UK_AIRPORTS_REGIONS_DF.loc[UK_AIRPORTS_REGIONS_DF["airport_code"] == airport_code, 'UK_region']
-        if region is not None and region is not []:
-            return region.values[0]  # should only be one element in the array
-    elif latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
+    if latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
         print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
             longitude) + ")")
         point = Point(longitude, latitude)
@@ -190,9 +185,10 @@ def get_uk_region(airport_code, latitude, longitude):
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
                 return (feature['properties']['NAME'])
-        return ("Not in a UK region or an online workshop")
+        return ("Location (" + str(latitude) + ", " + str(
+            longitude) + ") is not in any UK region")
     else:
-        print("Cannot look up region for location - airport_code, latitude, longitude are all missing.")
+        print("Cannot look up region for location - at least one of latitude, longitude are missing.")
         return None
 
 

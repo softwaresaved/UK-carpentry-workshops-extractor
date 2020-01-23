@@ -136,11 +136,11 @@
   },
   {
     "VIEW_NAME": "The Alan Turing Institute",
-    "LONGITUDE":-0.127673,
+    "LONGITUDE": -0.127673,
     "LATITUDE": 51.530126
   },
   {
-    "VIEW NAME": "The Sainsbury Laboratory",
+    "VIEW_NAME": "The Sainsbury Laboratory",
     "LONGITUDE": 1.222558,
     "LATITUDE": 52.624620
   }

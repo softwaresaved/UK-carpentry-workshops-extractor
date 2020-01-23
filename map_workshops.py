@@ -59,7 +59,7 @@ def main():
         if "_GB_" in workshops_file_name_without_extension:  # Only makes sense for the UK
             # Calculate and insert UK region based on workshop location
             workshops_df['region'] = workshops_df.apply(
-                lambda x: helper.get_uk_region(airport_code=np.nan, latitude=x['latitude'],
+                lambda x: helper.get_uk_region(latitude=x['latitude'],
                                                longitude=x['longitude']), axis=1)
         # Save workshop locations table, it may come in handy
         workshops_file = MAPS_DIR + "/locations_" + workshops_file_name_without_extension + ".csv"
@@ -114,21 +114,20 @@ def main():
         print ("An error occurred while creating a heatmap of workshop venue locations.\n")
         print(traceback.format_exc())
 
-    # Choropleth map over UK regions
-    if "_GB_" in workshops_file_name_without_extension:  # Only makes sense for the UK
-        try:
-            print("#####################################################################")
-            print('Map 4: Generating a choropleth map of workshop venues over UK regions')
-            print("#####################################################################\n")
-            uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
-            workshops_map = helper.generate_choropleth_map(workshops_df, uk_regions, "workshops")
-            # Save map to a HTML file
-            map_file = MAPS_DIR + '/choropleth_map_workshops_per_UK_regions_' + workshops_file_name_without_extension + '.html'
-            workshops_map.save(map_file)
-            print('A choropleth map of workshops over UK regions saved to HTML file ' + map_file + '\n')
-        except Exception:
-            print ("An error occurred while creating a choropleth map of workshops over UK regions.\n")
-            print(traceback.format_exc())
+    # Choropleth map over UK regions -  only makes sense for the UK
+    try:
+        print("#####################################################################")
+        print('Map 4: Generating a choropleth map of workshop venues over UK regions')
+        print("#####################################################################\n")
+        uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+        workshops_map = helper.generate_choropleth_map(workshops_df, uk_regions, "workshops")
+        # Save map to a HTML file
+        map_file = MAPS_DIR + '/choropleth_map_workshops_per_UK_regions_' + workshops_file_name_without_extension + '.html'
+        workshops_map.save(map_file)
+        print('A choropleth map of workshops over UK regions saved to HTML file ' + map_file + '\n')
+    except Exception:
+        print ("An error occurred while creating a choropleth map of workshops over UK regions.\n")
+        print(traceback.format_exc())
 
 
 if __name__ == '__main__':

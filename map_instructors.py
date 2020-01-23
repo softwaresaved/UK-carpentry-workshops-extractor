@@ -29,7 +29,7 @@ def main():
     print(
         "#########################################################################################################################################################")
     print(
-        "Note: this map only makes sense to generate with instructors from the UK as it cross references their affiliations with geocoordinates of UK institutions.")
+        "Note: these maps only make sense to generate with instructors from the UK as it cross references their affiliations with geocoordinates of UK institutions.")
     print(
         "#########################################################################################################################################################\n")
 
@@ -53,29 +53,24 @@ def main():
     print("CSV spreadsheet with UK Carpentry instructors to be mapped: " + instructors_file + "\n")
 
     try:
-        instructors_df = pd.read_csv(instructors_file, encoding="utf-8", usecols=["affiliation", "country_code", "airport_code"])
+        instructors_df = pd.read_csv(instructors_file, encoding="utf-8", usecols=["affiliation", "country_code"])
+        # Drop rows where we do not have affiliation as there is nothing to map there
         instructors_df.dropna(subset=["affiliation"], inplace=True)
+        # Normalise affiliations
         instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
-        print(instructors_df.head(5))
-
-        # Insert latitude, longitude pairs for instructors' institutions into the dataframe with all the instructors' data
-        instructors_df = helper.insert_institutional_geocoordinates(instructors_df)
-
-        # Insert UK region for the location of the affiliation institution
+        # Insert latitude, longitude pairs for instructor's affiliation
+        instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution_name",
+                                                                    "latitude", "longitude")
+        # Insert the UK region that affiliation's geocoordinates fall in
         instructors_df = helper.insert_uk_region(instructors_df)
-
         # Drop rows where we do not have longitude and latitude
-        instructors_df.dropna(0, 'any', None, ['normalised_institution_latitude', 'normalised_institution_longitude'],
+        instructors_df.dropna(0, 'any', None, ['longitude', 'latitude'],
                               inplace=True)
-        instructors_df.rename(
-            columns={"normalised_institution_latitude": "latitude", "normalised_institution_longitude": "longitude",
-                     "affiliation" : "institution"},
-            inplace=True)
+        instructors_df.rename(columns={"affiliation" : "institution"},inplace=True)
         instructors_df = instructors_df.reset_index(drop=True)
 
         # Add column 'description' which is used for popups in maps
         instructors_df['description'] = instructors_df["institution"]
-        print(instructors_df.head(5))
 
         # Save instructors locations table, it may come in handy
         instructors_file = MAPS_DIR + "/locations_" + instructors_file_name_without_extension + ".csv"
