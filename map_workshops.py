@@ -56,11 +56,12 @@ def main():
         if not os.path.exists(MAPS_DIR):
             os.makedirs(MAPS_DIR)
 
-        if "_GB_" in workshops_file_name_without_extension:  # Only makes sense for the UK
-            # Calculate and insert UK region based on workshop location
-            workshops_df['region'] = workshops_df.apply(
-                lambda x: helper.get_uk_region(latitude=x['latitude'],
-                                               longitude=x['longitude']), axis=1)
+        # Calculate and insert UK region based on workshop location
+        # This only makes sense for the UK!!!!
+        workshops_df['region'] = workshops_df.apply(
+            lambda x: helper.get_uk_region(latitude=x['latitude'],
+                                           longitude=x['longitude']), axis=1)
+
         # Save workshop locations table, it may come in handy
         workshops_file = MAPS_DIR + "/locations_" + workshops_file_name_without_extension + ".csv"
         workshops_df.to_csv(workshops_file, encoding="utf-8", index=False)
@@ -100,18 +101,18 @@ def main():
         print ("An error occurred while creating a map of workshop venues with circular markers.\n")
         print(traceback.format_exc())
 
-    # A heatmap of workshop venues
+    # A heat map of workshop venues
     try:
         print("#######################################################")
-        print("Map 3: Generating a heatmap of workshop venue locations")
+        print("Map 3: Generating a heat map of workshop venue locations")
         print("#######################################################\n")
         workshops_map = helper.generate_heatmap(workshops_df)
-        # Save the heatmap to an HTML file
-        map_file = MAPS_DIR + '/heatmap_workshop_venues_' + workshops_file_name_without_extension + '.html'
+        # Save the heat map to an HTML file
+        map_file = MAPS_DIR + '/heat_map_workshop_venues_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
-        print("Heatmap of workshop venue locations saved to HTML file " + map_file + "\n")
+        print("Heat map of workshop venue locations saved to HTML file " + map_file + "\n")
     except Exception:
-        print ("An error occurred while creating a heatmap of workshop venue locations.\n")
+        print ("An error occurred while creating a heat map of workshop venue locations.\n")
         print(traceback.format_exc())
 
     # Choropleth map over UK regions -  only makes sense for the UK
