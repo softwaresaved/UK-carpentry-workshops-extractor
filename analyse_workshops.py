@@ -48,7 +48,7 @@ def main():
         workshops_df.insert(loc=idx + 1, column='region',
                             value=workshops_df["longitude"])
         workshops_df['region'] = workshops_df.apply(
-            lambda x: helper.get_uk_region(airport_code=np.nan, latitude=x['latitude'],
+            lambda x: helper.get_uk_region(latitude=x['latitude'],
                                            longitude=x['longitude']), axis=1)
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)

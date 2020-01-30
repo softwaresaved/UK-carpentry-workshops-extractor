@@ -108,7 +108,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY's API
     :return: published workshops as Pandas DataFrame
     """
-    print("\nExtracting workshops from AMY ...")
+    print("\nExtracting workshops from AMY for country: " + (url_parameters["country"] if url_parameters["country"] is not None else "ALL"))
     try:
         # Response is a JSON list of objects containing all published workshops
         response = requests.get(AMY_EVENTS_API_URL, headers=HEADERS, auth=(username, password),
@@ -195,7 +195,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
     :param password: AMY password to authenticate the user accessing AMY's API
     :return: instructors as Pandas DataFrame
     """
-    print("\nExtracting instructors from AMY ...")
+    print("\nExtracting instructors from AMY for country: " + (url_parameters["country"] if url_parameters["country"] is not None else "ALL"))
     # Response is a JSON object containing paged result with info on total
     # number of all results and pointers to previous and next page of results,
     # as well as a list of results for the current page

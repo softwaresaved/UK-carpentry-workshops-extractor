@@ -123,10 +123,10 @@ def insert_normalised_institution(df, non_normalised_institution_column):
     # Get the index of column 'venue'/'institution/affiliation' (with non-normalised workshop venue or instructor's
     # institution/affiliation), right to which we want to insert the new column containing normalised institution name
     idx = df.columns.get_loc(non_normalised_institution_column)
-    df.insert(loc=idx + 1, column='normalised_institution_name',
+    df.insert(loc=idx + 1, column='normalised_institution',
               value=df[
                   non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
-    df[df["country_code"] == "GB"]["normalised_institution_name"].map(get_normalised_institution_name,
+    df[df["country_code"] == "GB"]["normalised_institution"].map(get_normalised_institution_name,
                                                                       na_action="ignore")
     return df
 
@@ -146,7 +146,7 @@ def get_normalised_institution_name(non_normalised_institution_name):
 
 
 def insert_institutional_geocoordinates(df, institution_column_name, latitude_column_name, longitude_column_name):
-    # Insert latitude and longitude for affiliations, by looking up the all_uk_institutions_coords_df
+    # Insert latitude and longitude for institutions, by looking up the all_uk_institutions_coords_df
     idx = df.columns.get_loc(institution_column_name)  # index of column where (normalised) institution is kept
     df.insert(loc=idx + 1,
               column=latitude_column_name,

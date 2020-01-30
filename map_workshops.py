@@ -52,7 +52,7 @@ def main():
         # Add column 'description' which is used in popups in maps
         workshops_df['description'] = np.where(workshops_df["address"].empty, workshops_df["institution"],
                                                workshops_df["institution"] + ', ' + workshops_df["address"])
-        print(workshops_df)
+        # print(workshops_df)
         if not os.path.exists(MAPS_DIR):
             os.makedirs(MAPS_DIR)
 
@@ -80,7 +80,7 @@ def main():
         if "GB" in workshops_file:  # if the data is for UK workshops - add layer with UK regions to the map
             workshops_map = helper.add_UK_regions_layer(workshops_map)
         # Save map to a HTML file
-        map_file = MAPS_DIR + '/map_clustered_workshop_venues_' + workshops_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/map_clustered_markers_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
         print('Map of workshop venues saved to HTML file ' + map_file + '\n')
     except Exception:
@@ -94,7 +94,7 @@ def main():
         print("####################################################################\n")
         workshops_map = helper.generate_map_with_circular_markers(workshops_df)
         # Save the map to an HTML file
-        map_file = MAPS_DIR + '/map_individual_markers_workshop_venues_' + workshops_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/map_individual_markers_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
         print("A map of workshop venues with circular markers saved to HTML file " + map_file + "\n")
     except Exception:
@@ -108,7 +108,7 @@ def main():
         print("#######################################################\n")
         workshops_map = helper.generate_heatmap(workshops_df)
         # Save the heat map to an HTML file
-        map_file = MAPS_DIR + '/heat_map_workshop_venues_' + workshops_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/heat_map_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
         print("Heat map of workshop venue locations saved to HTML file " + map_file + "\n")
     except Exception:
@@ -123,7 +123,7 @@ def main():
         uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
         workshops_map = helper.generate_choropleth_map(workshops_df, uk_regions, "workshops")
         # Save map to a HTML file
-        map_file = MAPS_DIR + '/choropleth_map_workshops_per_UK_regions_' + workshops_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/choropleth_map_UK_regions_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
         print('A choropleth map of workshops over UK regions saved to HTML file ' + map_file + '\n')
     except Exception:

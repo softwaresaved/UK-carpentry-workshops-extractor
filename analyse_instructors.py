@@ -49,7 +49,7 @@ def main():
         instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
 
         # Insert latitude, longitude pairs for instructors' institutions
-        instructors_df = helper.insert_institutional_geocoordinates(instructors_df)
+        instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
 
         # Insert UK regional info based on instructors's affiliations or nearest airport
         instructors_df = helper.insert_uk_region(instructors_df)
@@ -119,7 +119,7 @@ def instructors_per_institution_analysis(df, writer):
 
     """
     instructors_per_institution = pd.core.frame.DataFrame(
-        {'number_of_instructors': df.groupby(['normalised_institution_name']).size().sort_values()}).reset_index()
+        {'number_of_instructors': df.groupby(['normalised_institution']).size().sort_values()}).reset_index()
     instructors_per_institution.to_excel(writer,
                                          sheet_name='instructors_per_institution',
                                          index=False)

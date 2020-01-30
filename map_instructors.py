@@ -59,7 +59,7 @@ def main():
         # Normalise affiliations
         instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
         # Insert latitude, longitude pairs for instructor's affiliation
-        instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution_name",
+        instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution",
                                                                     "latitude", "longitude")
         # Insert the UK region that affiliation's geocoordinates fall in
         instructors_df = helper.insert_uk_region(instructors_df)
@@ -90,7 +90,7 @@ def main():
         instructors_map = helper.generate_map_with_clustered_markers(instructors_df)
         instructors_map = helper.add_UK_regions_layer(instructors_map)
         # Save map to a HTML file
-        map_file = MAPS_DIR + '/map_clustered_instructor_affiliations_' + instructors_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/map_clustered_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
         print('Map of instructor affiliations saved to HTML file ' + map_file + '\n')
     except Exception:
@@ -104,7 +104,7 @@ def main():
         print("########################################################################\n")
         instructors_map = helper.generate_map_with_circular_markers(instructors_df)
         # Save the map to an HTML file
-        map_file = MAPS_DIR + '/map_individual_markers_instructor_affiliations_' + \
+        map_file = MAPS_DIR + '/map_individual_markers_' + \
                    instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
         print("A map of instructor affiliations with circular markers saved to HTML file " + map_file + "\n")
@@ -119,11 +119,11 @@ def main():
         print("#######################################################\n")
         instructors_map = helper.generate_heatmap(instructors_df)
         # Save the heatmap to an HTML file
-        map_file = MAPS_DIR + '/heatmap_instructors_affiliations_' + instructors_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/heat_map_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
         print("Heatmap of instructors affiliations saved to HTML file " + map_file + "\n")
     except Exception:
-        print ("An error occurred while creating a heatmap of instructors affiliations.\n")
+        print ("An error occurred while creating a heat map of instructors affiliations.\n")
         print(traceback.format_exc())
 
     # Choropleth map over UK regions
@@ -134,7 +134,7 @@ def main():
         uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
         instructors_map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
         # Save map to a HTML file
-        map_file = MAPS_DIR + '/choropleth_map_instructors_per_UK_regions_' + instructors_file_name_without_extension + '.html'
+        map_file = MAPS_DIR + '/choropleth_map_UK_regions_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
         print('A choropleth map of instructors affiliations over UK regions saved to HTML file ' + map_file + '\n')
     except Exception:
