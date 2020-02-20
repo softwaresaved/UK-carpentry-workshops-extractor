@@ -118,7 +118,7 @@ def workshops_per_year_analysis(df, writer):
 
 def workshops_per_type_analysis(df, writer):
     """
-    Number of workshops of different type (SWC, DC, LC, TTT).
+    Number of workshops of different type (SWC, DC, LC, TTT, Circuits).
     """
     workshops_per_type = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['workshop_type']).size()}).reset_index()

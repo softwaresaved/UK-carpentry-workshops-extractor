@@ -15,13 +15,34 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
-UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions-geodata.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
+UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
-STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']  # , 'unresponsive']
+STOPPED_WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
 
-UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
+# UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
+
+WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT", "Circuits"]
+WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive', 'Pilot']
+
+COUNTRIES_FILE = CURRENT_DIR + "/countries.json"
+
+def get_countries(countries_file):
+    countries = None
+    if os.path.isfile(countries_file):
+        with open(countries_file, 'r') as stream:
+            try:
+                countries = json.load(stream)
+            except Exception as exc:
+                print("An error occurred while reading countries JSON file " + countries_file)
+                print(traceback.format_exc())
+    else:
+        print("Countries JSON file does not exist " + countries_file)
+    return countries
+
+
+COUNTRIES = get_countries(COUNTRIES_FILE)
 
 
 def get_uk_non_academic_institutions():
@@ -93,6 +114,61 @@ def parse_command_line_parameters_maps():
                              "off project root will be used, if such exists.")
     args = parser.parse_args()
     return args
+
+
+def extract_workshop_type(workshop_tags):
+    """
+    Extract workshop type from a list of workshop tags. Tags contain a mix of workshop status and workshop type.
+    :param workshop_tags: list of tags
+    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", "Circuits" or "" if none of the recognised tags is found)
+    """
+    # if isinstance(workshop_tags, list):
+    #     print("list:" + str(workshop_tags))
+    # else:
+    #     print("not list:" + str(type(workshop_tags)))
+
+    # If we have the list passed as a string instead - convert to a list first
+    if isinstance(workshop_tags, str):
+        workshop_tags = workshop_tags.split(",")
+
+    tags = list(set(workshop_tags) & set(WORKSHOP_TYPE))  # intersection of 2 sets
+    if tags != []:
+        return tags[0]
+    else:
+        return ""
+
+
+def extract_workshop_status(workshop_tags):
+    """
+    Extract workshop status from a list of workshop tags. Tags contain a mix of workshop status and workshop type.
+    :param workshop_tags: list of tags
+    :return: workshop status (e.g. one of 'stalled', 'cancelled', 'unresponsive' or "" if none of the recognised tags is found)
+    """
+    # if isinstance(workshop_tags, list):
+    #     print("list:" + str(workshop_tags))
+    # else:
+    #     print("not list:" + str(type(workshop_tags)))
+
+    # If we have the list passed as a string instead - convert to a list first
+    if isinstance(workshop_tags, str):
+        workshop_tags = workshop_tags.split(",")
+
+    # Is this a stopped workshop (if not then it will have a workshop type)?
+    is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_STATUS))
+
+    if is_stopped != []:
+        return is_stopped[0]
+    else:
+        return ""
+
+
+def get_country(country_code):
+    """
+    :param country_code: 2-letter ISO Alpha 2 country code, e.g. 'GB' for United Kingdom
+    :return: country's common name
+    """
+    # print("country_code: " + country_code)
+    return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
 
 
 def create_readme_tab(writer, readme_text):
@@ -185,11 +261,8 @@ def get_uk_region(latitude, longitude):
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
                 return (feature['properties']['NAME'])
-        return ("Location (" + str(latitude) + ", " + str(
-            longitude) + ") is not in any UK region")
-    else:
-        print("Cannot look up region for location - at least one of latitude, longitude are missing.")
-        return None
+    print("Could no find UK region for location (" + str(latitude) + ", " + str(longitude) + ")")
+    return None
 
 
 def get_center(df):

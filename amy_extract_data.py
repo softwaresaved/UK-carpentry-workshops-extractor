@@ -3,7 +3,6 @@ import os
 import sys
 import re
 import datetime
-import json
 import requests
 import yaml
 import pandas
@@ -20,10 +19,14 @@ HEADERS = {
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = CURRENT_DIR + '/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
+PROCESSED_DATA_DIR = DATA_DIR + '/processed'
 AMY_CREDENTIALS_FILE = CURRENT_DIR + '/amy_login.yml'
 
 if not os.path.exists(RAW_DATA_DIR):
     os.makedirs(RAW_DATA_DIR)
+
+if not os.path.exists(PROCESSED_DATA_DIR):
+    os.makedirs(PROCESSED_DATA_DIR)
 
 AMY_API_ROOT = "https://amy.carpentries.org/api/v1"
 AMY_EVENTS_API_URL = AMY_API_ROOT + "/events/"
@@ -31,28 +34,6 @@ AMY_PERSONS_API_URL = AMY_API_ROOT + "/persons/"
 AMY_AIRPORTS_API_URL = AMY_API_ROOT + "/airports/"
 
 AIRPORTS_FILE = DATA_DIR + "/airports.csv"
-
-COUNTRIES_FILE = CURRENT_DIR + "/lib/countries.json"
-
-WORKSHOP_TYPES = ["SWC", "DC", "LC", "TTT"]
-STOPPED_WORKSHOP_TYPES = ['stalled', 'cancelled']
-
-
-def get_countries(countries_file):
-    countries = None
-    if os.path.isfile(countries_file):
-        with open(countries_file, 'r') as stream:
-            try:
-                countries = json.load(stream)
-            except Exception as exc:
-                print("An error occurred while reading countries JSON file " + countries_file)
-                print(traceback.format_exc())
-    else:
-        print("Countries JSON file does not exist " + countries_file)
-    return countries
-
-
-COUNTRIES = get_countries(COUNTRIES_FILE)
 
 
 def main():
@@ -142,16 +123,16 @@ def get_workshops(url_parameters=None, username=None, password=None):
         idx = workshops_df.columns.get_loc("country")
         workshops_df.insert(loc=idx + 1, column='country_code',
                             value=workshops_df["country"])
-        workshops_df["country"] = workshops_df["country_code"].map(get_country, na_action="ignore")
+        workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
 
         # Extract workshop type and add as a new column
         idx = workshops_df.columns.get_loc("attendance")
         workshops_df.insert(loc=idx, column='workshop_type',
                             value=workshops_df["tags"])
-        workshops_df["workshop_type"] = workshops_df["tags"].map(extract_workshop_type, na_action="ignore")
+        workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
 
         # Remove workshops that have been stopped
-        workshops_df = workshops_df[workshops_df["workshop_type"].isin(WORKSHOP_TYPES)]
+        workshops_df = workshops_df[workshops_df["workshop_type"].isin(helper.WORKSHOP_TYPES)]
 
         # Extract workshop year and add as a new column
         workshops_df.insert(loc=idx, column='year',
@@ -389,33 +370,6 @@ def get_credentials(file_path):
     else:
         print("AMY credentials YAML file does not exist " + file_path)
     return username, password
-
-
-def get_country(country_code):
-    """
-    :param country_code: 2-letter ISO Alpha 2 country code, e.g. 'GB' for United Kingdom
-    :return: country's common name
-    """
-    return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
-
-
-def extract_workshop_type(workshop_tags):
-    """
-    Extract workshop type from a list of workshop tags.
-    :param workshop_tags:
-    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", or "" if none of the recognised tags is found)
-    """
-    # Is this a stopped workshop (it may not have a type in this case)?
-    is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_TYPES))
-
-    tags = list(set(workshop_tags) & set(WORKSHOP_TYPES))  # intersection of 2 sets
-
-    if is_stopped != []:
-        return is_stopped[0]
-    elif tags != []:
-        return tags[0]
-    else:
-        return ""
 
 
 def extract_top_level_domain(URI):

@@ -1,0 +1,7 @@
+List of UK academic institutions in file UK-academic-institutions.csv was extracted on
+2020-02-18 from http://learning-provider.data.ac.uk/, which in turn was compiled from UK Register of Learning Providers
+https://www.ukrlp.co.uk/. It contains info on UK learning providers such as their official/normalised names,
+geo location (longitude, latitude) of each institution and their web domains.
+
+HESA_UK-higher_education_providers.csv was copied on 2020-02-18 from https://www.hesa.ac.uk/support/providers. It contains
+list of official UK higher education providers together with UK region they fall into.

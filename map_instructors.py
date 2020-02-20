@@ -17,7 +17,7 @@ DATA_DIR = CURRENT_DIR + '/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 MAPS_DIR = DATA_DIR + "/maps"
 
-UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.csv'
+UK_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/lib/UK-academic-institutions.csv'
 UK_REGIONS_FILE = CURRENT_DIR + '/lib/UK-regions.json'
 
 

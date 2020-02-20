@@ -14,7 +14,7 @@ DATA_DIR = CURRENT_DIR + '/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 ANALYSES_DIR = DATA_DIR + '/analyses'
 
-UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
+# UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
 
 
 def main():
