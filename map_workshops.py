@@ -82,9 +82,9 @@ def main():
         # Save map to a HTML file
         map_file = MAPS_DIR + '/map_clustered_markers_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
-        print('Map of workshop venues saved to HTML file ' + map_file + '\n')
+        print('Map of clustered workshop locations saved to HTML file ' + map_file + '\n')
     except Exception:
-        print ("An error occurred while creating the map of workshop venues as clusters of markers.")
+        print ("An error occurred while creating the map of workshop locations as clusters of markers.")
         print(traceback.format_exc())
 
     # A map of workshop venues with circular markers

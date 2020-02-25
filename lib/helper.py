@@ -355,7 +355,7 @@ def generate_map_with_clustered_markers(df):
     marker_cluster = MarkerCluster(name='workshops').add_to(map)
 
     for index, row in df.iterrows():
-        popup = folium.Popup(row['description'], parse_html=True)
+        popup = folium.Popup(row['popup'], parse_html=True)
 
         folium.CircleMarker(
             radius=5,
