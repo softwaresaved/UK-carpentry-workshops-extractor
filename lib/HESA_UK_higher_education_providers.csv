@@ -7,9 +7,9 @@ UKPRN,INSTID,Name,Region,Provider type
 10000080,268,Access to Music Limited,West Midlands,AP
 10067853,357,ACM Guildford Limited,South East,AP
 10000163,213,AECC University College,South West,HEI
-10000216,285,All Nations Christian College,East of England,AP
+10000216,285,All Nations Christian College,Eastern,AP
 10032036,353,Amity Global Education,London,AP
-10000291,47,Anglia Ruskin University,East of England,HEI
+10000291,47,Anglia Ruskin University,Eastern,HEI
 10041898,329,Apex College London,London,AP
 10005451,333,Arden University,West Midlands,AP
 10000381,244,Arts Educational Schools,London,AP
@@ -28,7 +28,7 @@ UKPRN,INSTID,Name,Region,Provider type
 10028216,280,Brit College,London,AP
 10000961,113,Brunel University London,London,HEI
 10000975,9,Buckinghamshire New University,South East,HEI
-10010308,332,Cambridge Arts and Sciences Limited,East of England,AP
+10010308,332,Cambridge Arts and Sciences Limited,Eastern,AP
 10001143,12,Canterbury Christ Church University,South East,HEI
 10007854,89,Cardiff Metropolitan University,Wales,HEI
 10007814,179,Cardiff University,Wales,HEI
@@ -42,7 +42,7 @@ UKPRN,INSTID,Name,Region,Provider type
 10034324,326,Court Theatre Training Company Ltd,London,AP
 10007761,201,Courtauld Institute of Art,London,HEI
 10001726,56,Coventry University,West Midlands,HEI
-10007822,2,Cranfield University,East of England,HEI
+10007822,2,Cranfield University,Eastern,HEI
 10001883,68,De Montfort University,East Midlands,HEI
 10007823,16,Edge Hill University,North West,HEI
 10007772,107,Edinburgh Napier University,Scotland,HEI
@@ -117,7 +117,7 @@ UKPRN,INSTID,Name,Region,Provider type
 10007832,28,Newman University,West Midlands,HEI
 10008397,247,Norland College,South West,AP
 10004740,261,Northern College of Acupuncture,Yorkshire and The Humber,AP
-10004775,190,Norwich University of the Arts,East of England,HEI
+10004775,190,Norwich University of the Arts,Eastern,HEI
 10010227,313,Oak Hill College,London,AP
 10004930,72,Oxford Brookes University,South East,HEI
 10020439,308,Oxford Business College,South East,AP
@@ -161,7 +161,7 @@ UKPRN,INSTID,Name,Region,Provider type
 10007855,180,Swansea University,Wales,HEI
 10007161,79,Teesside University,North East,HEI
 10000385,197,The Arts University Bournemouth,South West,HEI
-10032072,288,The Cambridge Theological Federation,East of England,AP
+10032072,288,The Cambridge Theological Federation,Eastern,AP
 10010213,271,The City College,London,AP
 10001546,270,The College of Integrated Chinese Medicine,South East,AP
 10004035,359,The Film Education Training Trust Limited,London,AP
@@ -193,14 +193,14 @@ UKPRN,INSTID,Name,Region,Provider type
 10000886,51,The University of Brighton,South East,HEI
 10007786,112,The University of Bristol,South West,HEI
 10007787,203,The University of Buckingham,South East,AP
-10007788,114,The University of Cambridge,East of England,HEI
+10007788,114,The University of Cambridge,Eastern,HEI
 10007141,53,The University of Central Lancashire,North West,HEI
 10007137,82,The University of Chichester,South East,HEI
 10007852,172,The University of Dundee,Scotland,HEI
-10007789,117,The University of East Anglia,East of England,HEI
+10007789,117,The University of East Anglia,Eastern,HEI
 10007144,58,The University of East London,London,HEI
 10007790,167,The University of Edinburgh,Scotland,HEI
-10007791,118,The University of Essex,East of England,HEI
+10007791,118,The University of Essex,Eastern,HEI
 10007792,119,The University of Exeter,South West,HEI
 10007794,168,The University of Glasgow,Scotland,HEI
 10007146,59,The University of Greenwich,London,HEI
@@ -245,20 +245,20 @@ UKPRN,INSTID,Name,Region,Provider type
 10007784,149,University College London,London,HEI
 10008173,294,University College of Estate Management,South East,AP
 10006427,206,University for the Creative Arts,South East,HEI
-10007152,26,University of Bedfordshire,East of England,HEI
+10007152,26,University of Bedfordshire,Eastern,HEI
 10007848,11,University of Chester,North West,HEI
 10007842,38,University of Cumbria,North West,HEI
 10007851,57,University of Derby,East Midlands,HEI
 10007143,116,University of Durham,North East,HEI
 10007145,54,University of Gloucestershire,South West,HEI
-10007147,60,University of Hertfordshire,East of England,HEI
+10007147,60,University of Hertfordshire,Eastern,HEI
 10007797,151,University of London (Institutes and activities),London,HEI
 10001282,69,University of Northumbria at Newcastle,North East,HEI
 10007154,155,University of Nottingham,East Midlands,HEI
 10007801,73,University of Plymouth,South West,HEI
 10007793,90,University of South Wales,Wales,HEI
 10037449,14,University of St Mark and St John,South West,HEI
-10014001,210,University of Suffolk,East of England,HEI
+10014001,210,University of Suffolk,Eastern,HEI
 10007162,24,"University of the Arts, London",London,HEI
 10007114,196,University of the Highlands and Islands,Scotland,HEI
 10007164,81,"University of the West of England, Bristol",South West,HEI
@@ -268,5 +268,5 @@ UKPRN,INSTID,Name,Region,Provider type
 10007361,295,Waverley Abbey College,South East,AP
 10032288,312,West Dean College,South East,AP
 10023290,275,West London College of Business and Management Sciences Limited,London,AP
-10007657,189,Writtle University College,East of England,HEI
+10007657,189,Writtle University College,Eastern,HEI
 10007713,13,York St John University,Yorkshire and The Humber,HEI
