@@ -1,0 +1,166 @@
+,UKPRN,HE Provider,1a Biotechnology and Biological Sciences Research Council (BBSRC),1b Medical Research Council (MRC),1c Natural Environment Research Council (NERC),1d Engineering and Physical Sciences Research Council (EPSRC),1e Economic and Social Research Council (ESRC),1f Arts & Humanities Research Council (AHRC),1g Science & Technology Facilities Council (STFC),1h Other,1i Total Research Councils,"10 EU industry, commerce and public corporations",11 EU (excluding UK) other,12 Non-EU-based charities (open competitive process),"13 Non-EU industry, commerce and public corporations",14 Non-EU other,15 Total,2 UK-based charities (open competitive process),3 UK based charities (other),"4 UK central government bodies/local authorities, health and hospital authorities",5 UK central government tax credits for research and development expenditure,"6 UK industry, commerce and public corporations",7 UK other sources,8 EU government bodies,9 EU-based charities (open competitive process),total_£000s,total_%,region
+0,10007783,The University of Aberdeen,208,1154,65,6,77,0,0,1,1511,118,61,0,1089,36,16791,3620,610,8460,0,434,73,705,74,18302,0.737224351524941,Scotland
+1,10007849,University of Abertay Dundee,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+2,10007856,Aberystwyth University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+3,10000163,AECC University College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+4,10000291,Anglia Ruskin University,0,0,0,0,0,0,0,0,0,0,0,14,36,14,315,19,0,113,0,100,0,19,0,315,0.01268854063656193,Eastern
+5,10007759,Aston University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+6,10007857,Bangor University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,343,233,0,54,0,0,44,12,0,343,0.013816410915367432,Wales
+7,10000571,Bath Spa University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+8,10007850,The University of Bath,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+9,10007152,University of Bedfordshire,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+10,10005343,Queen's University Belfast,693,2903,0,0,1416,0,0,124,5136,476,28,116,89,356,30214,9731,50,10611,0,741,0,2854,26,35350,1.4239362269919498,Northern Ireland
+11,10007760,Birkbeck College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+12,10007140,Birmingham City University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+13,10006840,The University of Birmingham,1367,6497,23,70,16,91,0,102,8166,483,68,256,1893,70,52100,15923,4427,15583,0,1899,205,2780,347,60266,2.4275796508033056,West Midlands
+14,10000712,University College Birmingham,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+15,10007811,Bishop Grosseteste University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+16,10006841,The University of Bolton,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+17,10000385,The Arts University Bournemouth,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+18,10000824,Bournemouth University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+19,10007785,The University of Bradford,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+20,10000886,The University of Brighton,174,31,0,12,50,0,0,0,267,0,0,0,0,52,1753,391,0,768,0,96,0,179,0,2020,0.08136778439953998,South East
+21,10000936,The University College of Osteopathy,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+22,10007786,The University of Bristol,540,8716,73,96,835,0,0,32,10292,65,351,583,304,1358,40052,9416,0,14992,0,161,733,1682,115,50344,2.0279107612922975,South West
+23,10000961,Brunel University London,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+24,10000975,Buckinghamshire New University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+25,10007787,The University of Buckingham,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+26,10007788,The University of Cambridge,1575,47991,57,466,10,49,14,1144,51306,747,224,4663,2115,10396,209543,84347,4357,35306,0,4278,300,11235,269,260849,10.50727979843347,Eastern
+27,10003324,The Institute of Cancer Research,90,1291,0,175,0,0,0,0,1556,1149,186,341,1362,333,27257,14509,-41,6037,0,1155,0,670,0,28813,1.1606187979722504,London
+28,10001143,Canterbury Christ Church University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+29,10007814,Cardiff University,343,7274,0,2,75,0,0,45,7739,177,97,1906,562,576,37299,11775,285,11820,0,823,104,1394,41,45038,1.8141793434586544,Wales
+30,10007854,Cardiff Metropolitan University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+31,10007141,The University of Central Lancashire,0,0,0,0,0,0,0,0,0,0,42,0,0,0,193,18,0,126,0,0,7,0,0,193,0.007774248707480801,North West
+32,10007848,University of Chester,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+33,10007137,The University of Chichester,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+34,10001478,"City, University of London",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+35,10001653,Conservatoire for Dance and Drama,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+36,10007761,Courtauld Institute of Art,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+37,10001726,Coventry University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+38,10007822,Cranfield University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+39,10006427,University for the Creative Arts,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+40,10007842,University of Cumbria,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+41,10001883,De Montfort University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+42,10007851,University of Derby,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+43,10007852,The University of Dundee,230,1161,0,96,0,0,0,37,1524,5766,15,113,703,75,19641,4077,378,4550,230,989,37,1041,143,21165,0.8525490875328039,Scotland
+44,10007143,University of Durham,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North East
+45,10007789,The University of East Anglia,85,562,0,0,20,0,0,0,667,306,46,0,-3,25,4856,806,37,2872,0,23,18,59,0,5523,0.22247241249438582,Eastern
+46,10007144,The University of East London,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+47,10007823,Edge Hill University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+48,10007772,Edinburgh Napier University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+49,10007790,The University of Edinburgh,1893,27700,-12,623,290,0,0,68,30562,2492,398,1031,1233,1624,96880,32010,113,14782,0,2627,2945,6917,146,127442,5.1335015739832555,Scotland
+50,10007791,The University of Essex,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+51,10007792,The University of Exeter,132,1970,169,57,364,32,2,303,3029,73,27,324,31,1141,16908,1905,1919,5944,0,436,132,1923,24,19937,0.8030839195909053,South West
+52,10008640,Falmouth University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+53,10004511,The National Film and Television School,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+54,10007762,Glasgow Caledonian University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+55,10002681,Glasgow School of Art,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+56,10007794,The University of Glasgow,1164,18270,0,317,190,4,0,126,20071,1714,199,481,4036,871,99605,42735,165,18885,95,5360,583,4360,50,119676,4.820678695940271,Scotland
+57,10007145,University of Gloucestershire,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+58,10007833,GlyndÃÂµr University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+59,10002718,Goldsmiths College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+60,10007146,The University of Greenwich,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+61,10007825,Guildhall School of Music and Drama,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+62,10040812,Harper Adams University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+63,10007764,Heriot-Watt University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+64,10007147,University of Hertfordshire,0,0,0,0,0,0,0,0,0,0,0,0,0,41,66,25,0,0,0,0,0,0,0,66,0.0026585513714701184,Eastern
+65,10007765,Heythrop College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,
+66,10007148,The University of Huddersfield,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+67,10007149,The University of Hull,-7,0,0,0,0,0,0,0,-7,70,0,58,191,32,1961,442,13,693,0,215,12,242,0,1954,0.07870923302806987,Yorkshire and The Humber
+68,10003270,"Imperial College of Science, Technology and Medicine",2441,21336,205,3093,447,66,0,157,27745,12847,160,11277,6281,8631,176915,45505,6681,37745,0,6815,1667,10785,776,204660,8.243926116440523,London
+69,10007767,Keele University,0,85,0,32,0,0,0,0,117,45,0,0,45,92,2443,204,13,1737,0,149,11,30,0,2560,0.10311956834793187,West Midlands
+70,10007150,The University of Kent,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+71,10003645,King's College London,1294,14877,0,2397,793,0,19,314,19694,2004,454,1279,4647,2561,101055,26379,6018,23466,117,4598,547,8946,345,120749,4.863900296267354,London
+72,10003678,Kingston University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+73,10007768,The University of Lancaster,17,363,0,81,3,0,0,26,490,0,32,27,0,65,1203,239,27,323,0,0,0,0,0,1693,0.06819587078634713,North West
+74,10003854,Leeds Arts University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+75,10003861,Leeds Beckett University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+76,10007795,The University of Leeds,367,2540,0,702,14,0,32,48,3703,327,75,13,1377,624,32634,11678,1995,7235,0,4392,175,1040,0,36337,1.463693654319844,Yorkshire and The Humber
+77,10003863,Leeds Trinity University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+78,10007796,The University of Leicester,229,2592,0,5,74,0,0,57,2957,420,256,172,355,535,21149,4132,1093,9233,0,1029,0,967,0,24106,0.9710157478887679,East Midlands
+79,10007151,The University of Lincoln,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,5,0,13,0,0,0,18,0.000725059464946396,East Midlands
+80,10003956,Liverpool Hope University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+81,10003957,Liverpool John Moores University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+82,10003945,The Liverpool Institute for Performing Arts,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+83,10006842,The University of Liverpool,343,2863,4,415,279,43,0,2,3949,233,83,1409,192,888,28931,6274,1099,11324,0,1811,404,1265,0,32880,1.32444195596875,North West
+84,10003958,Liverpool School of Tropical Medicine,428,6450,52,0,0,0,0,115,7045,32,1119,13971,14,10654,76835,14986,389,19157,2612,1108,948,4767,33,83880,3.3787771066502046,North West
+85,10007162,"University of the Arts, London",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+86,10007769,London Business School,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+87,10007797,University of London (Institutes and activities),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+88,10004048,London Metropolitan University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+89,10004078,London South Bank University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,8,0,0,8,0.0003222486510872871,London
+90,10004063,London School of Economics and Political Science,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+91,10007771,London School of Hygiene and Tropical Medicine,1646,22518,27,109,1473,0,0,209,25982,7164,466,17014,1488,20628,140577,17392,1637,25922,0,1334,573,20822,155,166559,6.709176634555932,London
+92,10004113,Loughborough University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+93,10004180,The Manchester Metropolitan University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+94,10007798,The University of Manchester,908,8085,0,767,222,0,129,19,10130,62,252,172,853,696,46877,13089,2079,10093,0,6779,149,2290,233,57007,2.296303606566622,North West
+95,10004351,Middlesex University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+96,10007799,Newcastle University,934,7680,0,852,38,0,2,16,9522,376,746,130,3160,1083,58281,15913,4880,15736,0,1480,329,4803,123,67803,2.731178161208916,North East
+97,10007832,Newman University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+98,10007138,The University of Northampton,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+99,10001282,University of Northumbria at Newcastle,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North East
+100,10004775,Norwich University of the Arts,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+101,10007154,University of Nottingham,337,5244,0,178,225,21,21,-33,5993,608,80,218,775,409,26624,4543,380,11803,0,512,304,973,26,32617,1.3138480315642553,East Midlands
+102,10004797,The Nottingham Trent University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,East Midlands
+103,10007773,The Open University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+104,10004930,Oxford Brookes University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+105,10007774,The University of Oxford,2100,46453,195,1717,720,0,1,693,51879,9172,395,18557,22433,9659,308519,101673,3904,61125,0,11012,693,17075,942,360398,14.51722116931951,South East
+106,10005127,Plymouth College of Art,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+107,10007801,University of Plymouth,70,113,74,0,7,0,0,0,264,82,-2,0,0,0,3733,833,43,2205,0,133,1,174,0,3997,0.1610034822994858,South West
+108,10007155,The University of Portsmouth,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+109,10005337,"Queen Margaret University, Edinburgh",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+110,10007775,Queen Mary University of London,896,6104,0,138,16,0,0,1264,8418,947,1,1022,2825,1214,68564,22435,5172,15184,0,7252,796,3282,16,76982,3.1009182072501917,London
+111,10005389,Ravensbourne University London,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+112,10007802,The University of Reading,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+113,10005500,The Robert Gordon University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+114,10007776,Roehampton University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+115,10005523,Rose Bruford College of Theatre and Performance,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+116,10007835,Royal Academy of Music,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+117,10005545,Royal Agricultural University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+118,10007777,Royal College of Art,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+119,10007778,Royal College of Music,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+120,10005561,Royal Conservatoire of Scotland,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+121,10007816,The Royal Central School of Speech and Drama,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+122,10005553,Royal Holloway and Bedford New College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+123,10007837,Royal Northern College of Music,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+124,10007779,The Royal Veterinary College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+125,10007803,University of St Andrews,81,249,0,0,0,0,0,178,508,26,160,3,42,35,2761,576,55,984,0,286,2,84,0,3269,0.13167885505054266,Scotland
+126,10007782,"St George's, University of London",235,2492,0,0,0,0,0,13,2740,90,0,17,191,801,10666,1321,1413,1795,0,601,13,1600,84,13406,0.5400081770595213,London
+127,10008026,St Mary's University College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Northern Ireland
+128,10007843,"St Mary's University, Twickenham",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+129,10007156,The University of Salford,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North West
+130,10007780,SOAS University of London,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+131,10005700,SRUC,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+132,10005790,Sheffield Hallam University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+133,10007157,The University of Sheffield,271,2709,0,587,13,0,0,50,3630,322,34,171,650,174,18896,6105,-497,4298,0,1291,1025,1564,129,22526,0.9073716392990286,Yorkshire and The Humber
+134,10006022,Solent University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+135,10007158,The University of Southampton,489,4623,0,335,27,0,0,96,5570,1212,25,97,2687,565,29693,8862,225,8105,0,901,20,1418,6,35263,1.4204317729113756,South East
+136,10006299,Staffordshire University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+137,10007804,The University of Stirling,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+138,10037449,University of St Mark and St John,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+139,10008010,Stranmillis University College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Northern Ireland
+140,10007805,The University of Strathclyde,0,27,0,75,0,0,67,0,169,24,0,0,43,0,797,68,7,387,0,71,8,20,0,966,0.03891152461878992,Scotland
+141,10014001,University of Suffolk,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+142,10007159,The University of Sunderland,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North East
+143,10007160,The University of Surrey,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+144,10007806,The University of Sussex,174,31,0,12,50,0,0,0,267,0,0,0,0,150,1913,391,0,825,0,233,0,47,0,2180,0.08781275742128573,South East
+145,10007855,Swansea University,85,1149,57,659,1109,0,10,0,3069,148,0,0,11,38,11648,1347,0,4812,0,433,416,1374,0,14717,0.5928166747564505,Wales
+146,10007161,Teesside University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,North East
+147,10008017,Trinity Laban Conservatoire of Music and Dance,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+148,10007858,University of Wales Trinity Saint David,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+149,10007114,University of the Highlands and Islands,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+150,10007807,Ulster University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Northern Ireland
+151,10007784,University College London,3578,42600,2,1415,3240,0,0,1000,51835,1384,1991,5517,8723,5374,249121,89316,12928,44354,0,9660,2744,14156,1139,300956,12.122833129578197,London
+152,10007793,University of South Wales,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+153,10008574,The University of Wales (central functions),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Wales
+154,10007163,The University of Warwick,155,637,0,32,34,23,0,3,884,0,143,0,271,209,15798,1084,427,11832,0,328,314,306,0,16682,0.6719689996797654,West Midlands
+155,10007164,"University of the West of England, Bristol",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South West
+156,10007800,The University of the West of Scotland,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Scotland
+157,10006566,The University of West London,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+158,10007165,The University of Westminster,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,London
+159,10003614,The University of Winchester,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,South East
+160,10007166,The University of Wolverhampton,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+161,10007139,University of Worcester,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,West Midlands
+162,10007657,Writtle University College,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Eastern
+163,10007713,York St John University,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,Yorkshire and The Humber
+164,10007167,The University of York,99,751,0,0,0,0,0,0,850,0,0,0,33,8,1890,699,0,293,-1,0,0,8,0,2740,0.11037016299739583,Yorkshire and The Humber

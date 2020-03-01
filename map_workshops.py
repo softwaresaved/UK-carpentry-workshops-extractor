@@ -49,8 +49,8 @@ def main():
                             value=workshops_df["longitude"])
         # Rename 'venue' column to 'institution' as some of our methods expect that column name
         workshops_df.rename(columns={"venue": "institution"}, inplace=True)
-        # Add column 'description' which is used in popups in maps
-        workshops_df['description'] = np.where(workshops_df["address"].empty, workshops_df["institution"],
+        # Add column 'popup' which is used in popups in maps
+        workshops_df['popup'] = np.where(workshops_df["address"].empty, workshops_df["institution"],
                                                workshops_df["institution"] + ', ' + workshops_df["address"])
         # print(workshops_df)
         if not os.path.exists(MAPS_DIR):
@@ -121,6 +121,8 @@ def main():
         print('Map 4: Generating a choropleth map of workshop venues over UK regions')
         print("#####################################################################\n")
         uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+        # Get rid of rows where region is null
+        workshops_df = workshops_df.dropna(subset=['region'])
         workshops_map = helper.generate_choropleth_map(workshops_df, uk_regions, "workshops")
         # Save map to a HTML file
         map_file = MAPS_DIR + '/choropleth_map_UK_regions_' + workshops_file_name_without_extension + '.html'

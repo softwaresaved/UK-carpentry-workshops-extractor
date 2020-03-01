@@ -69,8 +69,8 @@ def main():
         instructors_df.rename(columns={"affiliation" : "institution"},inplace=True)
         instructors_df = instructors_df.reset_index(drop=True)
 
-        # Add column 'description' which is used for popups in maps
-        instructors_df['description'] = instructors_df["institution"]
+        # Add column 'popup' which is used for popups in maps
+        instructors_df['popup'] = instructors_df["institution"]
 
         # Save instructors locations table, it may come in handy
         instructors_file = MAPS_DIR + "/locations_" + instructors_file_name_without_extension + ".csv"

@@ -124,7 +124,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
         workshops_df.insert(loc=idx + 1, column='country_code',
                             value=workshops_df["country"])
         workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
-
+        print(workshops_df)
         # Extract workshop type and add as a new column
         idx = workshops_df.columns.get_loc("attendance")
         workshops_df.insert(loc=idx, column='workshop_type',
@@ -132,7 +132,8 @@ def get_workshops(url_parameters=None, username=None, password=None):
         workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
 
         # Remove workshops that have been stopped
-        workshops_df = workshops_df[workshops_df["workshop_type"].isin(helper.WORKSHOP_TYPES)]
+        workshops_df = workshops_df[~workshops_df["workshop_type"].isin(helper.STOPPED_WORKSHOP_STATUS)]
+        print(workshops_df)
 
         # Extract workshop year and add as a new column
         workshops_df.insert(loc=idx, column='year',
@@ -158,6 +159,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
         # Get instructors for workshops
         workshops_df["instructors"] = workshops_df["tasks"].map(
             lambda tasks_url: extract_workshop_instructors(tasks_url, username, password), na_action="ignore")
+        print(workshops_df)
 
         return workshops_df
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as ex:
@@ -218,7 +220,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
         idx = instructors_df.columns.get_loc("country")
         instructors_df.insert(loc=idx, column='country_code',
                               value=instructors_df["country"])
-        instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code),
+        instructors_df["country"] = instructors_df["country"].map(lambda country_code: helper.get_country(country_code),
                                                                   na_action="ignore")
 
         # Airport field contains URIs like 'https://amy.carpentries.org/api/v1/airports/MAN/'
