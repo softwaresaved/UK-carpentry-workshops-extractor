@@ -126,20 +126,20 @@ def main():
         print ("An error occurred while creating a heat map of instructors affiliations.\n")
         print(traceback.format_exc())
 
-    # Choropleth map over UK regions
-    try:
-        print("##############################################################################")
-        print('Map 4: Generating a choropleth map of instructors affiliations over UK regions')
-        print("##############################################################################\n")
-        uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
-        instructors_map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
-        # Save map to a HTML file
-        map_file = MAPS_DIR + '/choropleth_map_UK_regions_' + instructors_file_name_without_extension + '.html'
-        instructors_map.save(map_file)
-        print('A choropleth map of instructors affiliations over UK regions saved to HTML file ' + map_file + '\n')
-    except Exception:
-        print ("An error occurred while creating a choropleth map of instructors affiliations over UK regions.\n")
-        print(traceback.format_exc())
+    # # Choropleth map over UK regions
+    # try:
+    #     print("##############################################################################")
+    #     print('Map 4: Generating a choropleth map of instructors affiliations over UK regions')
+    #     print("##############################################################################\n")
+    #     uk_regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8-sig'))
+    #     instructors_map = helper.generate_choropleth_map(instructors_df, uk_regions, "instructors")
+    #     # Save map to a HTML file
+    #     map_file = MAPS_DIR + '/choropleth_map_UK_regions_' + instructors_file_name_without_extension + '.html'
+    #     instructors_map.save(map_file)
+    #     print('A choropleth map of instructors affiliations over UK regions saved to HTML file ' + map_file + '\n')
+    # except Exception:
+    #     print ("An error occurred while creating a choropleth map of instructors affiliations over UK regions.\n")
+    #     print(traceback.format_exc())
 
 
 if __name__ == '__main__':
