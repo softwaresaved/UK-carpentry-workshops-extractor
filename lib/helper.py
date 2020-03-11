@@ -23,8 +23,8 @@ STOPPED_WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
 
-WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT", "Circuits"]
-WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive', 'Pilot']
+WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT"]
+WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive', 'Pilot', "Circuits"]
 
 COUNTRIES_FILE = CURRENT_DIR + "/countries.json"
 

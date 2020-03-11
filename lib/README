@@ -5,3 +5,23 @@ geo location (longitude, latitude) of each institution and their web domains.
 
 HESA_UK-higher_education_providers.csv was copied on 2020-02-18 from https://www.hesa.ac.uk/support/providers. It contains
 list of official UK higher education providers together with UK region they fall into.
+
+HESA_UK-research-income.xlsx was downloaded from HESA https://www.hesa.ac.uk/data-and-analysis/finances/table-5
+and contains self-reported data by institutions on their research
+income from research councils as well as other sources (e.g. industry).
+
+HESA_UK-research-income-from-research-councils-2017_2018.csv was extracted from HESA_UK-research-income.xlsx to contain
+only data about research council grants.
+
+HESA_UK-research-income-other-sources-2017_2018.csv was extracted from HESA_UK-research-income.xlsx to contain
+only data about research grants from sources other than research councils.
+
+HESA_UK-research-income_combined.csv is a table merged from the previous two.
+
+R_and_D_expenditure_per_region.xls was downloaded from the Office fo National Statistics
+https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/researchanddevelopmentexpenditure/datasets/ukgrossdomesticexpenditureonresearchanddevelopmentregionaltables
+and provides annual estimates of research and development by UK country and region by business enterprise,
+higher education, government, research councils and private non-profit organisations.
+
+R_and_D_expenditure_per_region_2017.csv is the processed version of R_and_D_expenditure_per_region.xls containing a
+summary table.
