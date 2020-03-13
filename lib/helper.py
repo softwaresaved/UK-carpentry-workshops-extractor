@@ -18,13 +18,12 @@ NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institution
 UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
 
-STOPPED_WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
-
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
 
 WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT"]
-WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive', 'Pilot', "Circuits"]
+WORKSHOP_SUBTYPE = ['Pilot', "Circuits"]
+WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
 
 COUNTRIES_FILE = CURRENT_DIR + "/countries.json"
 
@@ -118,9 +117,9 @@ def parse_command_line_parameters_maps():
 
 def extract_workshop_type(workshop_tags):
     """
-    Extract workshop type from a list of workshop tags. Tags contain a mix of workshop status and workshop type.
+    Extract workshop type from a list of workshop tags. Tags contain a mix of workshop status and workshop types.
     :param workshop_tags: list of tags
-    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", "Circuits" or "" if none of the recognised tags is found)
+    :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", or "" if none of the recognised tags is found)
     """
     # if isinstance(workshop_tags, list):
     #     print("list:" + str(workshop_tags))
@@ -137,6 +136,26 @@ def extract_workshop_type(workshop_tags):
     else:
         return ""
 
+def extract_workshop_subtype(workshop_tags):
+    """
+    Extract workshop subtype from a list of workshop tags. Tags contain a mix of workshop status and workshop types.
+    :param workshop_tags: list of tags
+    :return: workshop type (e.g. "Circuits", "Pilot", or "" if none of the recognised tags is found)
+    """
+    # if isinstance(workshop_tags, list):
+    #     print("list:" + str(workshop_tags))
+    # else:
+    #     print("not list:" + str(type(workshop_tags)))
+
+    # If we have the list passed as a string instead - convert to a list first
+    if isinstance(workshop_tags, str):
+        workshop_tags = workshop_tags.split(",")
+
+    tags = list(set(workshop_tags) & set(WORKSHOP_SUBTYPE))  # intersection of 2 sets
+    if tags != []:
+        return tags[0]
+    else:
+        return ""
 
 def extract_workshop_status(workshop_tags):
     """
@@ -154,7 +173,7 @@ def extract_workshop_status(workshop_tags):
         workshop_tags = workshop_tags.split(",")
 
     # Is this a stopped workshop (if not then it will have a workshop type)?
-    is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_STATUS))
+    is_stopped = list(set(workshop_tags) & set(WORKSHOP_STATUS))
 
     if is_stopped != []:
         return is_stopped[0]
