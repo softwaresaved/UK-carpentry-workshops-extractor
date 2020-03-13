@@ -91,6 +91,33 @@ def parse_command_line_parameters_amy():
     return args
 
 
+def parse_command_line_parameters_redash():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-rw", "--raw_workshops_file", type=str, default=None,
+                        help="File path where raw workshops data extracted from REDASH will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'redash_raw_carpentry_workshops_UK'.csv.")
+
+    parser.add_argument("-pw", "--processed_workshops_file", type=str, default=None,
+                        help="File path where processed workshops data will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'redash_processed_carpentry_workshops_UK'.csv.")
+
+    parser.add_argument("-ri", "--raw_instructors_file", type=str, default=None,
+                        help="File path where raw instructors data extracted from REDASH will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'redash_raw_carpentry_instructors_UK_<DATE>'.csv.")
+
+    parser.add_argument("-pi", "--processed_instructors_file", type=str, default=None,
+                        help="File path where processed instructors data will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as 'redash_processed_carpentry_instructors_UK_<DATE>'.csv.")
+
+    args = parser.parse_args()
+    return args
+
+
 def parse_command_line_parameters_analyses():
     parser = argparse.ArgumentParser()
     parser.add_argument("-in", "--input_file", type=str, default=None,

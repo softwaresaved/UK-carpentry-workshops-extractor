@@ -27,7 +27,7 @@ if not os.path.exists(PROCESSED_DATA_DIR):
 
 # Carpentries Redash system
 REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
-REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
+REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/243/results.csv"
 
 REDASH_API_KEY = "gqMCK5SWYXH4B52zUFmVaf15rN3nArKoJlPHkGg8"
 
@@ -39,6 +39,29 @@ def main():
     Main function
     """
 
+    args = helper.parse_command_line_parameters_redash()
+
+    if args.raw_workshops_file:
+        raw_workshops_file = args.raw_workshops_file
+    else:
+        raw_workshops_file = RAW_DATA_DIR + "/redash_raw_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.processed_workshops_file:
+        processed_workshops_file = args.processed_workshops_file
+    else:
+        processed_workshops_file = PROCESSED_DATA_DIR + "/redash_processed_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.raw_instructors_file:
+        raw_instructors_file = args.raw_instructors_file
+    else:
+        raw_instructors_file = RAW_DATA_DIR + "/redash_raw_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.processed_instructors_file:
+        processed_instructors_file = args.processed_instructors_file
+    else:
+        processed_instructors_file = PROCESSED_DATA_DIR + "/redash_processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime(
+            '%Y-%m-%d') + ".csv"
+
     ############################ Extract and process workshop data ########################
 
     print("\nExtracting workshops from: " + REDASH_API_WORKSHOPS_QUERY_URL)
@@ -48,7 +71,6 @@ def main():
     print("\n####### Extracted " + str(workshops.index.size) + " workshops. #######\n")
 
     # Save raw workshop data
-    raw_workshops_file = RAW_DATA_DIR + "/redash_raw_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
     workshops.to_csv(raw_workshops_file, encoding="utf-8", index=False)
     print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
 
@@ -128,16 +150,21 @@ def main():
     workshops["workshop_domains_list"] = workshops["workshop_domains"].str.split(':')
 
     # Save the processed workshop data
-    processed_workshops_file = PROCESSED_DATA_DIR + "/redash_processed_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
     workshops.to_csv(processed_workshops_file, encoding="utf-8", index=False)
     print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
 
     ############################ Extract and process instructor data ########################
+
     print("\nExtracting workshops from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
     # Get instructor data as returned by a predefined query within Carpentries Redash system (cached results are returned
     # from the last time Redash ran the query, currently set to run every 2 weeks)
     instructors = get_csv_data_redash(REDASH_API_INSTRUCTORS_QUERY_URL, REDASH_API_KEY)
     print("\n####### Extracted " + str(instructors.index.size) + " instructors. #######\n")
+
+    # Save raw instructor data
+    workshops.to_csv(raw_instructors_file, encoding="utf-8", index=False)
+    print("Saved raw Carpentry workshop data to "+ raw_instructors_file + "\n")
+
 
 def get_csv_data_redash(query_results_url, api_key):
     """
