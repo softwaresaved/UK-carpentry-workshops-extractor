@@ -285,16 +285,6 @@ def insert_institutional_geocoordinates(df, institution_column_name, latitude_co
     return df
 
 
-def insert_uk_region(df):
-    """
-    Insert UK region for instructors' airport geocoordinates into new column 'region'.
-    """
-    df['region'] = df.apply(
-        lambda x: get_uk_region(latitude=x['latitude'],
-                                longitude=x['longitude']), axis=1)
-    return df
-
-
 def get_uk_region(latitude, longitude):
     """
     Lookup UK region given the (latitude, longitude) coordinates.
