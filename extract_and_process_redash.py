@@ -31,7 +31,8 @@ REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/24
 
 REDASH_API_KEY = "gqMCK5SWYXH4B52zUFmVaf15rN3nArKoJlPHkGg8"
 
-AIRPORTS_FILE = DATA_DIR + "/airports.csv"
+UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
+UK_AIRPORTS = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 
 
 def main():
@@ -109,10 +110,10 @@ def main():
     workshops["organiser_top_level_web_domain"] = workshops["organiser_web_domain"].map(lambda domain: extract_top_level_domain(domain),na_action="ignore")
 
     # Add UK region for a workshop based on its geocoordinates as a new column
-    # idx = workshops.columns.get_loc("country") + 1
-    # workshops.insert(loc=idx, column='region', value=workshops["country_code"])
-    # workshops['region'] = workshops.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
-    # print("\n################################\nGetting regions took a while but it has finished now.")
+    idx = workshops.columns.get_loc("country") + 1
+    workshops.insert(loc=idx, column='region', value=workshops["country_code"])
+    workshops['region'] = workshops.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    print("\n###################\nGetting regions took a while but it has finished now.###################\n")
 
     # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
     uk_academic_institutions = pd.read_csv(LIB_DATA_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
@@ -162,9 +163,34 @@ def main():
     print("\n####### Extracted " + str(instructors.index.size) + " instructors. #######\n")
 
     # Save raw instructor data
-    workshops.to_csv(raw_instructors_file, encoding="utf-8", index=False)
-    print("Saved raw Carpentry workshop data to "+ raw_instructors_file + "\n")
+    instructors.to_csv(raw_instructors_file, encoding="utf-8", index=False)
+    print("Saved raw Carpentry workshop data to " + raw_instructors_file + "\n")
 
+    # Process the instructor data a bit to get it ready for further analyses and mapping
+
+    # Insert normalised/official names for institutions (for UK academic institutions)
+    print("\nInserting normalised name for instructors' affiliations/institutions...\n")
+    instructors = helper.insert_normalised_institution(instructors, "institution")
+
+    # Insert latitude, longitude pairs for instructors' institutions
+    print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
+    instructors = helper.insert_institutional_geocoordinates(instructors, "normalised_institution", "latitude", "longitude")
+
+    # Insert UK regional info based on instructors's affiliations
+    print("\nInserting regions for instructors' affiliations/institutions...\n")
+    idx = instructors.columns.get_loc("institution") + 1
+    instructors.insert(loc=idx, column='institutional_region', value=instructors["institution"])
+    instructors['region'] = instructors.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    print("\nGetting regions for institutions took a while but it has finished now.\n")
+
+    # Insert UK regional info based on nearest airport
+    print("\nInserting regions for instructors based on nearest airport...\n")
+    instructors.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
+    instructors.rename({"region" : "airport_region"}, inplace=True)
+
+    # Save the processed instructor data
+    instructors.to_csv(processed_instructors_file, encoding="utf-8", index=False)
+    print("Saved processed Carpentry instructor data to " + processed_instructors_file + "\n")
 
 def get_csv_data_redash(query_results_url, api_key):
     """

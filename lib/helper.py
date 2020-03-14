@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
-import sys
 import json
 import folium
 from folium.plugins import MarkerCluster
@@ -163,6 +162,7 @@ def extract_workshop_type(workshop_tags):
     else:
         return ""
 
+
 def extract_workshop_subtype(workshop_tags):
     """
     Extract workshop subtype from a list of workshop tags. Tags contain a mix of workshop status and workshop types.
@@ -183,6 +183,7 @@ def extract_workshop_subtype(workshop_tags):
         return tags[0]
     else:
         return ""
+
 
 def extract_workshop_status(workshop_tags):
     """
