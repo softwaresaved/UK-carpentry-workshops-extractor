@@ -63,11 +63,11 @@ def main():
         processed_instructors_file = PROCESSED_DATA_DIR + "/redash_processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
 
-    ############################ Extract and process workshop data ########################
+    ############################ Extract workshop data from Carpentries redash ########################
 
     print("\nExtracting workshops from: " + REDASH_API_WORKSHOPS_QUERY_URL)
     # Get workshop data as returned by a predefined query within Carpentries Redash system (cached results are returned
-    # from the last time Redash ran the query, currently set to run every 2 weeks)
+    # from the last time Redash ran the query, currently set to run every day)
     workshops = get_csv_data_redash(REDASH_API_WORKSHOPS_QUERY_URL, REDASH_API_KEY)
     print("\n####### Extracted " + str(workshops.index.size) + " workshops. #######\n")
 
@@ -75,6 +75,7 @@ def main():
     workshops.to_csv(raw_workshops_file, encoding="utf-8", index=False)
     print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
 
+    ############################ Process workshop data ########################
     # Process the workshop data a bit to get it ready for further analyses and mapping
 
     # Convert column "tags" from a string to a list of strings

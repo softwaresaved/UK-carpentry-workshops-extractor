@@ -44,41 +44,64 @@ def main():
     args = helper.parse_command_line_parameters_amy()
 
     url_parameters = {
-        "country": None,  # by default we look for workshops in all countries
+        "country": "GB",  # by default we look for workshops in all countries
         "is_instructor": "true"
     }
-
-    if args.country_code is not None:
-        url_parameters["country"] = args.country_code
+    #
+    # if args.country_code is not None:
+    #     url_parameters["country"] = args.country_code
 
     if args.username is None and args.password is None:
         args.username, args.password = get_credentials(AMY_CREDENTIALS_FILE)
 
+    if args.raw_workshops_file:
+        raw_workshops_file = args.raw_workshops_file
+    else:
+        raw_workshops_file = RAW_DATA_DIR + "/amy_raw_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.processed_workshops_file:
+        processed_workshops_file = args.processed_workshops_file
+    else:
+        processed_workshops_file = PROCESSED_DATA_DIR + "/amy_processed_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.raw_instructors_file:
+        raw_instructors_file = args.raw_instructors_file
+    else:
+        raw_instructors_file = RAW_DATA_DIR + "/amy_raw_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
+    if args.processed_instructors_file:
+        processed_instructors_file = args.processed_instructors_file
+    else:
+        processed_instructors_file = PROCESSED_DATA_DIR + "/amy_processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+
     if args.username is None or args.password is None:
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
-        workshops = get_workshops(url_parameters, args.username, args.password)
-        if args.output_workshops_file:
-            workshops_file = args.output_workshops_file
-        else:
-            workshops_file = RAW_DATA_DIR + "/carpentry-workshops" + "_" + (url_parameters["country"] if url_parameters[
-                                                                                                         "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
-            '%Y-%m-%d') + ".csv"
-        workshops.to_csv(workshops_file, encoding="utf-8", index=False)
-        print("Saved a total of " + str(workshops.index.size) + " workshops to " + workshops_file)
+        # Get and process workshop data
 
-        print("\n\n")
+        workshops_df = get_workshops(url_parameters, args.username, args.password)
 
-        instructors = get_instructors(url_parameters, args.username, args.password)
-        if args.output_instructors_file:
-            instructors_file = args.output_instructors_file
-        else:
-            instructors_file = RAW_DATA_DIR + "/carpentry-instructors" + "_" + (url_parameters["country"] if url_parameters[
-                                                                                                             "country"] is not None else "ALL") + "_" + datetime.datetime.today().strftime(
-            '%Y-%m-%d') + ".csv"
-        instructors.to_csv(instructors_file, encoding="utf-8", index=False)
-        print("Saved a total of " + str(instructors.index.size) + " instructors to " + instructors_file)
+        # Save raw workshop data
+        workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
+        print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
 
+        workshops_df = process_workshops(workshops_df)
+
+        # Save processed workshop data
+        workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+        print("Saved processed workshops to " + processed_workshops_file + "\n\n")
+
+        # Get and process instructor data
+
+        instructors_df = get_instructors(url_parameters, args.username, args.password)
+        # Save raw instructor data
+        instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
+        print("Saved a total of " + str(instructors_df.index.size) + " instructors to " + raw_instructors_file)
+
+        # instructors_df = process_instructors(instructors_df)
+        # # Save processed instructors data
+        # instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
+        # print("Saved processed instructors to " + processed_instructors_file + "\n\n")
 
 def get_workshops(url_parameters=None, username=None, password=None):
     """
@@ -95,80 +118,90 @@ def get_workshops(url_parameters=None, username=None, password=None):
         response = requests.get(AMY_EVENTS_API_URL, headers=HEADERS, auth=(username, password),
                                 params=url_parameters)
         response.raise_for_status()  # check if a request was successful
-        workshops = []
+        workshops_df = []
         print("Total workshops expected: " + str(response.json()["count"]))
         next_url = response.json()["next"]
         print("Getting paged workshop data from " + AMY_EVENTS_API_URL)
-        workshops = response.json()["results"]  # a list extracted from JSON response
+        workshops_df = response.json()["results"]  # a list extracted from JSON response
         while next_url is not None:
             response = requests.get(next_url, headers=HEADERS, auth=(username, password))
             response.raise_for_status()  # check if a request was successful
             print("Getting paged workshop data from " + str(next_url))
             next_url = response.json()["next"]
-            workshops.extend(response.json()["results"])
+            workshops_df.extend(response.json()["results"])
 
         # Translate a list of JSON objects/dictionaries directly into a DataFrame
-        workshops_df = pandas.DataFrame(workshops,
+        workshops_df = pandas.DataFrame(workshops_df,
                                         columns=["slug", "start", "end", "attendance", "country", "host", "venue",
-                                                 "address", "latitude", "longitude", "tags", "website_url",
+                                                 "address", "latitude", "longitude", "tags", "website_url"
                                                  # "contact",
-                                                 "tasks"])
+                                                 # "tasks"
+                                                 ])
 
-        print("\n####### Extracted " + str(
-            workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
-
-        # Remove workshops that do not have latitude/longitude (as they do not count as 'published' workshops)
-        workshops_df.dropna(subset=["latitude", "longitude"], inplace=True)
-
-        idx = workshops_df.columns.get_loc("country")
-        workshops_df.insert(loc=idx + 1, column='country_code',
-                            value=workshops_df["country"])
-        workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
-        print(workshops_df)
-        # Extract workshop type and add as a new column
-        idx = workshops_df.columns.get_loc("attendance")
-        workshops_df.insert(loc=idx, column='workshop_type',
-                            value=workshops_df["tags"])
-        workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
-
-        # Remove workshops that have been stopped
-        workshops_df = workshops_df[~workshops_df["workshop_type"].isin(helper.STOPPED_WORKSHOP_STATUS)]
-        print(workshops_df)
-
-        # Extract workshop year and add as a new column
-        workshops_df.insert(loc=idx, column='year',
-                            value=workshops_df["start"])
-        workshops_df["year"] = workshops_df["start"].map(
-            lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
-            na_action="ignore")
-        # Add AMY URL to the workshop event record
-        idx = workshops_df.columns.get_loc("slug")
-        workshops_df.insert(loc=idx + 1, column='amy_url',
-                            value=AMY_EVENTS_API_URL + workshops_df["slug"])
-
-        # Extract hosts' domains from host URIs
-        idx = workshops_df.columns.get_loc("host")
-        workshops_df.insert(loc=idx, column='host_domain',
-                            value=workshops_df["host"])
-        # workshops_df["host_domain"] = workshops_df["host"].map(
-        #     lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-        #     na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-        workshops_df["host_domain"] = workshops_df["host"].map(
-            lambda URI: extract_top_level_domain(URI), na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-
-        # Get instructors for workshops
-        workshops_df["instructors"] = workshops_df["tasks"].map(
-            lambda tasks_url: extract_workshop_instructors(tasks_url, username, password), na_action="ignore")
-        print(workshops_df)
+        workshops_df.rename(columns={"country": "country_code", "tags": "tags_list"}, inplace=True)
+        print(workshops_df.columns)
+        # print("\n####### Extracted " + str(
+        #     workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
+        # # Get instructors for workshops
+        # workshops_df["instructors"] = workshops_df["tasks"].map(
+        #     lambda tasks_url: extract_workshop_instructors(tasks_url, username, password), na_action="ignore")
+        # print(workshops_df)
 
         return workshops_df
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as ex:
-        # Catastrophic error occured or HTTP request was not successful for some
+        # Catastrophic error occurred or HTTP request was not successful for some
         # reason (e.g. status code 4XX or 5XX was returned)
-        print("Ooops - something went wrong when getting workshops data from AMY...")
+        print("Ops - something went wrong when getting workshops data from AMY...")
         print(ex.format_exc())
         sys.exit(1)
 
+
+def process_workshops(workshops_df):
+    """
+    Process raw data extracted from AMY a bit to make it easier to analyse and map later on.
+    :param workshops_df: a dataframe with raw workshops data
+    :return: a dataframe with processed workshops data
+    """
+
+    # Get country for country code
+    idx = workshops_df.columns.get_loc("country_code") + 1
+    workshops_df.insert(loc=idx, column='country',
+                        value=workshops_df["country_code"])
+    workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
+    print(workshops_df)
+
+    # Extract workshop type and add as a new column
+    idx = workshops_df.columns.get_loc("tags_list")
+    workshops_df.insert(loc=idx, column='workshop_type',
+                        value=workshops_df["tags_list"])
+    workshops_df["workshop_type"] = workshops_df["tags_list"].map(helper.extract_workshop_type, na_action="ignore")
+
+    # Extract workshop subtype and add as a new column
+    workshops_df.insert(loc=idx + 1, column='workshop_subtype',
+                        value=workshops_df["tags_list"])
+    workshops_df["workshop_subtype"] = workshops_df["tags_list"].map(helper.extract_workshop_subtype, na_action="ignore")
+
+    # Extract workshop status and add as a new column
+    workshops_df.insert(loc=idx + 2, column='workshop_status',
+                        value=workshops_df["tags_list"])
+    workshops_df["workshop_status"] = workshops_df["tags_list"].map(helper.extract_workshop_status, na_action="ignore")
+
+    # Extract workshop year and add as a new column
+    idx = workshops_df.columns.get_loc("start")
+    workshops_df.insert(loc=idx, column='year', value=workshops_df["start"])
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
+
+    # Extract hosts' web domains from host URIs
+    idx = workshops_df.columns.get_loc("host") + 1
+    workshops_df.insert(loc=idx, column='organisation_web_domain',
+                        value=workshops_df["host"])
+    # workshops_df["host_domain"] = workshops_df["host"].map(
+    #     lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
+    #     na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+    workshops_df["organisation_web_domain"] = workshops_df["host"].map(lambda uri: extract_top_level_domain(uri),
+                                                                       na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+
+    return workshops_df
 
 def get_instructors(url_parameters=None, username=None, password=None):
     """
@@ -374,15 +407,15 @@ def get_credentials(file_path):
     return username, password
 
 
-def extract_top_level_domain(URI):
+def extract_top_level_domain(uri):
     """
     Extract host's top level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/' to 'earlham.ac.uk'.
     When subdomains are used, as in 'https://amy.carpentries.org/api/v1/organizations/cmist.manchester.ac.uk/' we are only interested in
     top level domain 'manchester.ac.uk'.
-    :param URI:
+    :param uri:
     :return:
     """
-    host = list(filter(None, re.split("(.+?)/", URI)))[-1] # Get the host from the URI first
+    host = list(filter(None, re.split("(.+?)/", uri)))[-1] # Get the host from the URI first
     # Now just get the top level domain of the host
     domain_parts = list(filter(None, re.split("(.+?)\.", host)))
     if len(domain_parts) >= 3:

@@ -66,20 +66,31 @@ ALL_UK_INSTITUTIONS_DF = UK_ACADEMIC_INSTITUTIONS_DF.append(get_uk_non_academic_
 
 def parse_command_line_parameters_amy():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--country_code", type=str,
-                        help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
+    # parser.add_argument("-c", "--country_code", type=str,
+    #                     help="ISO-3166-1 two-letter country_code code or leave blank for all countries")
     parser.add_argument("-u", "--username", type=str, help="Username to login to AMY")
     parser.add_argument("-p", "--password", type=str, nargs='?', default=argparse.SUPPRESS,
                         help="Password to log in to AMY - you will be prompted for it (please do not enter your "
                              "password on the command line even though it is possible)")
-    parser.add_argument("-out_workshops", "--output_workshops_file", type=str, default=None,
-                        help="File path where workshops data extracted from AMY will be saved in CSV format. "
+    parser.add_argument("-rw", "--raw_workshops_file", type=str, default=None,
+                        help="File path where raw workshops data extracted from AMY will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'carpentry_workshops_<COUNTRY_CODE>_<DATE>'.csv.")
-    parser.add_argument("-out_instructors", "--output_instructors_file", type=str, default=None,
-                        help="File path where instructors data extracted from AMY will be saved in CSV format. "
+                             "data/raw/ directory and will be named as amy_raw_carpentry_workshops_UK_<DATE>.csv.")
+
+    parser.add_argument("-pw", "--processed_workshops_file", type=str, default=None,
+                        help="File path where processed workshops data will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'carpentry_instructors_<COUNTRY_CODE>_<DATE>'.csv.")
+                             "data/raw/ directory and will be named as amy_processed_carpentry_workshops_UK_<DATE>.csv.")
+
+    parser.add_argument("-ri", "--raw_instructors_file", type=str, default=None,
+                        help="File path where raw instructors data extracted from REDASH will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as amy_raw_carpentry_instructors_UK_<DATE>.csv.")
+
+    parser.add_argument("-pi", "--processed_instructors_file", type=str, default=None,
+                        help="File path where processed instructors data will be saved in CSV format. "
+                             "If omitted, data will be saved to "
+                             "data/raw/ directory and will be named as amy_processed_carpentry_instructors_UK_<DATE>'.csv.")
     args = parser.parse_args()
     if hasattr(args, "password"):  # if the -p switch was set - ask user for a password but do not echo it
         if args.password is None:
@@ -96,22 +107,22 @@ def parse_command_line_parameters_redash():
     parser.add_argument("-rw", "--raw_workshops_file", type=str, default=None,
                         help="File path where raw workshops data extracted from REDASH will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'redash_raw_carpentry_workshops_UK'.csv.")
+                             "data/raw/ directory and will be named as redash_raw_carpentry_workshops_UK.csv.")
 
     parser.add_argument("-pw", "--processed_workshops_file", type=str, default=None,
                         help="File path where processed workshops data will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'redash_processed_carpentry_workshops_UK'.csv.")
+                             "data/raw/ directory and will be named as redash_processed_carpentry_workshops_UK.csv.")
 
     parser.add_argument("-ri", "--raw_instructors_file", type=str, default=None,
                         help="File path where raw instructors data extracted from REDASH will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'redash_raw_carpentry_instructors_UK_<DATE>'.csv.")
+                             "data/raw/ directory and will be named as redash_raw_carpentry_instructors_UK_<DATE>.csv.")
 
     parser.add_argument("-pi", "--processed_instructors_file", type=str, default=None,
                         help="File path where processed instructors data will be saved in CSV format. "
                              "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as 'redash_processed_carpentry_instructors_UK_<DATE>'.csv.")
+                             "data/raw/ directory and will be named as redash_processed_carpentry_instructors_UK_<DATE>.csv.")
 
     args = parser.parse_args()
     return args
@@ -147,17 +158,13 @@ def extract_workshop_type(workshop_tags):
     :param workshop_tags: list of tags
     :return: workshop type (e.g. "SWC", "DC", "LC" or "TTT", or "" if none of the recognised tags is found)
     """
-    # if isinstance(workshop_tags, list):
-    #     print("list:" + str(workshop_tags))
-    # else:
-    #     print("not list:" + str(type(workshop_tags)))
 
     # If we have the list passed as a string instead - convert to a list first
     if isinstance(workshop_tags, str):
         workshop_tags = workshop_tags.split(",")
 
     tags = list(set(workshop_tags) & set(WORKSHOP_TYPE))  # intersection of 2 sets
-    if tags != []:
+    if len(tags) > 0:  # non-empty list?
         return tags[0]
     else:
         return ""
@@ -169,17 +176,13 @@ def extract_workshop_subtype(workshop_tags):
     :param workshop_tags: list of tags
     :return: workshop type (e.g. "Circuits", "Pilot", or "" if none of the recognised tags is found)
     """
-    # if isinstance(workshop_tags, list):
-    #     print("list:" + str(workshop_tags))
-    # else:
-    #     print("not list:" + str(type(workshop_tags)))
 
     # If we have the list passed as a string instead - convert to a list first
     if isinstance(workshop_tags, str):
         workshop_tags = workshop_tags.split(",")
 
     tags = list(set(workshop_tags) & set(WORKSHOP_SUBTYPE))  # intersection of 2 sets
-    if tags != []:
+    if len(tags) > 0:  # non-empty list?
         return tags[0]
     else:
         return ""
@@ -191,10 +194,6 @@ def extract_workshop_status(workshop_tags):
     :param workshop_tags: list of tags
     :return: workshop status (e.g. one of 'stalled', 'cancelled', 'unresponsive' or "" if none of the recognised tags is found)
     """
-    # if isinstance(workshop_tags, list):
-    #     print("list:" + str(workshop_tags))
-    # else:
-    #     print("not list:" + str(type(workshop_tags)))
 
     # If we have the list passed as a string instead - convert to a list first
     if isinstance(workshop_tags, str):
@@ -202,8 +201,7 @@ def extract_workshop_status(workshop_tags):
 
     # Is this a stopped workshop (if not then it will have a workshop type)?
     is_stopped = list(set(workshop_tags) & set(WORKSHOP_STATUS))
-
-    if is_stopped != []:
+    if len(is_stopped) > 0:  # non-empty list?
         return is_stopped[0]
     else:
         return ""
