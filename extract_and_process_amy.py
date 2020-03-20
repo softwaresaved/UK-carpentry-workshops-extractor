@@ -73,17 +73,18 @@ def main():
     if args.username is None or args.password is None:
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
-        # Get and process workshop data
-        url_parameters = {
-            "country": "GB"
-        }
-        workshops_df = get_workshops(url_parameters, args.username, args.password)
+        # # Get and process workshop data
+        # url_parameters = {
+        #     "country": "GB"
+        # }
+        # workshops_df = get_workshops(url_parameters, args.username, args.password)
+        #
+        # # Save raw workshop data
+        # workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
+        # print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
 
-        # Save raw workshop data
-        workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
-        print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
-
-        workshops_df = process_workshops(workshops_df)
+        workshops_df = pandas.read_csv(raw_workshops_file, encoding="utf-8")
+        workshops_df = helper.process_workshops(workshops_df)
 
         # Save processed workshop data
         workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
@@ -151,54 +152,6 @@ def get_workshops(url_parameters=None, username=None, password=None):
         print("Ops - something went wrong when getting workshops data from AMY...")
         print(ex.format_exc())
         sys.exit(1)
-
-
-def process_workshops(workshops_df):
-    """
-    Process raw data extracted from AMY a bit to make it easier to analyse and map later on.
-    :param workshops_df: a dataframe with raw workshops data
-    :return: a dataframe with processed workshops data
-    """
-
-    # Get country for country code
-    idx = workshops_df.columns.get_loc("country_code")
-    workshops_df.insert(loc=idx, column='country',
-                        value=workshops_df["country_code"])
-    workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
-    print(workshops_df)
-
-    # Extract workshop type and add as a new column
-    idx = workshops_df.columns.get_loc("tags")
-    workshops_df.insert(loc=idx, column='workshop_type',
-                        value=workshops_df["tags"])
-    workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
-
-    # Extract workshop subtype and add as a new column
-    workshops_df.insert(loc=idx + 1, column='workshop_subtype',
-                        value=workshops_df["tags"])
-    workshops_df["workshop_subtype"] = workshops_df["tags"].map(helper.extract_workshop_subtype, na_action="ignore")
-
-    # Extract workshop status and add as a new column
-    workshops_df.insert(loc=idx + 2, column='workshop_status',
-                        value=workshops_df["tags"])
-    workshops_df["workshop_status"] = workshops_df["tags"].map(helper.extract_workshop_status, na_action="ignore")
-
-    # Extract workshop year and add as a new column
-    idx = workshops_df.columns.get_loc("start")
-    workshops_df.insert(loc=idx, column='year', value=workshops_df["start"])
-    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
-
-    # Extract hosts' web domains from host URIs
-    idx = workshops_df.columns.get_loc("organiser_uri") + 1
-    workshops_df.insert(loc=idx, column='organiser_top_level_web_domain',
-                        value=workshops_df["organiser_uri"])
-    # workshops_df["host_domain"] = workshops_df["host"].map(
-    #     lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
-    #     na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-    workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
-                                                                       na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-
-    return workshops_df
 
 
 def get_instructors(url_parameters=None, username=None, password=None):
@@ -405,24 +358,6 @@ def get_credentials(file_path):
     else:
         print("AMY credentials YAML file does not exist " + file_path)
     return username, password
-
-
-def extract_top_level_domain_from_uri(uri):
-    """
-    Extract host's top level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/' to 'earlham.ac.uk'.
-    When subdomains are used, as in 'https://amy.carpentries.org/api/v1/organizations/cmist.manchester.ac.uk/' we are only interested in
-    top level domain 'manchester.ac.uk'.
-    :param uri: URI like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-    :return: top level domain like 'earlham.ac.uk'
-    """
-    host = list(filter(None, re.split("(.+?)/", uri)))[-1] # Get the host from the URI first
-    # Now just get the top level domain of the host
-    domain_parts = list(filter(None, re.split("(.+?)\.", host)))
-    if len(domain_parts) >= 3:
-        domain_parts = domain_parts[-3:]  # Get the past 3 elements of the list only
-    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
-    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
-    return top_level_domain
 
 
 def extract_workshop_instructors(workshop_tasks_url, username, password):

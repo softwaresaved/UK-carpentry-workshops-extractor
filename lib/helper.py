@@ -3,6 +3,8 @@ import numpy as np
 import os
 import argparse
 import json
+import datetime
+import re
 import folium
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
@@ -216,6 +218,83 @@ def get_country(country_code):
     return next((country["name"]["common"] for country in COUNTRIES if country["cca2"] == country_code), None)
 
 
+def process_workshops(workshops_df):
+    """
+    :param workshops_df: dataframe with raw workshop data to be processed a bit for further analyses and mapping
+    :return: dataframe with processed workshop data
+    """
+
+    # Extract workshop year from its slug and add as a new column
+    idx = workshops_df.columns.get_loc("start")
+    workshops_df.insert(loc=idx, column='year', value=workshops_df["start"])
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,na_action="ignore")
+
+    # Extract workshop type ('SWC', 'DC', 'LC', 'TTT'), subtype ('Circuits', 'Pilot'),
+    # and status ('cancelled', 'unresponsive', 'stalled') from the list of workshop tags and add as new columns
+    idx = workshops_df.columns.get_loc("tags")
+    workshops_df.insert(loc=idx, column='workshop_type',
+                        value=workshops_df["tags"])
+    workshops_df["workshop_type"] = workshops_df["tags"].map(extract_workshop_type, na_action="ignore")
+
+    workshops_df.insert(loc=idx + 1, column='workshop_subtype', value=workshops_df["tags"])
+    workshops_df["workshop_subtype"] = workshops_df["tags"].map(extract_workshop_subtype, na_action="ignore")
+
+    workshops_df.insert(loc=idx + 2, column='workshop_status', value=workshops_df["tags"])
+    workshops_df["workshop_status"] = workshops_df["tags"].map(extract_workshop_status, na_action="ignore")
+
+    # Insert countries where workshops were held based on country_code
+    idx = workshops_df.columns.get_loc("country_code")
+    workshops_df.insert(loc=idx, column='country', value=workshops_df["country_code"])
+    countries = pd.read_csv("lib/country_codes.csv", encoding="utf-8", keep_default_na=False)  # keep_default_na prevents Namibia "NA" being read as NaN!
+    countries_mapping = dict(countries[['country_code', 'country_name']].values)
+    workshops_df['country'] = workshops_df['country_code'].map(countries_mapping, na_action="ignore")
+
+    # Extract hosts' domains from host URIs or host web domains, depending which column we have
+    if "organiser_web_domain" in workshops_df.columns:
+        idx = workshops_df.columns.get_loc("organiser_web_domain") + 1
+        workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_web_domain"])
+        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_web_domain"].map(lambda web_domain: extract_top_level_domain_from_string(web_domain),na_action="ignore")
+    elif "organiser_uri" in workshops_df.columns:
+        # Extract hosts' web domains from host URIs
+        idx = workshops_df.columns.get_loc("organiser_uri") + 1
+        workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_uri"])
+        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
+                                                                       na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+
+    # Add UK region for a workshop based on its geocoordinates as a new column
+    idx = workshops_df.columns.get_loc("country") + 1
+    workshops_df.insert(loc=idx, column='region', value=workshops_df["country_code"])
+    workshops_df['region'] = workshops_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    print("\n###################\nGetting regions took a while but it has finished now.###################\n")
+
+    # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
+    uk_academic_institutions = pd.read_csv(CURRENT_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
+    hesa_uk_higher_education_providers = pd.read_csv(CURRENT_DIR + "/HESA_UK_higher_education_providers.csv", encoding="utf-8")
+    hesa_uk_higher_education_providers_region_mapping = dict(hesa_uk_higher_education_providers[['UKPRN', 'Region']].values)  # create a dict for lookup
+    uk_academic_institutions['top_level_web_domain'] = uk_academic_institutions['WEBSITE_URL'].apply(lambda x: x.strip("http://www.").strip("/"))  # strip 'http://www' from domain
+    uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(hesa_uk_higher_education_providers_region_mapping, na_action="ignore")
+    uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
+
+    idx = workshops_df.columns.get_loc("organiser_top_level_web_domain") + 1
+    workshops_df.insert(loc=idx, column='organiser_region', value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_region'] = workshops_df['organiser_region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
+
+    # Get normalised and common names for UK academic institutions, if exist, by mapping to UK higher education providers
+    uk_academic_institutions_normalised_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'PROVIDER_NAME']].values)  # create a dict for lookup
+    uk_academic_institutions_common_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'VIEW_NAME']].values)  # create a dict for lookup
+
+    # Insert normalised (official) name for organiser
+    idx = workshops_df.columns.get_loc("organiser_top_level_web_domain") + 1
+    workshops_df.insert(loc=idx, column='organiser_normalised_name', value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_normalised_name'] = workshops_df['organiser_normalised_name'].map(uk_academic_institutions_normalised_names_mapping, na_action="ignore")
+
+    # Insert common name for organiser
+    workshops_df.insert(loc=idx + 1, column='organiser_common_name', value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_common_name'] = workshops_df['organiser_common_name'].map(uk_academic_institutions_common_names_mapping, na_action="ignore")
+
+    return workshops_df
+
+
 def create_readme_tab(writer, readme_text):
     """
     Create the README tab in the spreadsheet.
@@ -298,6 +377,39 @@ def get_uk_region(latitude, longitude):
                 return (feature['properties']['NAME'])
     print("Could no find UK region for location (" + str(latitude) + ", " + str(longitude) + ")")
     return None
+
+
+def extract_top_level_domain_from_string(domain):
+    """
+    Extract host's top level domain from strings like 'cmist.manchester.ac.uk' to 'manchester.ac.uk'.
+    top level domain 'manchester.ac.uk'.
+    :param domain
+    :return:
+    """
+    domain_parts = list(filter(None, re.split("(.+?)\.", domain)))
+    if len(domain_parts) >= 3:
+        domain_parts = domain_parts[-3:]  # Get the last 3 elements of the list only
+    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
+    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
+    return top_level_domain
+
+
+def extract_top_level_domain_from_uri(uri):
+    """
+    Extract host's top level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/' to 'earlham.ac.uk'.
+    When subdomains are used, as in 'https://amy.carpentries.org/api/v1/organizations/cmist.manchester.ac.uk/' we are only interested in
+    top level domain 'manchester.ac.uk'.
+    :param uri: URI like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+    :return: top level domain like 'earlham.ac.uk'
+    """
+    host = list(filter(None, re.split("(.+?)/", uri)))[-1] # Get the host from the URI first
+    # Now just get the top level domain of the host
+    domain_parts = list(filter(None, re.split("(.+?)\.", host)))
+    if len(domain_parts) >= 3:
+        domain_parts = domain_parts[-3:]  # Get the past 3 elements of the list only
+    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
+    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
+    return top_level_domain
 
 
 def get_center(df):
