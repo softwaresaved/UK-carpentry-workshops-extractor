@@ -68,52 +68,48 @@ def main():
     print("\nExtracting workshops from: " + REDASH_API_WORKSHOPS_QUERY_URL)
     # Get workshop data as returned by a predefined query within Carpentries Redash system (cached results are returned
     # from the last time Redash ran the query, currently set to run every day)
-    workshops = get_csv_data_redash(REDASH_API_WORKSHOPS_QUERY_URL, REDASH_API_KEY)
-    print("\n####### Extracted " + str(workshops.index.size) + " workshops. #######\n")
+    workshops_df = get_csv_data_redash(REDASH_API_WORKSHOPS_QUERY_URL, REDASH_API_KEY)
+    print("\n####### Extracted " + str(workshops_df.index.size) + " workshops. #######\n")
 
     # Save raw workshop data
-    workshops.to_csv(raw_workshops_file, encoding="utf-8", index=False)
+    workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
     print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
 
     ############################ Process workshop data ########################
     # Process the workshop data a bit to get it ready for further analyses and mapping
 
     # Convert column "tags" from a string to a list of strings
-    idx = workshops.columns.get_loc("tags")
-    workshops.insert(loc=idx, column='tags_list', value=workshops["tags"])
-    workshops["tags_list"] = workshops["tags"].str.split(',')
+    workshops_df["tags"] = workshops_df["tags"].str.split(',')
 
     # Extract workshop type ('SWC', 'DC', 'LC', 'TTT'), subtype ('Circuits', 'Pilot'),
     # and status ('cancelled', 'unresponsive', 'stalled') from the list of workshop tags and add as new columns
-    idx = workshops.columns.get_loc("tags_list")
-    workshops.insert(loc=idx, column='workshop_type',
-                        value=workshops["tags_list"])
-    workshops["workshop_type"] = workshops["tags_list"].map(helper.extract_workshop_type, na_action="ignore")
+    idx = workshops_df.columns.get_loc("tags")
+    workshops_df.insert(loc=idx, column='workshop_type',
+                        value=workshops_df["tags"])
+    workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
 
-    idx = workshops.columns.get_loc("workshop_type") + 1
-    workshops.insert(loc=idx, column='workshop_subtype', value=workshops["tags_list"])
-    workshops["workshop_subtype"] = workshops["tags_list"].map(helper.extract_workshop_subtype, na_action="ignore")
+    workshops_df.insert(loc=idx +1 , column='workshop_subtype', value=workshops_df["tags"])
+    workshops_df["workshop_subtype"] = workshops_df["tags"].map(helper.extract_workshop_subtype, na_action="ignore")
 
-    idx = workshops.columns.get_loc("workshop_subtype") + 1
-    workshops.insert(loc=idx, column='workshop_status', value=workshops["tags_list"])
-    workshops["workshop_status"] = workshops["tags_list"].map(helper.extract_workshop_status, na_action="ignore")
+    workshops_df.insert(loc=idx + 2, column='workshop_status', value=workshops_df["tags"])
+    workshops_df["workshop_status"] = workshops_df["tags"].map(helper.extract_workshop_status, na_action="ignore")
 
     # Insert countries where workshops were held based on country_code
-    idx = workshops.columns.get_loc("country_code")
-    workshops.insert(loc=idx, column='country', value=workshops["country_code"])
+    idx = workshops_df.columns.get_loc("country_code")
+    workshops_df.insert(loc=idx, column='country', value=workshops_df["country_code"])
     countries = pd.read_csv("lib/country_codes.csv", encoding="utf-8", keep_default_na=False)  # keep_default_na prevents Namibia "NA" being read as NaN!
     countries_mapping = dict(countries[['country_code', 'country_name']].values)
-    workshops['country'] = workshops['country_code'].map(countries_mapping, na_action="ignore")
+    workshops_df['country'] = workshops_df['country_code'].map(countries_mapping, na_action="ignore")
 
     # Extract hosts' domains from host URIs
-    idx = workshops.columns.get_loc("organiser_web_domain") + 1
-    workshops.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops["organiser_web_domain"])
-    workshops["organiser_top_level_web_domain"] = workshops["organiser_web_domain"].map(lambda domain: extract_top_level_domain(domain),na_action="ignore")
+    idx = workshops_df.columns.get_loc("organiser_web_domain") + 1
+    workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_web_domain"])
+    workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_web_domain"].map(lambda domain: extract_top_level_domain(domain),na_action="ignore")
 
     # Add UK region for a workshop based on its geocoordinates as a new column
-    idx = workshops.columns.get_loc("country") + 1
-    workshops.insert(loc=idx, column='region', value=workshops["country_code"])
-    workshops['region'] = workshops.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    idx = workshops_df.columns.get_loc("country") + 1
+    workshops_df.insert(loc=idx, column='region', value=workshops_df["country_code"])
+    workshops_df['region'] = workshops_df.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
     print("\n###################\nGetting regions took a while but it has finished now.###################\n")
 
     # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
@@ -124,35 +120,33 @@ def main():
     uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(hesa_UK_higher_education_providers_region_mapping, na_action="ignore")
     uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
-    idx = workshops.columns.get_loc("organiser_country_code") + 1
-    workshops.insert(loc=idx, column='organiser_region', value=workshops["organiser_top_level_web_domain"])
-    workshops['organiser_region'] = workshops['organiser_region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
+    idx = workshops_df.columns.get_loc("organiser_country_code") + 1
+    workshops_df.insert(loc=idx, column='organiser_region', value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_region'] = workshops_df['organiser_region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
 
     # Get normalised and common names for UK academic institutions, if exist, by mapping to UK higher education providers
     uk_academic_institutions_normalised_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'PROVIDER_NAME']].values)  # create a dict for lookup
     uk_academic_institutions_common_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'VIEW_NAME']].values)  # create a dict for lookup
 
     # Insert normalised (official) name for organiser
-    idx = workshops.columns.get_loc("organiser_country_code") + 1
-    workshops.insert(loc=idx, column='organiser_normalised_name', value=workshops["organiser_web_domain"])
-    workshops['organiser_normalised_name'] = workshops['organiser_normalised_name'].map(uk_academic_institutions_normalised_names_mapping, na_action="ignore")
+    idx = workshops_df.columns.get_loc("organiser_country_code") + 1
+    workshops_df.insert(loc=idx, column='organiser_normalised_name', value=workshops_df["organiser_web_domain"])
+    workshops_df['organiser_normalised_name'] = workshops_df['organiser_normalised_name'].map(uk_academic_institutions_normalised_names_mapping, na_action="ignore")
 
     # Insert common name for organiser
-    workshops.insert(loc=idx + 1, column='organiser_common_name', value=workshops["organiser_web_domain"])
-    workshops['organiser_common_name'] = workshops['organiser_common_name'].map(uk_academic_institutions_common_names_mapping, na_action="ignore")
+    workshops_df.insert(loc=idx + 1, column='organiser_common_name', value=workshops_df["organiser_web_domain"])
+    workshops_df['organiser_common_name'] = workshops_df['organiser_common_name'].map(uk_academic_institutions_common_names_mapping, na_action="ignore")
 
     # Extract workshop year from its slug and add as a new column
-    idx = workshops.columns.get_loc("start") + 1
-    workshops.insert(loc=idx, column='year', value=workshops["start"])
-    workshops["year"] = workshops["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,na_action="ignore")
+    idx = workshops_df.columns.get_loc("start")
+    workshops_df.insert(loc=idx, column='year', value=workshops_df["start"])
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,na_action="ignore")
 
     # Extract workshop scientific domains from a string to a list
-    idx = workshops.columns.get_loc("workshop_domains")
-    workshops.insert(loc=idx, column='workshop_domains_list', value=workshops["workshop_domains"])
-    workshops["workshop_domains_list"] = workshops["workshop_domains"].str.split(':')
+    workshops_df["workshop_domains"] = workshops_df["workshop_domains"].str.split(':')
 
     # Save the processed workshop data
-    workshops.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+    workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
     print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
 
     ############################ Extract and process instructor data ########################
@@ -160,37 +154,37 @@ def main():
     print("\nExtracting workshops from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
     # Get instructor data as returned by a predefined query within Carpentries Redash system (cached results are returned
     # from the last time Redash ran the query, currently set to run every 2 weeks)
-    instructors = get_csv_data_redash(REDASH_API_INSTRUCTORS_QUERY_URL, REDASH_API_KEY)
-    print("\n####### Extracted " + str(instructors.index.size) + " instructors. #######\n")
+    instructors_df = get_csv_data_redash(REDASH_API_INSTRUCTORS_QUERY_URL, REDASH_API_KEY)
+    print("\n####### Extracted " + str(instructors_df.index.size) + " instructors. #######\n")
 
     # Save raw instructor data
-    instructors.to_csv(raw_instructors_file, encoding="utf-8", index=False)
+    instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
     print("Saved raw Carpentry workshop data to " + raw_instructors_file + "\n")
 
     # Process the instructor data a bit to get it ready for further analyses and mapping
 
     # Insert normalised/official names for institutions (for UK academic institutions)
     print("\nInserting normalised name for instructors' affiliations/institutions...\n")
-    instructors = helper.insert_normalised_institution(instructors, "institution")
+    instructors_df = helper.insert_normalised_institution(instructors_df, "institution")
 
     # Insert latitude, longitude pairs for instructors' institutions
     print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
-    instructors = helper.insert_institutional_geocoordinates(instructors, "normalised_institution", "latitude", "longitude")
+    instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
 
     # Insert UK regional info based on instructors's affiliations
     print("\nInserting regions for instructors' affiliations/institutions...\n")
-    idx = instructors.columns.get_loc("institution") + 1
-    instructors.insert(loc=idx, column='institutional_region', value=instructors["institution"])
-    instructors['region'] = instructors.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    idx = instructors_df.columns.get_loc("institution") + 1
+    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
+    instructors_df['region'] = instructors_df.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
     print("\nGetting regions for institutions took a while but it has finished now.\n")
 
     # Insert UK regional info based on nearest airport
     print("\nInserting regions for instructors based on nearest airport...\n")
-    instructors.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    instructors.rename({"region" : "airport_region"}, inplace=True)
+    instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
+    instructors_df.rename({"region" : "airport_region"}, inplace=True)
 
     # Save the processed instructor data
-    instructors.to_csv(processed_instructors_file, encoding="utf-8", index=False)
+    instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
     print("Saved processed Carpentry instructor data to " + processed_instructors_file + "\n")
 
 def get_csv_data_redash(query_results_url, api_key):

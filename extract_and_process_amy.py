@@ -43,10 +43,6 @@ def main():
 
     args = helper.parse_command_line_parameters_amy()
 
-    url_parameters = {
-        "country": "GB",  # by default we look for workshops in all countries
-        "is_instructor": "true"
-    }
     #
     # if args.country_code is not None:
     #     url_parameters["country"] = args.country_code
@@ -78,7 +74,9 @@ def main():
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
         # Get and process workshop data
-
+        url_parameters = {
+            "country": "GB"
+        }
         workshops_df = get_workshops(url_parameters, args.username, args.password)
 
         # Save raw workshop data
@@ -92,7 +90,6 @@ def main():
         print("Saved processed workshops to " + processed_workshops_file + "\n\n")
 
         # Get and process instructor data
-
         instructors_df = get_instructors(url_parameters, args.username, args.password)
         # Save raw instructor data
         instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
@@ -103,14 +100,14 @@ def main():
         # instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
         # print("Saved processed instructors to " + processed_instructors_file + "\n\n")
 
+
 def get_workshops(url_parameters=None, username=None, password=None):
     """
-    Get 'published' Carpentry workshop events from AMY. 'Published' workshops are those
-    that went ahead or are likely to go ahead (i.e. have country_code, address, start date, end date, latitude and longitude, etc.)
+    Get Carpentry workshop events from AMY.
     :param url_parameters: URL parameters to filter results, e.g. by country.
     :param username: AMY username used to authenticate the user accessing AMY's API
     :param password: AMY password to authenticate the user accessing AMY's API
-    :return: published workshops as Pandas DataFrame
+    :return: workshops as Pandas DataFrame
     """
     print("\nExtracting workshops from AMY for country: " + (url_parameters["country"] if url_parameters["country"] is not None else "ALL"))
     try:
@@ -138,7 +135,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
                                                  # "tasks"
                                                  ])
 
-        workshops_df.rename(columns={"country": "country_code", "tags": "tags_list"}, inplace=True)
+        workshops_df.rename(columns={"country": "country_code", "host": "organiser_uri"}, inplace=True)
         print(workshops_df.columns)
         # print("\n####### Extracted " + str(
         #     workshops_df.index.size) + " workshops; extracting additional workshop instructors info ... #######\n")
@@ -164,27 +161,27 @@ def process_workshops(workshops_df):
     """
 
     # Get country for country code
-    idx = workshops_df.columns.get_loc("country_code") + 1
+    idx = workshops_df.columns.get_loc("country_code")
     workshops_df.insert(loc=idx, column='country',
                         value=workshops_df["country_code"])
     workshops_df["country"] = workshops_df["country_code"].map(helper.get_country, na_action="ignore")
     print(workshops_df)
 
     # Extract workshop type and add as a new column
-    idx = workshops_df.columns.get_loc("tags_list")
+    idx = workshops_df.columns.get_loc("tags")
     workshops_df.insert(loc=idx, column='workshop_type',
-                        value=workshops_df["tags_list"])
-    workshops_df["workshop_type"] = workshops_df["tags_list"].map(helper.extract_workshop_type, na_action="ignore")
+                        value=workshops_df["tags"])
+    workshops_df["workshop_type"] = workshops_df["tags"].map(helper.extract_workshop_type, na_action="ignore")
 
     # Extract workshop subtype and add as a new column
     workshops_df.insert(loc=idx + 1, column='workshop_subtype',
-                        value=workshops_df["tags_list"])
-    workshops_df["workshop_subtype"] = workshops_df["tags_list"].map(helper.extract_workshop_subtype, na_action="ignore")
+                        value=workshops_df["tags"])
+    workshops_df["workshop_subtype"] = workshops_df["tags"].map(helper.extract_workshop_subtype, na_action="ignore")
 
     # Extract workshop status and add as a new column
     workshops_df.insert(loc=idx + 2, column='workshop_status',
-                        value=workshops_df["tags_list"])
-    workshops_df["workshop_status"] = workshops_df["tags_list"].map(helper.extract_workshop_status, na_action="ignore")
+                        value=workshops_df["tags"])
+    workshops_df["workshop_status"] = workshops_df["tags"].map(helper.extract_workshop_status, na_action="ignore")
 
     # Extract workshop year and add as a new column
     idx = workshops_df.columns.get_loc("start")
@@ -192,16 +189,17 @@ def process_workshops(workshops_df):
     workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year, na_action="ignore")
 
     # Extract hosts' web domains from host URIs
-    idx = workshops_df.columns.get_loc("host") + 1
-    workshops_df.insert(loc=idx, column='organisation_web_domain',
-                        value=workshops_df["host"])
+    idx = workshops_df.columns.get_loc("organiser_uri") + 1
+    workshops_df.insert(loc=idx, column='organiser_top_level_web_domain',
+                        value=workshops_df["organiser_uri"])
     # workshops_df["host_domain"] = workshops_df["host"].map(
     #     lambda host: list(filter(None, re.split("(.+?)/", host)))[-1],
     #     na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
-    workshops_df["organisation_web_domain"] = workshops_df["host"].map(lambda uri: extract_top_level_domain(uri),
+    workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
                                                                        na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
     return workshops_df
+
 
 def get_instructors(url_parameters=None, username=None, password=None):
     """
@@ -212,6 +210,8 @@ def get_instructors(url_parameters=None, username=None, password=None):
     :return: instructors as Pandas DataFrame
     """
     print("\nExtracting instructors from AMY for country: " + (url_parameters["country"] if url_parameters["country"] is not None else "ALL"))
+    url_parameters.update({"is_instructor": "true"})
+
     # Response is a JSON object containing paged result with info on total
     # number of all results and pointers to previous and next page of results,
     # as well as a list of results for the current page
@@ -237,8 +237,8 @@ def get_instructors(url_parameters=None, username=None, password=None):
                                               "affiliation",
                                               "awards", "badges", "domains",
                                               # "github", "orcid", "twitter",
-                                              # "url", "username", "publish_profile",
-                                              "tasks", "lessons",
+                                              # "url", "username", "publish_profile", "tasks",
+                                              "lessons",
                                               # "may_contact", "notes",
                                               "country", "airport"])
 
@@ -309,7 +309,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
 
         return instructors_df
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as ex:
-        # Catastrophic error occured or HTTP request was not successful for
+        # Catastrophic error occurred or HTTP request was not successful for
         # some reason (e.g. status code 4XX or 5XX was returned)
         print("Ooops - something went wrong when getting instructors data from AMY...")
         print(ex.format_exc())
@@ -407,13 +407,13 @@ def get_credentials(file_path):
     return username, password
 
 
-def extract_top_level_domain(uri):
+def extract_top_level_domain_from_uri(uri):
     """
     Extract host's top level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/' to 'earlham.ac.uk'.
     When subdomains are used, as in 'https://amy.carpentries.org/api/v1/organizations/cmist.manchester.ac.uk/' we are only interested in
     top level domain 'manchester.ac.uk'.
-    :param uri:
-    :return:
+    :param uri: URI like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+    :return: top level domain like 'earlham.ac.uk'
     """
     host = list(filter(None, re.split("(.+?)/", uri)))[-1] # Get the host from the URI first
     # Now just get the top level domain of the host
