@@ -31,9 +31,6 @@ REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/24
 
 REDASH_API_KEY = "gqMCK5SWYXH4B52zUFmVaf15rN3nArKoJlPHkGg8"
 
-UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
-UK_AIRPORTS = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
-
 
 def main():
     """
@@ -63,34 +60,34 @@ def main():
         processed_instructors_file = PROCESSED_DATA_DIR + "/redash_processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime(
             '%Y-%m-%d') + ".csv"
 
-    ############################ Extract workshop data from Carpentries redash ########################
+    # ############################ Extract workshop data from Carpentries Redash ########################
+    #
+    # print("\nExtracting workshops from: " + REDASH_API_WORKSHOPS_QUERY_URL)
+    # # Get workshop data as returned by a predefined query within Carpentries Redash system (cached results are returned
+    # # from the last time Redash ran the query, currently set to run every day)
+    # workshops_df = get_csv_data_redash(REDASH_API_WORKSHOPS_QUERY_URL, REDASH_API_KEY)
+    # print("\n####### Extracted " + str(workshops_df.index.size) + " workshops. #######\n")
+    #
+    # # Save raw workshop data
+    # workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
+    # print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
+    #
+    # ############################ Process workshop data ########################
+    # # Process the workshop data a bit to get it ready for further analyses and mapping
+    #
+    # # Convert column "tags" from a string to a list of strings
+    # workshops_df["tags"] = workshops_df["tags"].str.split(',')
+    #
+    # # Extract workshop scientific domains from a string to a list
+    # workshops_df["workshop_domains"] = workshops_df["workshop_domains"].str.split(':')
+    #
+    # workshops_df = helper.process_workshops(workshops_df)
+    #
+    # # Save the processed workshop data
+    # workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+    # print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
 
-    print("\nExtracting workshops from: " + REDASH_API_WORKSHOPS_QUERY_URL)
-    # Get workshop data as returned by a predefined query within Carpentries Redash system (cached results are returned
-    # from the last time Redash ran the query, currently set to run every day)
-    workshops_df = get_csv_data_redash(REDASH_API_WORKSHOPS_QUERY_URL, REDASH_API_KEY)
-    print("\n####### Extracted " + str(workshops_df.index.size) + " workshops. #######\n")
-
-    # Save raw workshop data
-    workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
-    print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
-
-    ############################ Process workshop data ########################
-    # Process the workshop data a bit to get it ready for further analyses and mapping
-
-    # Convert column "tags" from a string to a list of strings
-    workshops_df["tags"] = workshops_df["tags"].str.split(',')
-
-    # Extract workshop scientific domains from a string to a list
-    workshops_df["workshop_domains"] = workshops_df["workshop_domains"].str.split(':')
-
-    workshops_df = helper.process_workshops(workshops_df)
-
-    # Save the processed workshop data
-    workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
-    print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
-
-    ############################ Extract and process instructor data ########################
+    ############################ Extract instructor data from Carpentries Redash ########################
 
     print("\nExtracting workshops from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
     # Get instructor data as returned by a predefined query within Carpentries Redash system (cached results are returned
@@ -102,31 +99,24 @@ def main():
     instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
     print("Saved raw Carpentry workshop data to " + raw_instructors_file + "\n")
 
+    ############################ Process instructor data ########################
     # Process the instructor data a bit to get it ready for further analyses and mapping
 
-    # Insert normalised/official names for institutions (for UK academic institutions)
-    print("\nInserting normalised name for instructors' affiliations/institutions...\n")
-    instructors_df = helper.insert_normalised_institution(instructors_df, "institution")
+    # Convert column "domains" from a string to a list of strings
+    instructors_df['domains'] = instructors_df['domains'].str.split(',')
 
-    # Insert latitude, longitude pairs for instructors' institutions
-    print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
-    instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
+    # Convert column "badges" from a string to a list of strings
+    instructors_df['badges'] = instructors_df['badges'].str.split(',')
 
-    # Insert UK regional info based on instructors's affiliations
-    print("\nInserting regions for instructors' affiliations/institutions...\n")
-    idx = instructors_df.columns.get_loc("institution") + 1
-    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
-    instructors_df['region'] = instructors_df.apply(lambda x: helper.get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
-    print("\nGetting regions for institutions took a while but it has finished now.\n")
+    # Convert column "domains" from a string to a list of strings
+    instructors_df['badges_dates'] = instructors_df['badges_dates'].str.split(',')
 
-    # Insert UK regional info based on nearest airport
-    print("\nInserting regions for instructors based on nearest airport...\n")
-    instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    instructors_df.rename({"region" : "airport_region"}, inplace=True)
+    instructors_df = helper.process_instructors(instructors_df)
 
     # Save the processed instructor data
     instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
     print("Saved processed Carpentry instructor data to " + processed_instructors_file + "\n")
+
 
 def get_csv_data_redash(query_results_url, api_key):
     """

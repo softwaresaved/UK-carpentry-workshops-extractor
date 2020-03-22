@@ -21,12 +21,15 @@ UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-inst
 
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
+UK_AIRPORTS = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 
 WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT"]
 WORKSHOP_SUBTYPE = ['Pilot', "Circuits"]
 WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
+INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "lc-instructor", "trainer"]
 
 COUNTRIES_FILE = CURRENT_DIR + "/countries.json"
+
 
 def get_countries(countries_file):
     countries = None
@@ -295,6 +298,73 @@ def process_workshops(workshops_df):
     return workshops_df
 
 
+def process_instructors(instructors_df):
+    """
+    :param instructors_df: dataframe with raw instructor data to be processed a bit for further analyses and mapping
+    :return: dataframe with processed instructor data
+    """
+
+    idx = instructors_df.columns.get_loc("country_code")
+    instructors_df.insert(loc=idx, column='country',
+                      value=instructors_df["country_code"])
+    instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code), na_action="ignore")
+
+    # Insert normalised/official names for institutions (for UK academic institutions)
+    print("\nInserting normalised name for instructors' affiliations/institutions...\n")
+    instructors_df = insert_normalised_institution(instructors_df, "institution")
+
+    # Insert latitude, longitude pairs for instructors' institutions
+    print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
+    instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
+
+    # Insert UK regional info based on the nearest airport
+    print("\nInserting regions for instructors based on the nearest airport...\n")
+    instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
+    instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
+
+    # Insert UK regional info based on instructors' affiliations
+    print("\nInserting regions for instructors' affiliations/institutions...\n")
+    idx = instructors_df.columns.get_loc("institution") + 1
+    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
+    instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    print("\nGetting regions for institutions took a while but it has finished now.\n")
+
+    # Extract dates when instructors badges were awarded from list
+    if "badges_dates" in instructors_df.columns:
+        idx = instructors_df.columns.get_loc("badges_dates")
+        i = 1
+        for badge in INSTRUCTOR_BADGES:
+
+            instructors_df.insert(loc=idx + i, column=badge, value=instructors_df["badges"])
+            instructors_df[badge] = pd.to_datetime(instructors_df.apply(lambda x: get_badge_date(badge=badge, badges=x['badges'], dates=x['badges_dates']), axis=1))
+            i = i+1
+
+        instructors_df.insert(loc=idx + i, column='earliest_badge_awarded', value=instructors_df[INSTRUCTOR_BADGES].min(axis=1))
+        instructors_df["earliest_badge_awarded"] = pd.to_datetime(instructors_df["earliest_badge_awarded"])
+        instructors_df.insert(loc=idx + i + 1, column='year_earliest_badge_awarded', value=instructors_df["earliest_badge_awarded"].dt.year.fillna(0.0).astype(int))
+
+    return instructors_df
+
+
+def get_badge_date(badge, badges, dates):
+    """
+    For a given badge name, return the date it was awarded.
+    :param badge: Instructor badge name.
+    :param badges: List of all badges awarded.
+    :param dates: List of dates the badges were awarded, order of dates corresponds to the order of badges in badges list.
+    :return: For a given badge name, return the date it was awarded or None is no such badge was awarded.
+    """
+    if badges is None or badges == [] or dates is None or dates == []:
+        return None
+
+    # Find index of badge in badges list
+    try:
+        index = badges.index(badge)
+        return dates[index]
+    except ValueError:
+        return None
+
+
 def create_readme_tab(writer, readme_text):
     """
     Create the README tab in the spreadsheet.
@@ -326,8 +396,7 @@ def insert_normalised_institution(df, non_normalised_institution_column):
     df.insert(loc=idx + 1, column='normalised_institution',
               value=df[
                   non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
-    df[df["country_code"] == "GB"]["normalised_institution"].map(get_normalised_institution_name,
-                                                                      na_action="ignore")
+    df[df["country_code"] == "GB"]["normalised_institution"].map(get_normalised_institution_name, na_action="ignore")
     return df
 
 

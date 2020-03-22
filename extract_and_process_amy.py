@@ -73,36 +73,35 @@ def main():
     if args.username is None or args.password is None:
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
-        # # Get and process workshop data
-        # url_parameters = {
-        #     "country": "GB"
-        # }
-        # workshops_df = get_workshops(url_parameters, args.username, args.password)
+        # Get and process workshop data
+        url_parameters = {
+            "country": "GB"
+        }
+        # workshops_df = get_workshops_amy(url_parameters, args.username, args.password)
         #
         # # Save raw workshop data
         # workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
         # print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
-
-        workshops_df = pandas.read_csv(raw_workshops_file, encoding="utf-8")
-        workshops_df = helper.process_workshops(workshops_df)
-
-        # Save processed workshop data
-        workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
-        print("Saved processed workshops to " + processed_workshops_file + "\n\n")
+        #
+        # workshops_df = helper.process_workshops(workshops_df)
+        #
+        # # Save processed workshop data
+        # workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+        # print("Saved processed workshops to " + processed_workshops_file + "\n\n")
 
         # Get and process instructor data
-        instructors_df = get_instructors(url_parameters, args.username, args.password)
+        instructors_df = get_instructors_amy(url_parameters, args.username, args.password)
         # Save raw instructor data
         instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
         print("Saved a total of " + str(instructors_df.index.size) + " instructors to " + raw_instructors_file)
 
-        # instructors_df = process_instructors(instructors_df)
-        # # Save processed instructors data
-        # instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
-        # print("Saved processed instructors to " + processed_instructors_file + "\n\n")
+        instructors_df = helper.process_instructors(instructors_df)
+        # Save processed instructors data
+        instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
+        print("Saved processed instructors to " + processed_instructors_file + "\n\n")
 
 
-def get_workshops(url_parameters=None, username=None, password=None):
+def get_workshops_amy(url_parameters=None, username=None, password=None):
     """
     Get Carpentry workshop events from AMY.
     :param url_parameters: URL parameters to filter results, e.g. by country.
@@ -154,7 +153,7 @@ def get_workshops(url_parameters=None, username=None, password=None):
         sys.exit(1)
 
 
-def get_instructors(url_parameters=None, username=None, password=None):
+def get_instructors_amy(url_parameters=None, username=None, password=None):
     """
     Get Carpentry instructors registered in AMY.
     :param url_parameters: URL parameters to filter results, e.g. by country.
@@ -188,33 +187,29 @@ def get_instructors(url_parameters=None, username=None, password=None):
         instructors_df = pandas.DataFrame(persons,
                                           columns=[  # "personal", "middle", "family", "email", "gender",
                                               "affiliation",
+                                              "country",
                                               "awards", "badges", "domains",
                                               # "github", "orcid", "twitter",
                                               # "url", "username", "publish_profile", "tasks",
                                               "lessons",
                                               # "may_contact", "notes",
-                                              "country", "airport"])
+                                              "airport"])
 
         print("\n####### Extracted " + str(
             instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
 
+        instructors_df.rename(columns={"affiliation": "institution", "country" : "country_code"}, inplace=True)
+
         airports_df = get_airports(None, username, password)  # Get all airports
         airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
 
-        # instructors_df["country_code"] = instructors_df["airport_code"].map(
-        #     lambda airport_code: airports_dict[airport_code][0], na_action="ignore")
-        idx = instructors_df.columns.get_loc("country")
-        instructors_df.insert(loc=idx, column='country_code',
-                              value=instructors_df["country"])
-        instructors_df["country"] = instructors_df["country"].map(lambda country_code: helper.get_country(country_code),
-                                                                  na_action="ignore")
-
-        # Airport field contains URIs like 'https://amy.carpentries.org/api/v1/airports/MAN/'
-        # so we need to extract the 3-letter airport code out of it (e.g. 'MAN')
+        # 'airport' field contains URIs like 'https://amy.carpentries.org/api/v1/airports/MAN/'
+        # so we need to extract the 3-letter airport code out of it (e.g. 'MAN') and then use it to find
+        # airport's name, longitude and latitude
         instructors_df["airport_code"] = instructors_df["airport"].map(extract_airport_code)
         instructors_df["airport"] = instructors_df["airport_code"].map(
             lambda airport_code: airports_dict[airport_code][1],
-            na_action="ignore")
+            na_action="ignore") # replace the airport URI with the airport name
         instructors_df["airport_latitude"] = instructors_df["airport_code"].map(
             lambda airport_code: airports_dict[airport_code][2], na_action="ignore")
         instructors_df["airport_longitude"] = instructors_df["airport_code"].map(
@@ -229,7 +224,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
         for awards_uri in instructors_df["awards"]:
             print("Getting instructor's badges from " + awards_uri)
             response = requests.get(awards_uri, headers=HEADERS, auth=(username, password))
-            response.raise_for_status()  # check if a request was successful
+            response.raise_for_status()  # check if the request was successful
             awards = response.json()
 
             swc_instructor_badge_awarded_date = next(
@@ -238,8 +233,7 @@ def get_instructors(url_parameters=None, username=None, password=None):
                 (award["awarded"] for award in awards if award["badge"] == "dc-instructor"), None)
             lc_instructor_badge_awarded_date = next(
                 (award["awarded"] for award in awards if award["badge"] == "lc-instructor"), None)
-            trainer_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "trainer"),
-                                              None)
+            trainer_badge_awarded_date = next((award["awarded"] for award in awards if award["badge"] == "trainer"), None)
 
             swc_instructor_badge_awarded.append(swc_instructor_badge_awarded_date)
             dc_instructor_badge_awarded.append(dc_instructor_badge_awarded_date)
@@ -253,14 +247,16 @@ def get_instructors(url_parameters=None, username=None, password=None):
 
             year_earliest_instructor_badge_awarded.append(sorted(dates)[0].year if dates != [] else None)
 
-        instructors_df["swc-instructor-badge-awarded"] = pandas.Series(swc_instructor_badge_awarded).values
-        instructors_df["dc-instructor-badge-awarded"] = pandas.Series(dc_instructor_badge_awarded).values
-        instructors_df["lc-instructor-badge-awarded"] = pandas.Series(lc_instructor_badge_awarded).values
-        instructors_df["trainer-badge-awarded"] = pandas.Series(trainer_badge_awarded).values
-        instructors_df["year-earliest-instructor-badge-awarded"] = pandas.Series(
-            year_earliest_instructor_badge_awarded).values
+        idx = instructors_df.columns.get_loc("badges")
+        instructors_df.insert(loc=idx + 1, column='swc-instructor', value=swc_instructor_badge_awarded)
+        instructors_df.insert(loc=idx + 2, column='dc-instructor', value=dc_instructor_badge_awarded)
+        instructors_df.insert(loc=idx + 3, column='lc-instructor', value=lc_instructor_badge_awarded)
+        instructors_df.insert(loc=idx + 4, column='trainer', value=trainer_badge_awarded)
+        instructors_df.insert(loc=idx + 5, column='year_earliest_instructor_badge_awarded', value=year_earliest_instructor_badge_awarded)
+        instructors_df.drop(["awards"], axis=1, inplace=True) # We do not need this column any more
 
         return instructors_df
+
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as ex:
         # Catastrophic error occurred or HTTP request was not successful for
         # some reason (e.g. status code 4XX or 5XX was returned)
