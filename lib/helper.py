@@ -343,7 +343,51 @@ def process_instructors(instructors_df):
         instructors_df["earliest_badge_awarded"] = pd.to_datetime(instructors_df["earliest_badge_awarded"])
         instructors_df.insert(loc=idx + i + 1, column='year_earliest_badge_awarded', value=instructors_df["earliest_badge_awarded"].dt.year.fillna(0.0).astype(int))
 
+    # Create a dictionary of taught_workshops (a list of workshop slugs where instructor taught) and
+    # taught_workshop_dates (a list of corresponding dates for those workshops) and save into a new column
+    idx = instructors_df.columns.get_loc("taught_workshops")
+    instructors_df.insert(loc=idx, column='workshops', value=instructors_df["taught_workshops"])
+    instructors_df['workshops'] = instructors_df.apply(lambda x: create_dict(x['taught_workshops'], x['taught_workshop_dates']), axis=1)
+
+    # Average number of workshop taught per year
+    # instructors_df.insert(loc=idx+1, column='earliest_workshop_taught', value=instructors_df["taught_workshop_dates"])
+    # instructors_df['earliest_workshop_taught'] = instructors_df['taught_workshop_dates'].apply(lambda x: earliest_date(x))
+    # instructors_df.insert(loc=idx+1, column='last_workshop_taught', value=instructors_df["taught_workshop_dates"])
+    # instructors_df['last_workshop_taught'] = instructors_df['taught_workshop_dates'].apply(lambda x: latest_date(x))
+
     return instructors_df
+
+
+def earliest_date(dates_string):
+    '''
+    :param dates_string: sting representing a list of dates
+    :return:
+    '''
+    if dates_string is None or dates_string is np.nan:
+        return None
+    dates_string_list = str(dates_string).split(',')
+    # Convert to a list of dates
+    dates_list = [datetime.datetime.strptime(date, '%Y-%m-%d').date() for date in dates_string_list]
+    return min(dates_list)
+
+
+def latest_date(dates_string):
+    '''
+    :param dates_string: sting representing a list of dates
+    :return:
+    '''
+    if dates_string is None or dates_string is np.nan:
+        return None
+    dates_string_list = str(dates_string).split(',')
+    # Convert to a list of dates
+    dates_list = [datetime.datetime.strptime(date, '%Y-%m-%d').date() for date in dates_string_list]
+    return max(dates_list)
+
+def create_dict(list_a, list_b):
+    if list_a is None or list_a is np.nan:
+        return None
+    d = dict(zip(str(list_a).split(','),str(list_b).split(',')))
+    return json.dumps(d)
 
 
 def get_badge_date(badge, badges, dates):
