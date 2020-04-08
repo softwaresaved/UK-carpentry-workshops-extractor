@@ -318,16 +318,16 @@ def process_instructors(instructors_df):
     instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
 
     # Insert UK regional info based on the nearest airport
-    print("\nInserting regions for instructors based on the nearest airport...\n")
-    instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
-
-    # Insert UK regional info based on instructors' affiliations
-    print("\nInserting regions for instructors' affiliations/institutions...\n")
-    idx = instructors_df.columns.get_loc("institution") + 1
-    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
-    instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
-    print("\nGetting regions for institutions took a while but it has finished now.\n")
+    # print("\nInserting regions for instructors based on the nearest airport...\n")
+    # instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
+    # instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
+    #
+    # # Insert UK regional info based on instructors' affiliations
+    # print("\nInserting regions for instructors' affiliations/institutions...\n")
+    # idx = instructors_df.columns.get_loc("institution") + 1
+    # instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
+    # instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    # print("\nGetting regions for institutions took a while but it has finished now.\n")
 
     # Extract dates when instructors badges were awarded from list
     if "badges_dates" in instructors_df.columns:
@@ -343,19 +343,35 @@ def process_instructors(instructors_df):
         instructors_df["earliest_badge_awarded"] = pd.to_datetime(instructors_df["earliest_badge_awarded"])
         instructors_df.insert(loc=idx + i + 1, column='year_earliest_badge_awarded', value=instructors_df["earliest_badge_awarded"].dt.year.fillna(0.0).astype(int))
 
-    # Create a dictionary of taught_workshops (a list of workshop slugs where instructor taught) and
-    # taught_workshop_dates (a list of corresponding dates for those workshops) and save into a new column
-    idx = instructors_df.columns.get_loc("taught_workshops")
-    instructors_df.insert(loc=idx, column='workshops', value=instructors_df["taught_workshops"])
-    instructors_df['workshops'] = instructors_df.apply(lambda x: create_dict(x['taught_workshops'], x['taught_workshop_dates']), axis=1)
+    # # Create a dictionary of taught_workshops (a list of workshop slugs where instructor taught) and
+    # # taught_workshop_dates (a list of corresponding dates for those workshops) and save into a new column
+    # idx = instructors_df.columns.get_loc("taught_workshops")
+    # instructors_df.insert(loc=idx, column='workshops', value=instructors_df["taught_workshops"])
+    # instructors_df['workshops'] = instructors_df.apply(lambda x: create_dict(x['taught_workshops'], x['taught_workshop_dates']), axis=1)
 
-    # Average number of workshop taught per year
-    # instructors_df.insert(loc=idx+1, column='earliest_workshop_taught', value=instructors_df["taught_workshop_dates"])
-    # instructors_df['earliest_workshop_taught'] = instructors_df['taught_workshop_dates'].apply(lambda x: earliest_date(x))
-    # instructors_df.insert(loc=idx+1, column='last_workshop_taught', value=instructors_df["taught_workshop_dates"])
-    # instructors_df['last_workshop_taught'] = instructors_df['taught_workshop_dates'].apply(lambda x: latest_date(x))
+    # Create a dictionary of {year: number_taught_workshops_per_year} per instructor and save into a new column
+    idx = instructors_df.columns.get_loc("taught_workshops")
+    instructors_df.insert(loc=idx + 2, column='taught_workshops_per_year', value=instructors_df["taught_workshops"])
+    instructors_df['taught_workshops_per_year'] = instructors_df['taught_workshop_dates'].apply(lambda x: workshops_per_year_dict(x))
 
     return instructors_df
+
+
+def workshops_per_year_dict(taught_workshop_dates):
+    '''
+    Counts number of workshops taught for each year the person was actively teaching.
+    :param taught_workshops:
+    :param taught_workshop_dates:
+    :return: a dictionary like {year : number_taught_workshops_per_year}
+    '''
+    # Create a list of years for a list of dates (passed as one long string)
+    if taught_workshop_dates is None or taught_workshop_dates is np.nan:
+        return None
+    taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]
+    counts = dict()
+    for i in taught_workshop_years:
+        counts[i] = counts.get(i, 0) + 1
+    return counts
 
 
 def earliest_date(dates_string):
@@ -382,6 +398,7 @@ def latest_date(dates_string):
     # Convert to a list of dates
     dates_list = [datetime.datetime.strptime(date, '%Y-%m-%d').date() for date in dates_string_list]
     return max(dates_list)
+
 
 def create_dict(list_a, list_b):
     if list_a is None or list_a is np.nan:
