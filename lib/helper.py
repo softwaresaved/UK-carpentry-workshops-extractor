@@ -355,8 +355,8 @@ def process_instructors(instructors_df):
     instructors_df['taught_workshops_per_year'] = instructors_df['taught_workshop_dates'].apply(lambda x: workshops_per_year_dict(x))
 
     # For some reason Redash returns some people who are not instructors that have empty 'earliest_badge_awarded' field!
-    # So drop them.
-    instructors_df = instructors_df.dropna(subset=['earliest_badge_awarded'])
+    # This has been fixed in the query that gets the raw data from Redash!
+    # instructors_df = instructors_df.dropna(subset=['earliest_badge_awarded'])
 
     return instructors_df
 
