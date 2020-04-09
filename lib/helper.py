@@ -318,16 +318,16 @@ def process_instructors(instructors_df):
     instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
 
     # Insert UK regional info based on the nearest airport
-    # print("\nInserting regions for instructors based on the nearest airport...\n")
-    # instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    # instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
-    #
-    # # Insert UK regional info based on instructors' affiliations
-    # print("\nInserting regions for instructors' affiliations/institutions...\n")
-    # idx = instructors_df.columns.get_loc("institution") + 1
-    # instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
-    # instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
-    # print("\nGetting regions for institutions took a while but it has finished now.\n")
+    print("\nInserting regions for instructors based on the nearest airport...\n")
+    instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
+    instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
+
+    # Insert UK regional info based on instructors' affiliations
+    print("\nInserting regions for instructors' affiliations/institutions...\n")
+    idx = instructors_df.columns.get_loc("institution") + 1
+    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
+    instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    print("\nGetting regions for institutions took a while but it has finished now.\n")
 
     # Extract dates when instructors badges were awarded from list
     if "badges_dates" in instructors_df.columns:
@@ -353,6 +353,10 @@ def process_instructors(instructors_df):
     idx = instructors_df.columns.get_loc("taught_workshops")
     instructors_df.insert(loc=idx + 2, column='taught_workshops_per_year', value=instructors_df["taught_workshops"])
     instructors_df['taught_workshops_per_year'] = instructors_df['taught_workshop_dates'].apply(lambda x: workshops_per_year_dict(x))
+
+    # For some reason Redash returns some people who are not instructors that have empty 'earliest_badge_awarded' field!
+    # So drop them.
+    instructors_df = instructors_df.dropna(subset=['earliest_badge_awarded'])
 
     return instructors_df
 

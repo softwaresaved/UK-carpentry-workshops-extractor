@@ -1,7 +1,7 @@
-import traceback
+# import traceback
 import os
 import sys
-import datetime
+# import datetime
 import datetime
 import io
 import requests
@@ -73,19 +73,19 @@ def main():
     print("Saved raw Carpentry workshop data to "+ raw_workshops_file + "\n")
 
     ############################ Process workshop data ########################
-    # # Process the workshop data a bit to get it ready for further analyses and mapping
-    #
-    # # Convert column "tags" from a string to a list of strings
-    # workshops_df["tags"] = workshops_df["tags"].str.split(',')
-    #
-    # # Extract workshop scientific domains from a string to a list
-    # workshops_df["workshop_domains"] = workshops_df["workshop_domains"].str.split(':')
-    #
-    # workshops_df = helper.process_workshops(workshops_df)
-    #
-    # # Save the processed workshop data
-    # workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
-    # print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
+    # Process the workshop data a bit to get it ready for further analyses and mapping
+
+    # Convert column "tags" from a string to a list of strings
+    workshops_df["tags"] = workshops_df["tags"].str.split(',')
+
+    # Extract workshop scientific domains from a string to a list
+    workshops_df["workshop_domains"] = workshops_df["workshop_domains"].str.split(':')
+
+    workshops_df = helper.process_workshops(workshops_df)
+
+    # Save the processed workshop data
+    workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+    print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
 
     ############################ Extract instructor data from Carpentries Redash ########################
 
