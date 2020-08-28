@@ -77,17 +77,17 @@ def main():
         url_parameters = {
             "country": "GB"
         }
-        # workshops_df = get_workshops_amy(url_parameters, args.username, args.password)
-        #
-        # # Save raw workshop data
-        # workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
-        # print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
-        #
-        # workshops_df = helper.process_workshops(workshops_df)
-        #
-        # # Save processed workshop data
-        # workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
-        # print("Saved processed workshops to " + processed_workshops_file + "\n\n")
+        workshops_df = get_workshops_amy(url_parameters, args.username, args.password)
+
+        # Save raw workshop data
+        workshops_df.to_csv(raw_workshops_file, encoding="utf-8", index=False)
+        print("Saved a total of " + str(workshops_df.index.size) + " workshops to " + raw_workshops_file + "\n\n")
+
+        workshops_df = helper.process_workshops(workshops_df)
+
+        # Save processed workshop data
+        workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
+        print("Saved processed workshops to " + processed_workshops_file + "\n\n")
 
         # Get and process instructor data
         instructors_df = get_instructors_amy(url_parameters, args.username, args.password)

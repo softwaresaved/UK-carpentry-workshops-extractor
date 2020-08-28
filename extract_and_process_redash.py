@@ -25,7 +25,7 @@ if not os.path.exists(RAW_DATA_DIR):
 if not os.path.exists(PROCESSED_DATA_DIR):
     os.makedirs(PROCESSED_DATA_DIR)
 
-# Carpentries Redash system
+# Carpentries Redash QUERY URLs
 REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
 REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/243/results.csv"
 
@@ -89,7 +89,7 @@ def main():
 
     ############################ Extract instructor data from Carpentries Redash ########################
 
-    print("\nExtracting workshops from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
+    print("\nExtracting instructor from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
     # Get instructor data as returned by a predefined query within Carpentries Redash system (cached results are returned
     # from the last time Redash ran the query, currently set to run every 2 weeks)
     instructors_df = get_csv_data_redash(REDASH_API_INSTRUCTORS_QUERY_URL, REDASH_API_KEY)
@@ -97,7 +97,7 @@ def main():
 
     # Save raw instructor data
     instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
-    print("Saved raw Carpentry workshop data to " + raw_instructors_file + "\n")
+    print("Saved raw Carpentry instructor data to " + raw_instructors_file + "\n")
 
     ############################ Process instructor data ########################
     # Process the instructor data a bit to get it ready for further analyses and mapping
