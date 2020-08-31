@@ -17,7 +17,7 @@ RAW_DATA_DIR = DATA_DIR + '/raw'
 PROCESSED_DATA_DIR = DATA_DIR + '/processed'
 LIB_DATA_DIR = CURRENT_DIR + '/lib'
 
-REDASH_CREDENTIALS_FILE = CURRENT_DIR + '/redash_login.yml'
+# REDASH_CREDENTIALS_FILE = CURRENT_DIR + '/redash_login.yml'
 
 if not os.path.exists(RAW_DATA_DIR):
     os.makedirs(RAW_DATA_DIR)

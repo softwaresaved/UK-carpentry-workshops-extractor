@@ -73,10 +73,11 @@ def main():
     if args.username is None or args.password is None:
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
     else:
-        # Get and process workshop data
         url_parameters = {
             "country": "GB"
         }
+
+        # Get and process workshop data
         workshops_df = get_workshops_amy(url_parameters, args.username, args.password)
 
         # Save raw workshop data
@@ -188,7 +189,7 @@ def get_instructors_amy(url_parameters=None, username=None, password=None):
                                           columns=[  # "personal", "middle", "family", "email", "gender",
                                               "affiliation",
                                               "country",
-                                              "awards", "badges", "domains",
+                                              "awards", "badges", "domains", "tasks",
                                               # "github", "orcid", "twitter",
                                               # "url", "username", "publish_profile", "tasks",
                                               "lessons",
@@ -254,6 +255,24 @@ def get_instructors_amy(url_parameters=None, username=None, password=None):
         instructors_df.insert(loc=idx + 4, column='trainer', value=trainer_badge_awarded)
         instructors_df.insert(loc=idx + 5, column='year_earliest_instructor_badge_awarded', value=year_earliest_instructor_badge_awarded)
         instructors_df.drop(["awards"], axis=1, inplace=True) # We do not need this column any more
+
+        # Extract workshops taught
+        taught_workshops = []
+        taught_workshops_dates = []
+        for tasks_uri in instructors_df["tasks"]:
+            print("Getting instructor's tasks from " + tasks_uri)
+            response = requests.get(tasks_uri, headers=HEADERS, auth=(username, password))
+            response.raise_for_status()  # check if the request was successful
+            tasks = response.json()
+            taught_workshops_ids = [task["event"].split("/")[-2] for task in tasks if task["role"] == "instructor"] # get event slug
+            print(taught_workshops_ids)
+            taught_workshops.append(','.join(taught_workshops_ids))  # create a string from list joined by ',' to store in a dataframe
+            dates = [slug[0:10] for slug in taught_workshops_ids] # extract date from slug
+            taught_workshops_dates.append(','.join(dates))  # create a string from list joined by ',' to store in a dataframe
+
+        idx = instructors_df.columns.get_loc("tasks")
+        instructors_df.insert(loc=idx + 1, column='taught_workshops', value=taught_workshops)
+        instructors_df.insert(loc=idx + 2, column='taught_workshop_dates', value=taught_workshops_dates)
 
         return instructors_df
 
@@ -375,7 +394,7 @@ def extract_workshop_instructors(workshop_tasks_url, username, password):
             instructor_name = instructor["personal"] + " " + instructor["middle"] + " " + instructor["family"]
             instructors.append(re.sub(" +", " ", instructor_name))
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as ex:
-        # Catastrophic error occured or HTTP request was not successful
+        # Catastrophic error occurred or HTTP request was not successful
         # for some reason (e.g. status code 4XX or 5XX was returned)
         print("Ooops - something went wrong when getting instructors that taught at a workshop from AMY...")
         # Ignore - we still have workshop data to look at, just log this error

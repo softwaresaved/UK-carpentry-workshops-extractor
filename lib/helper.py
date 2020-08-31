@@ -369,7 +369,7 @@ def workshops_per_year_dict(taught_workshop_dates):
     :return: a dictionary like {year : number_taught_workshops_per_year}
     '''
     # Create a list of years for a list of dates (passed as one long string)
-    if taught_workshop_dates is None or taught_workshop_dates is np.nan:
+    if taught_workshop_dates is "" or taught_workshop_dates is None or taught_workshop_dates is np.nan:
         return None
     taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]
     counts = dict()
