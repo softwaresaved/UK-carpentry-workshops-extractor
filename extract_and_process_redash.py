@@ -97,6 +97,8 @@ def main():
 
     # Save raw instructor data
     instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
+    # Get rid of personal data - comment out if you do want it but beware not to upload to a public GitHub repo
+    instructors_df = instructors_df.drop(labels=['first_name', 'last_name'], axis=1)
     print("Saved raw Carpentry instructor data to " + raw_instructors_file + "\n")
 
     ############################ Process instructor data ########################

@@ -371,7 +371,21 @@ def workshops_per_year_dict(taught_workshop_dates):
     # Create a list of years for a list of dates (passed as one long string)
     if taught_workshop_dates is "" or taught_workshop_dates is None or taught_workshop_dates is np.nan:
         return None
-    taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]
+
+    # taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]
+    taught_workshop_years = []
+    for date in str(taught_workshop_dates).split(','):
+        try:
+            d = datetime.datetime.strptime(date, '%Y-%m-%d').date().year
+        except ValueError:
+            # Try the US date format with date before month - some slugs wrongly use this
+            d = datetime.datetime.strptime(date, '%Y-%d-%m').date().year
+        except Exception as exc: #anything else
+            print("An error occurred while parsing date from slug: " + date)
+            print(traceback.format_exc())
+            continue
+        taught_workshop_years.append(d)
+
     counts = dict()
     for i in taught_workshop_years:
         counts[i] = counts.get(i, 0) + 1

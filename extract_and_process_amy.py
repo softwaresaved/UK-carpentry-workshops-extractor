@@ -92,6 +92,9 @@ def main():
 
         # Get and process instructor data
         instructors_df = get_instructors_amy(url_parameters, args.username, args.password)
+        # Get rid of personal data - comment out if you do want it but beware not to upload to a public GitHub repo
+        instructors_df = instructors_df.drop(labels=['first_name', 'last_name'], axis=1)
+
         # Save raw instructor data
         instructors_df.to_csv(raw_instructors_file, encoding="utf-8", index=False)
         print("Saved a total of " + str(instructors_df.index.size) + " instructors to " + raw_instructors_file)
@@ -186,20 +189,22 @@ def get_instructors_amy(url_parameters=None, username=None, password=None):
 
         # Translate a list of JSON objects/dictionaries directly into a DataFrame
         instructors_df = pandas.DataFrame(persons,
-                                          columns=[  # "personal", "middle", "family", "email", "gender",
-                                              "affiliation",
-                                              "country",
-                                              "awards", "badges", "domains", "tasks",
-                                              # "github", "orcid", "twitter",
-                                              # "url", "username", "publish_profile", "tasks",
-                                              "lessons",
-                                              # "may_contact", "notes",
-                                              "airport"])
+                                          columns=["personal",  # "middle",
+                                                   "family",  # "email", "gender",
+                                                   "affiliation",
+                                                   "country",
+                                                   "awards", "badges", "domains", "tasks",
+                                                   # "github", "orcid", "twitter",
+                                                   # "url", "username", "publish_profile", "tasks",
+                                                   "lessons",
+                                                   # "may_contact", "notes",
+                                                   "airport"])
 
         print("\n####### Extracted " + str(
             instructors_df.index.size) + " instructors; extracting additional instructors info ... #######\n")
 
-        instructors_df.rename(columns={"affiliation": "institution", "country" : "country_code"}, inplace=True)
+        instructors_df.rename(columns={"personal": "first_name", "family": "last_name",
+                                       "affiliation": "institution", "country" : "country_code"}, inplace=True)
 
         airports_df = get_airports(None, username, password)  # Get all airports
         airports_dict = get_airports_dict(airports_df)  # airports as a dictionary for easier mapping
@@ -265,7 +270,7 @@ def get_instructors_amy(url_parameters=None, username=None, password=None):
             response.raise_for_status()  # check if the request was successful
             tasks = response.json()
             taught_workshops_ids = [task["event"].split("/")[-2] for task in tasks if task["role"] == "instructor"] # get event slug
-            print(taught_workshops_ids)
+            # print(taught_workshops_ids)
             taught_workshops.append(','.join(taught_workshops_ids))  # create a string from list joined by ',' to store in a dataframe
             dates = [slug[0:10] for slug in taught_workshops_ids] # extract date from slug
             taught_workshops_dates.append(','.join(dates))  # create a string from list joined by ',' to store in a dataframe
