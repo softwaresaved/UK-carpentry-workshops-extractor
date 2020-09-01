@@ -273,6 +273,13 @@ def get_instructors_amy(url_parameters=None, username=None, password=None):
             # print(taught_workshops_ids)
             taught_workshops.append(','.join(taught_workshops_ids))  # create a string from list joined by ',' to store in a dataframe
             dates = [slug[0:10] for slug in taught_workshops_ids] # extract date from slug
+            # Dates in some slugs are in the US date format - fix that to the expected YYYY-MM-DD format
+            for i in range(len(dates)):
+                try:
+                    d = datetime.datetime.strptime(dates[i], '%Y-%d-%m') # US date format
+                    dates[i] = d.strftime('%Y-%m-%d') # Replace list item in place with the date in the right format
+                except ValueError:
+                    continue
             taught_workshops_dates.append(','.join(dates))  # create a string from list joined by ',' to store in a dataframe
 
         idx = instructors_df.columns.get_loc("tasks")
