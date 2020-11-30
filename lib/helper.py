@@ -78,24 +78,20 @@ def parse_command_line_parameters_amy():
                         help="Password to log in to AMY - you will be prompted for it (please do not enter your "
                              "password on the command line even though it is possible)")
     parser.add_argument("-rw", "--raw_workshops_file", type=str, default=None,
-                        help="File path where raw workshops data extracted from AMY will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as amy_raw_carpentry_workshops_UK_<DATE>.csv.")
+                        help="File path where raw workshop data extracted from AMY will be saved in CSV format. "
+                             "If omitted, data will be saved to data/raw/ directory and named with the current date.")
 
     parser.add_argument("-pw", "--processed_workshops_file", type=str, default=None,
-                        help="File path where processed workshops data will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as amy_processed_carpentry_workshops_UK_<DATE>.csv.")
+                        help="File path where processed workshop data will be saved in CSV format. "
+                             "If omitted, data will be saved to data/processed/ directory and named with the current date.")
 
     parser.add_argument("-ri", "--raw_instructors_file", type=str, default=None,
-                        help="File path where raw instructors data extracted from REDASH will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as amy_raw_carpentry_instructors_UK_<DATE>.csv.")
+                        help="File path where raw instructors data extracted from AMY will be saved in CSV format. "
+                             "If omitted, data will be saved to data/raw/ directory and named with the current date.")
 
     parser.add_argument("-pi", "--processed_instructors_file", type=str, default=None,
                         help="File path where processed instructors data will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as amy_processed_carpentry_instructors_UK_<DATE>'.csv.")
+                             "If omitted, data will be saved to data/processed/ directory and named with the current date.")
     args = parser.parse_args()
     if hasattr(args, "password"):  # if the -p switch was set - ask user for a password but do not echo it
         if args.password is None:
@@ -110,24 +106,20 @@ def parse_command_line_parameters_redash():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-rw", "--raw_workshops_file", type=str, default=None,
-                        help="File path where raw workshops data extracted from REDASH will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as redash_raw_carpentry_workshops_UK.csv.")
+                        help="File path where raw workshop data extracted from REDASH will be saved in CSV format. "
+                             "If omitted, data will be saved to data/raw/ directory and named with the current date.")
 
     parser.add_argument("-pw", "--processed_workshops_file", type=str, default=None,
-                        help="File path where processed workshops data will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as redash_processed_carpentry_workshops_UK.csv.")
+                        help="File path where processed workshop data will be saved in CSV format. "
+                             "If omitted, data will be saved to data/processed/ directory and named with the current date.")
 
     parser.add_argument("-ri", "--raw_instructors_file", type=str, default=None,
                         help="File path where raw instructors data extracted from REDASH will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as redash_raw_carpentry_instructors_UK_<DATE>.csv.")
+                             "If omitted, data will be saved to data/raw/ directory and named with the current date.")
 
     parser.add_argument("-pi", "--processed_instructors_file", type=str, default=None,
                         help="File path where processed instructors data will be saved in CSV format. "
-                             "If omitted, data will be saved to "
-                             "data/raw/ directory and will be named as redash_processed_carpentry_instructors_UK_<DATE>.csv.")
+                             "If omitted, data will be saved to data/processed/ directory and named with the current date.")
 
     args = parser.parse_args()
     return args
@@ -135,10 +127,9 @@ def parse_command_line_parameters_redash():
 
 def parse_command_line_parameters_analyses():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-in", "--input_file", type=str, default=None,
-                        help="The path to the input data CSV file to analyse. "
-                             "If omitted, the latest file with workshops/instructors data from data/raw/ directory "
-                             "off project root will be used, if such exists.")
+    required_args = parser.add_argument_group('required named arguments')
+    required_args.add_argument("-in", "--input_file", type=str, default=None, required=True,
+                               help="The path to the input data CSV file to analyse.")
     parser.add_argument("-out", "--output_file", type=str, default=None,
                         help="File path where data analyses will be saved in xslx Excel format. "
                              "If omitted, the Excel file will be saved to "
@@ -149,10 +140,9 @@ def parse_command_line_parameters_analyses():
 
 def parse_command_line_parameters_maps():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-in", "--input_file", type=str, default=None,
-                        help="The path to the input data CSV file to map. "
-                             "If omitted, the latest file with workshops/instructors data from data/raw/ directory "
-                             "off project root will be used, if such exists.")
+    required_args = parser.add_argument_group('required named arguments')
+    required_args.add_argument("-in", "--input_file", type=str, default=None, required=True,
+                               help="The path to the input data CSV file to map.")
     args = parser.parse_args()
     return args
 
@@ -369,7 +359,7 @@ def workshops_per_year_dict(taught_workshop_dates):
     :return: a dictionary like {year : number_taught_workshops_per_year}
     '''
     # Create a list of years for a list of dates (passed as one long string)
-    if taught_workshop_dates is "" or taught_workshop_dates is None or taught_workshop_dates is np.nan:
+    if taught_workshop_dates == "" or taught_workshop_dates is None or taught_workshop_dates is np.nan:
         return None
 
     # taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]

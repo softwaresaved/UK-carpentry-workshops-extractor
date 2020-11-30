@@ -12,7 +12,6 @@ import lib.helper as helper
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = CURRENT_DIR + '/data'
-RAW_DATA_DIR = DATA_DIR + '/raw'
 ANALYSES_DIR = DATA_DIR + "/analyses"
 
 
@@ -22,19 +21,7 @@ def main():
     """
     args = helper.parse_command_line_parameters_analyses()
 
-    if args.input_file:
-        workshops_file = args.input_file
-    else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + RAW_DATA_DIR)
-        workshops_files = glob.glob(RAW_DATA_DIR + "/carpentry-workshops_*.csv")
-        workshops_files.sort(key=os.path.getctime)  # order files by creation date
-
-        if not workshops_files:
-            print("No CSV file with Carpentry workshops found in " + RAW_DATA_DIR + ". Exiting ...")
-            sys.exit(1)
-        else:
-            workshops_file = workshops_files[-1]  # get the last file
-
+    workshops_file = args.input_file
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
 
@@ -42,14 +29,14 @@ def main():
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
-        workshops_df.drop(labels=[  # "contact",
-            "tasks"], axis=1, inplace=True)
-        idx = workshops_df.columns.get_loc("longitude")
-        workshops_df.insert(loc=idx + 1, column='region',
-                            value=workshops_df["longitude"])
-        workshops_df['region'] = workshops_df.apply(
-            lambda x: helper.get_uk_region(latitude=x['latitude'],
-                                           longitude=x['longitude']), axis=1)
+        # workshops_df.drop(labels=[  # "contact",
+        #     "tasks"], axis=1, inplace=True)
+        # idx = workshops_df.columns.get_loc("longitude")
+        # workshops_df.insert(loc=idx + 1, column='region',
+        #                     value=workshops_df["longitude"])
+        # workshops_df['region'] = workshops_df.apply(
+        #     lambda x: helper.get_uk_region(latitude=x['latitude'],
+        #                                    longitude=x['longitude']), axis=1)
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
 
@@ -186,11 +173,11 @@ def workshops_per_host_per_year_analysis(df, writer):
     Number of workshops at different hosts over years.
     """
     # Remove rows with NaN value for the institution
-    df = df.dropna(subset=['host_domain'])
+    df = df.dropna(subset=['organiser_top_level_web_domain'])
 
     workshops_per_host_per_year = pd.core.frame.DataFrame(
-        {'number_of_workshops': df.groupby(['host_domain', 'year']).size()}).reset_index()
-    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='host_domain', columns='year')
+        {'number_of_workshops': df.groupby(['organiser_top_level_web_domain', 'year']).size()}).reset_index()
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='organiser_top_level_web_domain', columns='year')
     workshops_per_host_per_year_pivot = workshops_per_host_per_year_pivot.fillna(0).astype('int')
 
     workshops_per_host_per_year_pivot.to_excel(writer, sheet_name='workshops_per_host_per_year')
@@ -224,10 +211,10 @@ def workshops_per_host_analysis(df, writer):
     """
 
     # Remove rows with NaN value for the institution
-    df = df.dropna(subset=['host_domain'])
+    df = df.dropna(subset=['organiser_top_level_web_domain'])
 
     workshops_per_host = pd.core.frame.DataFrame(
-        {'workshops_per_host': df.groupby(['host_domain']).size().sort_values()}).reset_index()
+        {'workshops_per_host': df.groupby(['organiser_top_level_web_domain']).size().sort_values()}).reset_index()
 
     workshops_per_host.to_excel(writer, sheet_name='workshops_per_host', index=False)
 

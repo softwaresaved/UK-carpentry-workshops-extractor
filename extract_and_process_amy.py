@@ -53,22 +53,22 @@ def main():
     if args.raw_workshops_file:
         raw_workshops_file = args.raw_workshops_file
     else:
-        raw_workshops_file = RAW_DATA_DIR + "/amy_raw_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+        raw_workshops_file = RAW_DATA_DIR + "/raw_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + "_amy.csv"
 
     if args.processed_workshops_file:
         processed_workshops_file = args.processed_workshops_file
     else:
-        processed_workshops_file = PROCESSED_DATA_DIR + "/amy_processed_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+        processed_workshops_file = PROCESSED_DATA_DIR + "/processed_carpentry_workshops_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + "_amy.csv"
 
     if args.raw_instructors_file:
         raw_instructors_file = args.raw_instructors_file
     else:
-        raw_instructors_file = RAW_DATA_DIR + "/amy_raw_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+        raw_instructors_file = RAW_DATA_DIR + "/raw_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + "_amy.csv"
 
     if args.processed_instructors_file:
         processed_instructors_file = args.processed_instructors_file
     else:
-        processed_instructors_file = PROCESSED_DATA_DIR + "/amy_processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + ".csv"
+        processed_instructors_file = PROCESSED_DATA_DIR + "/processed_carpentry_instructors_UK" + "_" + datetime.datetime.today().strftime('%Y-%m-%d') + "_amy.csv"
 
     if args.username is None or args.password is None:
         print("Either username or password were not provided - cannot authenticate with AMY - exiting.")
