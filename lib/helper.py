@@ -583,9 +583,11 @@ def add_UK_regions_layer(map):
 
 
 def generate_heatmap(df):
+
+    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
-    map = folium.Map(
+    heatmap = folium.Map(
         location=center,
         zoom_start=6,
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
@@ -593,16 +595,16 @@ def generate_heatmap(df):
     lat_long = []
     for index, row in df.iterrows():
         lat_long.append([row['latitude'], row['longitude']])
+    HeatMap(lat_long).add_to(heatmap)
 
-    HeatMap(lat_long).add_to(map)
-
-    return map
+    return heatmap
 
 
 def generate_map_with_circular_markers(df):
+    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
-    map = folium.Map(
+    map_with_markers = folium.Map(
         location=center,
         zoom_start=6,
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
@@ -620,27 +622,27 @@ def generate_map_with_circular_markers(df):
             popup=popup,
             color='#ff6600',
             fill=True,
-            fill_color='#ff6600').add_to(map)
+            fill_color='#ff6600').add_to(map_with_markers)
 
-    return map
+    return map_with_markers
 
 
 def generate_map_with_clustered_markers(df):
     """
     Generates a map with clustered markers of a number of locations given in a dataframe.
     """
-
+    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
-    map = folium.Map(location=center, zoom_start=6, tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+    cluster_map = folium.Map(location=center, zoom_start=6, tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
-    marker_cluster = MarkerCluster(name='workshops').add_to(map)
+    marker_cluster = MarkerCluster(name='workshops').add_to(cluster_map)
 
     for index, row in df.iterrows():
         popup = folium.Popup(str(row['popup']), parse_html=True)
         folium.CircleMarker(radius=5, location=[row['latitude'], row['longitude']], popup=popup, color='#ff6600', fill=True, fill_color='#ff6600').add_to(marker_cluster)
 
-    return map
+    return cluster_map
 
 
 def generate_choropleth_map(df, regions, entity_type="workshops"):

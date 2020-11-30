@@ -22,50 +22,23 @@ def main():
     Main function
     """
     args = helper.parse_command_line_parameters_maps()
-
-    if args.input_file:
-        workshops_file = args.input_file
-    else:
-        print("Trying to locate the latest CSV spreadsheet with Carpentry workshops to analyse in " + RAW_DATA_DIR)
-        workshops_files = glob.glob(RAW_DATA_DIR + "/carpentry-workshops_*.csv")
-        workshops_files.sort(key=os.path.getctime)  # order files by creation date
-
-        if not workshops_files:
-            print("No CSV file with Carpentry workshops found in " + RAW_DATA_DIR + ". Exiting ...")
-            sys.exit(1)
-        else:
-            workshops_file = workshops_files[-1]  # get the last file
-
+    workshops_file = args.input_file
     workshops_file_name = os.path.basename(workshops_file)
     workshops_file_name_without_extension = re.sub('\.csv$', '', workshops_file_name.strip())
-
     print("CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file + "\n")
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8", usecols=['venue', 'address', 'latitude',
-                                                                              'longitude'])
-        idx = workshops_df.columns.get_loc("longitude")
-        workshops_df.insert(loc=idx + 1, column='region',
-                            value=workshops_df["longitude"])
+                                                                              'longitude', 'region'])
         # Rename 'venue' column to 'institution' as some of our methods expect that column name
         workshops_df.rename(columns={"venue": "institution"}, inplace=True)
-        # Add column 'popup' which is used in popups in maps
+
+       # Add column 'popup' which is used in popups in maps
         workshops_df['popup'] = np.where(workshops_df["address"].empty, workshops_df["institution"],
                                                workshops_df["institution"] + ', ' + workshops_df["address"])
         # print(workshops_df)
         if not os.path.exists(MAPS_DIR):
             os.makedirs(MAPS_DIR)
-
-        # Calculate and insert UK region based on workshop location
-        # This only makes sense for the UK!!!!
-        workshops_df['region'] = workshops_df.apply(
-            lambda x: helper.get_uk_region(latitude=x['latitude'],
-                                           longitude=x['longitude']), axis=1)
-
-        # Save workshop locations table, it may come in handy
-        workshops_file = MAPS_DIR + "/locations_" + workshops_file_name_without_extension + ".csv"
-        workshops_df.to_csv(workshops_file, encoding="utf-8", index=False)
-        print("\nSaved workshops locations to " + workshops_file + "\n")
     except Exception:
         print ("An error occurred while loading Carpentry workshops ...")
         print(traceback.format_exc())
