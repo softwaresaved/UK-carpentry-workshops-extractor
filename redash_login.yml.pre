@@ -1,4 +1,2 @@
-# Username and password details for logging into AMY
-amy_credentials:
-  username: your_amy_username
-  password: your_amy_password
+# Redash AuthN token for accessing Redash
+redash_token: "insert your Redash token here"
