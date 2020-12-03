@@ -2,6 +2,7 @@
 .idea
 _site
 amy_login.yml
+redash_login.yml
 carpentry-workshops*
 carpentry-instructors*
 client_secrets.json

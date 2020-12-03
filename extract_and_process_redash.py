@@ -1,11 +1,11 @@
-# import traceback
+import traceback
 import os
 import sys
-# import datetime
 import datetime
 import io
 import requests
 import pandas as pd
+import yaml
 import lib.helper as helper
 
 
@@ -17,7 +17,7 @@ RAW_DATA_DIR = DATA_DIR + '/raw'
 PROCESSED_DATA_DIR = DATA_DIR + '/processed'
 LIB_DATA_DIR = CURRENT_DIR + '/lib'
 
-# REDASH_CREDENTIALS_FILE = CURRENT_DIR + '/redash_login.yml'
+REDASH_CREDENTIALS_FILE = CURRENT_DIR + '/redash_login.yml'
 
 if not os.path.exists(RAW_DATA_DIR):
     os.makedirs(RAW_DATA_DIR)
@@ -29,8 +29,28 @@ if not os.path.exists(PROCESSED_DATA_DIR):
 REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
 REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/243/results.csv"
 
-REDASH_API_KEY = "gqMCK5SWYXH4B52zUFmVaf15rN3nArKoJlPHkGg8"
+def get_credentials(file_path):
+    """
+    Extract Redash AuthN token from a YML file
+    :param file_path: YML file with credentials
+    :return: Redash token
+    """
+    redash_token = None
 
+    if os.path.isfile(file_path):
+        with open(file_path, 'r') as stream:
+            try:
+                redash_credentials_yaml = yaml.load(stream, Loader=yaml.FullLoader)
+            except yaml.YAMLError as exc:
+                print("An error occurred while reading Redash credentials YAML file ...")
+                print(traceback.format_exc())
+
+        redash_token = redash_credentials_yaml["redash_token"]
+    else:
+        print("Redash credentials YAML file does not exist " + file_path)
+    return redash_token
+
+REDASH_API_KEY = get_credentials(REDASH_CREDENTIALS_FILE)
 
 def main():
     """
