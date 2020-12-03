@@ -25,8 +25,8 @@ python extract_and_process_redash.py -pw $WORKSHOPS_DATAFILE -pi $INSTRUCTORS_DA
 echo
 
 # Define the analysis files
-ANALYSED_WORKSHOPS="data/analyses/analysed_carpentry_workshops_UK_$(date +'%Y-%m-%d').csv"
-ANALYSED_INSTRUCTORS="data/analyses/analysed_carpentry_instructors_UK_$(date +'%Y-%m-%d').csv"
+ANALYSED_WORKSHOPS="data/analyses/analysed_carpentry_workshops_UK_$(date +'%Y-%m-%d').xlsx"
+ANALYSED_INSTRUCTORS="data/analyses/analysed_carpentry_instructors_UK_$(date +'%Y-%m-%d').xlsx"
 
 # Produce workshop output data.
 echo Analysing the workshop data
