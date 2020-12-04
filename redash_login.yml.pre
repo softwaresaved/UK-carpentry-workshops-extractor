@@ -1,2 +1,2 @@
-# Redash AuthN token for accessing Redash
+# AuthN token for accessing Redash
 redash_token: "insert your Redash token here"

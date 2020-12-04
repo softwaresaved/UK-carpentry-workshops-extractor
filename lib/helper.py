@@ -25,7 +25,7 @@ UK_AIRPORTS = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 
 WORKSHOP_TYPE = ["SWC", "DC", "LC", "TTT"]
 WORKSHOP_SUBTYPE = ['Pilot', "Circuits"]
-WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
+STOPPED_WORKSHOP_STATUS = ['stalled', 'cancelled', 'unresponsive']
 INSTRUCTOR_BADGES = ["swc-instructor", "dc-instructor", "lc-instructor", "trainer"]
 
 COUNTRIES_FILE = CURRENT_DIR + "/countries.json"
@@ -187,19 +187,34 @@ def extract_workshop_status(workshop_tags):
     """
     Extract workshop status from a list of workshop tags. Tags contain a mix of workshop status and workshop type.
     :param workshop_tags: list of tags
-    :return: workshop status (e.g. one of 'stalled', 'cancelled', 'unresponsive' or "" if none of the recognised tags is found)
+    :return: workshop status (e.g. one of 'stalled', 'cancelled', 'unresponsive' or "" if none of the recognised tags
+    is found)
     """
 
     # If we have the list passed as a string instead - convert to a list first
     if isinstance(workshop_tags, str):
         workshop_tags = workshop_tags.split(",")
 
-    # Is this a stopped workshop (if not then it will have a workshop type)?
-    is_stopped = list(set(workshop_tags) & set(WORKSHOP_STATUS))
+    # Is this a stopped workshop?
+    is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_STATUS))
     if len(is_stopped) > 0:  # non-empty list?
-        return is_stopped[0]
+        return is_stopped[0] # return the first STOPPED_WORKSHOP_STATUS tag found
     else:
         return ""
+
+
+def is_stopped(workshop_tags):
+    """
+    :param workshop_tags: list of tags
+    :return: True if workshop_tags contain one of the STOPPED_WORKSHOP_STATUS tags, else False
+    """
+
+    # Is this a stopped workshop?
+    stopped_tags = list(set(workshop_tags) & set(STOPPED_WORKSHOP_STATUS))
+    if len(stopped_tags) > 0:  # non-empty list?
+        return True
+    else:
+        return False
 
 
 def get_country(country_code):
@@ -235,6 +250,10 @@ def process_workshops(workshops_df):
     workshops_df.insert(loc=idx + 2, column='workshop_status', value=workshops_df["tags"])
     workshops_df["workshop_status"] = workshops_df["tags"].map(extract_workshop_status, na_action="ignore")
 
+    # Drop all stopped workshops
+    stopped_workshops = workshops_df[(workshops_df['workshop_status'].isin(STOPPED_WORKSHOP_STATUS))]
+    workshops_df.drop(stopped_workshops.index, inplace=True)
+
     # Insert countries where workshops were held based on country_code
     idx = workshops_df.columns.get_loc("country_code")
     workshops_df.insert(loc=idx, column='country', value=workshops_df["country_code"])
@@ -254,12 +273,6 @@ def process_workshops(workshops_df):
         workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
                                                                        na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
-    # Add UK region for a workshop based on its geocoordinates as a new column
-    idx = workshops_df.columns.get_loc("country") + 1
-    workshops_df.insert(loc=idx, column='region', value=workshops_df["country_code"])
-    workshops_df['region'] = workshops_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
-    print("\n###################\nGetting regions took a while but it has finished now.###################\n")
-
     # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
     uk_academic_institutions = pd.read_csv(CURRENT_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
     hesa_uk_higher_education_providers = pd.read_csv(CURRENT_DIR + "/HESA_UK_higher_education_providers.csv", encoding="utf-8")
@@ -268,9 +281,15 @@ def process_workshops(workshops_df):
     uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(hesa_uk_higher_education_providers_region_mapping, na_action="ignore")
     uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
-    idx = workshops_df.columns.get_loc("organiser_top_level_web_domain") + 1
-    workshops_df.insert(loc=idx, column='organiser_region', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['organiser_region'] = workshops_df['organiser_region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
+    idx = workshops_df.columns.get_loc("country") + 1
+    workshops_df.insert(loc=idx, column='region', value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['region'] = workshops_df['region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
+
+    # If we cannot find the region by institution, try finding it based on the workshop's geocoordinates
+    workshops_df['region'] = workshops_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']) if x['region'] is np.NaN else x['region'], axis=1)
+    print("\n###################\nGetting regions took a while but it has finished now.###################\n")
+
+    #TODO: add mapping of non-academic institutions to their geo-coordinates and regions, e.g. ukaea.uk, SSI
 
     # Get normalised and common names for UK academic institutions, if exist, by mapping to UK higher education providers
     uk_academic_institutions_normalised_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'PROVIDER_NAME']].values)  # create a dict for lookup
@@ -299,7 +318,7 @@ def process_instructors(instructors_df):
                       value=instructors_df["country_code"])
     instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code), na_action="ignore")
 
-    # Insert normalised/official names for institutions (for UK academic institutions)
+    # Insert normalised/official names for UK academic institutions
     print("\nInserting normalised name for instructors' affiliations/institutions...\n")
     instructors_df = insert_normalised_institution(instructors_df, "institution")
 

@@ -29,6 +29,7 @@ if not os.path.exists(PROCESSED_DATA_DIR):
 REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
 REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/243/results.csv"
 
+
 def get_credentials(file_path):
     """
     Extract Redash AuthN token from a YML file
@@ -50,7 +51,9 @@ def get_credentials(file_path):
         print("Redash credentials YAML file does not exist " + file_path)
     return redash_token
 
+
 REDASH_API_KEY = get_credentials(REDASH_CREDENTIALS_FILE)
+
 
 def main():
     """
