@@ -25,8 +25,8 @@ python extract_and_process_redash.py -pw $WORKSHOPS_DATAFILE -pi $INSTRUCTORS_DA
 echo
 
 # Define the analysis files
-ANALYSED_WORKSHOPS="data/analyses/analysed_carpentry_workshops_UK_$(date +'%Y-%m-%d').csv"
-ANALYSED_INSTRUCTORS="data/analyses/analysed_carpentry_instructors_UK_$(date +'%Y-%m-%d').csv"
+ANALYSED_WORKSHOPS="data/analyses/analysed_carpentry_workshops_UK_$(date +'%Y-%m-%d').xlsx"
+ANALYSED_INSTRUCTORS="data/analyses/analysed_carpentry_instructors_UK_$(date +'%Y-%m-%d').xlsx"
 
 # Produce workshop output data.
 echo Analysing the workshop data
@@ -48,15 +48,17 @@ git push
 # hanging off the home directory. We will copy the output files to that
 # repository. Add them, commit them, do a git pull of the repo contents
 # and then push them to the metrics repository.
-#cp ./data/analyses/${outfile1} ~/metrics/training/workshops/analyses
-#cp ./data/analyses/${outfile2} ~/metrics/training/workshops/analyses
+cp ${ANALYSED_WORKSHOPS} ~/metrics/training/workshops/analyses
+cp ${WORKSHOPS_DATAFILE} ~/metrics/training/workshops/data/processed
+cp ${ANALYSED_INSTRUCTORS} ~/metrics/training/instructors/analyses
+cp ${INSTRUCTORS_DATAFILE} ~/metrics/training/instructors/data/processed
 
 # Go to the repository, add and commit the files.
-#cd ~/metrics/training/workshops/analyses
-#git add ${outfile1}
-#git add ${outfile2}
-#git commit -m "Adding carpentry and workshop data for ${date}."
+cd ~/metrics/training/
+git add workshops/
+git add instructors/
+git commit -m "Adding carpentry instructor and workshop data for ${date}."
 # Make sure the repo is up to date.
-#git pull  
+git pull  
 # Now push the results.
-#git push 
+git push 
