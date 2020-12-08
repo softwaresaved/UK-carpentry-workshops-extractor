@@ -57,6 +57,8 @@ def main():
         workshops_per_type_analysis(workshops_df, excel_writer)
         workshops_per_type_per_year_analysis(workshops_df, excel_writer)
 
+        online_workshop_analysis(workshops_df, excel_writer)
+
         workshops_per_host_analysis(workshops_df, excel_writer)
         workshops_per_host_per_year_analysis(workshops_df, excel_writer)
 
@@ -100,6 +102,8 @@ def workshops_per_year_analysis(df, writer):
 
     worksheet.insert_chart('I2', chart1)
 
+    total_workshops = workshops_per_year['number_of_workshops'].sum()
+    worksheet.write(0, 3, "Total workshops: " + str(total_workshops))
     return workshops_per_year
 
 
@@ -239,6 +243,39 @@ def workshops_per_host_analysis(df, writer):
 
     return workshops_per_host
 
+
+def online_workshop_analysis(df, writer):
+    """
+    Online vs in-person workshops
+    """
+    online_workshops = df[df['tags'].str.contains('online')]['tags'].count()
+    inperson_workshops = df['slug'].count() - online_workshops
+    online_vs_inperson_workshops = pd.Series([online_workshops, inperson_workshops])
+    online_vs_inperson_workshops.index = ['Online', 'In-person']
+    online_vs_inperson_workshops = online_vs_inperson_workshops.astype(int)
+
+    online_vs_inperson_workshops.to_excel(writer, sheet_name='online_vs_inperson', index=True)
+
+    workbook = writer.book
+    worksheet = writer.sheets['online_vs_inperson']
+
+    chart = workbook.add_chart({'type': 'column'})
+
+    chart.add_series({
+        'categories': ['online_vs_inperson', 1, 0, len(online_vs_inperson_workshops.index), 0],
+        'values': ['online_vs_inperson', 1, 1, len(online_vs_inperson_workshops.index), 1],
+        'gap': 2,
+    })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'Workshop delivery mode'})
+    chart.set_y_axis({'name': 'Number of workshops', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of online vs in-person workshops'})
+
+    worksheet.insert_chart('I2', chart)
+
+    return online_vs_inperson_workshops
 
 def attendance_per_year_analysis(df, writer):
     """
