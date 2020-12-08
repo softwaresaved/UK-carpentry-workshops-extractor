@@ -11,6 +11,7 @@ from folium.plugins import HeatMap
 from shapely.geometry import shape, Point
 import traceback
 import getpass
+import tldextract
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
@@ -261,7 +262,7 @@ def process_workshops(workshops_df):
     countries_mapping = dict(countries[['country_code', 'country_name']].values)
     workshops_df['country'] = workshops_df['country_code'].map(countries_mapping, na_action="ignore")
 
-    # Extract hosts' domains from host URIs or host web domains, depending which column we have
+    # Extract hosts' top level Web domains from host URIs or host web domains, depending which column we have
     if "organiser_web_domain" in workshops_df.columns:
         idx = workshops_df.columns.get_loc("organiser_web_domain") + 1
         workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_web_domain"])
@@ -273,12 +274,15 @@ def process_workshops(workshops_df):
         workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
                                                                        na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
+
     # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
     uk_academic_institutions = pd.read_csv(CURRENT_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
     hesa_uk_higher_education_providers = pd.read_csv(CURRENT_DIR + "/HESA_UK_higher_education_providers.csv", encoding="utf-8")
     hesa_uk_higher_education_providers_region_mapping = dict(hesa_uk_higher_education_providers[['UKPRN', 'Region']].values)  # create a dict for lookup
-    uk_academic_institutions['top_level_web_domain'] = uk_academic_institutions['WEBSITE_URL'].apply(lambda x: x.strip("http://www.").strip("/"))  # strip 'http://www' from domain
+
+    uk_academic_institutions['top_level_web_domain'] = uk_academic_institutions['WEBSITE_URL'].apply(lambda x: tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix)  # strip 'http://www' from domain
     uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(hesa_uk_higher_education_providers_region_mapping, na_action="ignore")
+
     uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
     idx = workshops_df.columns.get_loc("country") + 1
