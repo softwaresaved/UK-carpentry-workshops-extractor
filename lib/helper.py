@@ -19,6 +19,7 @@ UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
 UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
+UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_CSV = CURRENT_DIR + '/UK-non-academic-institutions-geodata.csv'
 
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
@@ -52,12 +53,23 @@ COUNTRIES = get_countries(COUNTRIES_FILE)
 def get_uk_non_academic_institutions():
     """
     Return names and coordinates for UK institutions that are not high education providers
-    (so are not in the official academic institutions list), but appear in AMY as affiliations of UK instructors.
-    This list needs to be periodically updated as more non-academic affiliations appear in AMY.
+    (so are not in the official academic institutions list), but appear in data as host institutions or
+     affiliations of UK instructors.
+    This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
     """
     non_academic_UK_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE))
     return pd.DataFrame(non_academic_UK_institutions_coords)
 
+
+def get_uk_non_academic_institutions_from_csv():
+    """
+    Return names and coordinates for UK institutions that are not high education providers
+    (so are not in the official academic institutions list), but appear in data as host institutions or
+     affiliations of UK instructors.
+    This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
+    """
+    uk_academic_institutions_geodata_df = pd.read_csv(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_CSV, encoding="utf-8")
+    return pd.DataFrame(uk_academic_institutions_geodata_df)
 
 def get_uk_academic_institutions():
     uk_academic_institutions_geodata_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE, encoding="utf-8",
@@ -274,7 +286,6 @@ def process_workshops(workshops_df):
         workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
                                                                        na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
-
     # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
     uk_academic_institutions = pd.read_csv(CURRENT_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
     hesa_uk_higher_education_providers = pd.read_csv(CURRENT_DIR + "/HESA_UK_higher_education_providers.csv", encoding="utf-8")
@@ -285,9 +296,15 @@ def process_workshops(workshops_df):
 
     uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
+    # Get geo data for non-academic institutions
+    uk_non_academic_institutions = get_uk_non_academic_institutions_from_csv() # data frame
+
+    all_institutions_region_mapping = dict(uk_non_academic_institutions[['top_level_web_domain', 'region']].values)
+    all_institutions_region_mapping.update(uk_academic_institutions_region_mapping)
+
     idx = workshops_df.columns.get_loc("country") + 1
     workshops_df.insert(loc=idx, column='region', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['region'] = workshops_df['region'].map(uk_academic_institutions_region_mapping, na_action="ignore")
+    workshops_df['region'] = workshops_df['region'].map(all_institutions_region_mapping, na_action="ignore")
 
     # If we cannot find the region by institution, try finding it based on the workshop's geocoordinates
     workshops_df['region'] = workshops_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']) if x['region'] is np.NaN else x['region'], axis=1)

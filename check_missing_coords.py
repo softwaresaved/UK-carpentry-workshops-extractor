@@ -7,6 +7,7 @@ from openpyxl import load_workbook
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_INSTITUTIONS_GEOCODES_FILE = CURRENT_DIR + '/lib/UK-academic-institutions-geodata.xlsx'
 
+
 def load_geocodes(filename):
     """
     Creates a dataframe for the corresponding excel file.
@@ -14,11 +15,13 @@ def load_geocodes(filename):
     excel_file = pd.ExcelFile(filename)
     return excel_file.parse('UK-academic-institutions')
 
+
 def fix_missing_values(df):
     """
     Replaces missing nan values for empty strings.
     """
     return df.replace(np.nan, '', regex=True)
+
 
 def add_missing_coordinates(df):
     """
@@ -50,6 +53,7 @@ def add_missing_coordinates(df):
         print('The institutions that are still missing the coordinates are: ' + str(institutions_with_missing_coords))
 
     return df
+
 
 def save_geocodes(df, file):
     """
