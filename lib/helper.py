@@ -17,9 +17,11 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
-UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
-UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
-UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_CSV = CURRENT_DIR + '/UK-non-academic-institutions-geodata.csv'
+UK_ACADEMIC_INSTITUTIONS_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
+HESA_ACADEMIC_PROVIDERS_FILE = CURRENT_DIR + "/HESA_UK_higher_education_providers.csv"
+UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
+UK_NON_ACADEMIC_INSTITUTIONS_CSV = CURRENT_DIR + '/UK-non-academic-institutions.csv'
+ALL_UK_INSTITUTIONS_CSV = CURRENT_DIR + '/all-institutions.csv' # merged academic and non-academic institutions
 
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
@@ -57,8 +59,8 @@ def get_uk_non_academic_institutions():
      affiliations of UK instructors.
     This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
     """
-    non_academic_UK_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_FILE))
-    return pd.DataFrame(non_academic_UK_institutions_coords)
+    non_academic_uk_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_JSON))
+    return pd.DataFrame(non_academic_uk_institutions_coords)
 
 
 def get_uk_non_academic_institutions_from_csv():
@@ -68,13 +70,14 @@ def get_uk_non_academic_institutions_from_csv():
      affiliations of UK instructors.
     This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
     """
-    uk_academic_institutions_geodata_df = pd.read_csv(UK_NON_ACADEMIC_INSTITUTIONS_GEODATA_CSV, encoding="utf-8")
+    uk_academic_institutions_geodata_df = pd.read_csv(UK_NON_ACADEMIC_INSTITUTIONS_CSV, encoding="utf-8")
     return pd.DataFrame(uk_academic_institutions_geodata_df)
 
+
 def get_uk_academic_institutions():
-    uk_academic_institutions_geodata_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_GEODATA_FILE, encoding="utf-8",
+    uk_academic_institutions_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_FILE, encoding="utf-8",
                                                       usecols=['VIEW_NAME', 'LONGITUDE', 'LATITUDE'])
-    return uk_academic_institutions_geodata_df
+    return uk_academic_institutions_df
 
 
 NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
@@ -211,7 +214,7 @@ def extract_workshop_status(workshop_tags):
     # Is this a stopped workshop?
     is_stopped = list(set(workshop_tags) & set(STOPPED_WORKSHOP_STATUS))
     if len(is_stopped) > 0:  # non-empty list?
-        return is_stopped[0] # return the first STOPPED_WORKSHOP_STATUS tag found
+        return is_stopped[0]  # return the first STOPPED_WORKSHOP_STATUS tag found
     else:
         return ""
 
@@ -248,7 +251,8 @@ def process_workshops(workshops_df):
     # Extract workshop year from its slug and add as a new column
     idx = workshops_df.columns.get_loc("start")
     workshops_df.insert(loc=idx, column='year', value=workshops_df["start"])
-    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,na_action="ignore")
+    workshops_df["year"] = workshops_df["start"].map(lambda date: datetime.datetime.strptime(date, "%Y-%m-%d").year,
+                                                     na_action="ignore")
 
     # Extract workshop type ('SWC', 'DC', 'LC', 'TTT'), subtype ('Circuits', 'Pilot'),
     # and status ('cancelled', 'unresponsive', 'stalled') from the list of workshop tags and add as new columns
@@ -270,60 +274,59 @@ def process_workshops(workshops_df):
     # Insert countries where workshops were held based on country_code
     idx = workshops_df.columns.get_loc("country_code")
     workshops_df.insert(loc=idx, column='country', value=workshops_df["country_code"])
-    countries = pd.read_csv("lib/country_codes.csv", encoding="utf-8", keep_default_na=False)  # keep_default_na prevents Namibia "NA" being read as NaN!
+    countries = pd.read_csv("lib/country_codes.csv", encoding="utf-8",
+                            keep_default_na=False)  # keep_default_na prevents Namibia "NA" being read as NaN!
     countries_mapping = dict(countries[['country_code', 'country_name']].values)
     workshops_df['country'] = workshops_df['country_code'].map(countries_mapping, na_action="ignore")
 
     # Extract hosts' top level Web domains from host URIs or host web domains, depending which column we have
     if "organiser_web_domain" in workshops_df.columns:
         idx = workshops_df.columns.get_loc("organiser_web_domain") + 1
-        workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_web_domain"])
-        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_web_domain"].map(lambda web_domain: extract_top_level_domain_from_string(web_domain),na_action="ignore")
+        workshops_df.insert(loc=idx, column='organiser_top_level_web_domain',
+                            value=workshops_df["organiser_web_domain"])
+        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_web_domain"].apply(
+            lambda x: tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix)
     elif "organiser_uri" in workshops_df.columns:
         # Extract hosts' web domains from host URIs
         idx = workshops_df.columns.get_loc("organiser_uri") + 1
         workshops_df.insert(loc=idx, column='organiser_top_level_web_domain', value=workshops_df["organiser_uri"])
-        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(lambda uri: extract_top_level_domain_from_uri(uri),
-                                                                       na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
+        workshops_df["organiser_top_level_web_domain"] = workshops_df["organiser_uri"].map(
+            lambda uri: extract_top_level_domain_from_uri(uri),
+            na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
-    # Add UK region for a workshop based on its organiser (lookup UK academic institutitons and HESA data) as a new column
-    uk_academic_institutions = pd.read_csv(CURRENT_DIR + "/UK-academic-institutions.csv", encoding="utf-8")
-    hesa_uk_higher_education_providers = pd.read_csv(CURRENT_DIR + "/HESA_UK_higher_education_providers.csv", encoding="utf-8")
-    hesa_uk_higher_education_providers_region_mapping = dict(hesa_uk_higher_education_providers[['UKPRN', 'Region']].values)  # create a dict for lookup
+    # Get data for UK institutions to lookup
+    all_institutions_df = pd.read_csv(ALL_UK_INSTITUTIONS_CSV, encoding="utf-8")
+    all_institutions_regions_dict = dict(all_institutions_df[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
-    uk_academic_institutions['top_level_web_domain'] = uk_academic_institutions['WEBSITE_URL'].apply(lambda x: tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix)  # strip 'http://www' from domain
-    uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(hesa_uk_higher_education_providers_region_mapping, na_action="ignore")
-
-    uk_academic_institutions_region_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'region']].values)  # create a dict for lookup
-
-    # Get geo data for non-academic institutions
-    uk_non_academic_institutions = get_uk_non_academic_institutions_from_csv() # data frame
-
-    all_institutions_region_mapping = dict(uk_non_academic_institutions[['top_level_web_domain', 'region']].values)
-    all_institutions_region_mapping.update(uk_academic_institutions_region_mapping)
-
+    # Get region for institution
+    print("Getting regions for host institutions...\n")
     idx = workshops_df.columns.get_loc("country") + 1
     workshops_df.insert(loc=idx, column='region', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['region'] = workshops_df['region'].map(all_institutions_region_mapping, na_action="ignore")
-
+    workshops_df['region'] = workshops_df['region'].map(all_institutions_regions_dict, na_action="ignore")
     # If we cannot find the region by institution, try finding it based on the workshop's geocoordinates
-    workshops_df['region'] = workshops_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']) if x['region'] is np.NaN else x['region'], axis=1)
-    print("\n###################\nGetting regions took a while but it has finished now.###################\n")
+    print("Getting regions for workshops via (latitude, longitude) for host institutions that we do not have region for.")
+    workshops_df['region'] = workshops_df.apply(
+        lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude'], institution=x['organiser']) if x['region'] is np.NaN else x[
+            'region'], axis=1)
 
-    #TODO: add mapping of non-academic institutions to their geo-coordinates and regions, e.g. ukaea.uk, SSI
-
-    # Get normalised and common names for UK academic institutions, if exist, by mapping to UK higher education providers
-    uk_academic_institutions_normalised_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'PROVIDER_NAME']].values)  # create a dict for lookup
-    uk_academic_institutions_common_names_mapping = dict(uk_academic_institutions[['top_level_web_domain', 'VIEW_NAME']].values)  # create a dict for lookup
+    # Get normalised (official) and common names for UK academic institutions, if exist
+    uk_academic_institutions_normalised_names_dict = dict(
+        all_institutions_df[['top_level_web_domain', 'normalised_name']].values)  # create a dict for lookup
+    uk_academic_institutions_common_names_mapping = dict(
+        all_institutions_df[['top_level_web_domain', 'common_name']].values)  # create a dict for lookup
 
     # Insert normalised (official) name for organiser
     idx = workshops_df.columns.get_loc("organiser_top_level_web_domain") + 1
-    workshops_df.insert(loc=idx, column='organiser_normalised_name', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['organiser_normalised_name'] = workshops_df['organiser_normalised_name'].map(uk_academic_institutions_normalised_names_mapping, na_action="ignore")
+    workshops_df.insert(loc=idx, column='organiser_normalised_name',
+                        value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_normalised_name'] = workshops_df['organiser_normalised_name'].map(
+        uk_academic_institutions_normalised_names_dict, na_action="ignore")
 
     # Insert common name for organiser
-    workshops_df.insert(loc=idx + 1, column='organiser_common_name', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['organiser_common_name'] = workshops_df['organiser_common_name'].map(uk_academic_institutions_common_names_mapping, na_action="ignore")
+    workshops_df.insert(loc=idx + 1, column='organiser_common_name',
+                        value=workshops_df["organiser_top_level_web_domain"])
+    workshops_df['organiser_common_name'] = workshops_df['organiser_common_name'].map(
+        uk_academic_institutions_common_names_mapping, na_action="ignore")
 
     return workshops_df
 
@@ -336,8 +339,9 @@ def process_instructors(instructors_df):
 
     idx = instructors_df.columns.get_loc("country_code")
     instructors_df.insert(loc=idx, column='country',
-                      value=instructors_df["country_code"])
-    instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code), na_action="ignore")
+                          value=instructors_df["country_code"])
+    instructors_df["country"] = instructors_df["country"].map(lambda country_code: get_country(country_code),
+                                                              na_action="ignore")
 
     # Insert normalised/official names for UK academic institutions
     print("\nInserting normalised name for instructors' affiliations/institutions...\n")
@@ -345,18 +349,20 @@ def process_instructors(instructors_df):
 
     # Insert latitude, longitude pairs for instructors' institutions
     print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
-    instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
+    instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude",
+                                                         "longitude")
 
     # Insert UK regional info based on the nearest airport
     print("\nInserting regions for instructors based on the nearest airport...\n")
     instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    instructors_df.rename(columns = {"region": "airport_region"}, inplace=True)
+    instructors_df.rename(columns={"region": "airport_region"}, inplace=True)
 
     # Insert UK regional info based on instructors' affiliations
     print("\nInserting regions for instructors' affiliations/institutions...\n")
     idx = instructors_df.columns.get_loc("institution") + 1
     instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
-    instructors_df['institutional_region'] = instructors_df.apply(lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude']), axis=1)
+    instructors_df['institutional_region'] = instructors_df.apply(
+        lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude'], institution=x['institution']), axis=1)
     print("\nGetting regions for institutions took a while but it has finished now.\n")
 
     # Extract dates when instructors badges were awarded from list
@@ -364,14 +370,17 @@ def process_instructors(instructors_df):
         idx = instructors_df.columns.get_loc("badges_dates")
         i = 1
         for badge in INSTRUCTOR_BADGES:
-
             instructors_df.insert(loc=idx + i, column=badge, value=instructors_df["badges"])
-            instructors_df[badge] = pd.to_datetime(instructors_df.apply(lambda x: get_badge_date(badge=badge, badges=x['badges'], dates=x['badges_dates']), axis=1))
-            i = i+1
+            instructors_df[badge] = pd.to_datetime(
+                instructors_df.apply(lambda x: get_badge_date(badge=badge, badges=x['badges'], dates=x['badges_dates']),
+                                     axis=1))
+            i = i + 1
 
-        instructors_df.insert(loc=idx + i, column='earliest_badge_awarded', value=instructors_df[INSTRUCTOR_BADGES].min(axis=1))
+        instructors_df.insert(loc=idx + i, column='earliest_badge_awarded',
+                              value=instructors_df[INSTRUCTOR_BADGES].min(axis=1))
         instructors_df["earliest_badge_awarded"] = pd.to_datetime(instructors_df["earliest_badge_awarded"])
-        instructors_df.insert(loc=idx + i + 1, column='year_earliest_badge_awarded', value=instructors_df["earliest_badge_awarded"].dt.year.fillna(0.0).astype(int))
+        instructors_df.insert(loc=idx + i + 1, column='year_earliest_badge_awarded',
+                              value=instructors_df["earliest_badge_awarded"].dt.year.fillna(0.0).astype(int))
 
     # # Create a dictionary of taught_workshops (a list of workshop slugs where instructor taught) and
     # # taught_workshop_dates (a list of corresponding dates for those workshops) and save into a new column
@@ -382,7 +391,8 @@ def process_instructors(instructors_df):
     # Create a dictionary of {year: number_taught_workshops_per_year} per instructor and save into a new column
     idx = instructors_df.columns.get_loc("taught_workshops")
     instructors_df.insert(loc=idx + 2, column='taught_workshops_per_year', value=instructors_df["taught_workshops"])
-    instructors_df['taught_workshops_per_year'] = instructors_df['taught_workshop_dates'].apply(lambda x: workshops_per_year_dict(x))
+    instructors_df['taught_workshops_per_year'] = instructors_df['taught_workshop_dates'].apply(
+        lambda x: workshops_per_year_dict(x))
 
     # For some reason Redash returns some people who are not instructors that have empty 'earliest_badge_awarded' field!
     # This has been fixed in the query that gets the raw data from Redash!
@@ -410,7 +420,7 @@ def workshops_per_year_dict(taught_workshop_dates):
         except ValueError:
             # Try the US date format with date before month - some slugs wrongly use this
             d = datetime.datetime.strptime(date, '%Y-%d-%m').date().year
-        except Exception as exc: #anything else
+        except Exception as exc:  # anything else
             print("An error occurred while parsing date from slug: " + date)
             print(traceback.format_exc())
             continue
@@ -451,7 +461,7 @@ def latest_date(dates_string):
 def create_dict(list_a, list_b):
     if list_a is None or list_a is np.nan:
         return None
-    d = dict(zip(str(list_a).split(','),str(list_b).split(',')))
+    d = dict(zip(str(list_a).split(','), str(list_b).split(',')))
     return json.dumps(d)
 
 
@@ -518,8 +528,8 @@ def get_normalised_institution_name(non_normalised_institution_name):
 
     if normalised_institution_name == "Unknown":
         print(
-                'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
-                'Setting the institution to "Unknown" ...\n')
+            'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
+            'Setting the institution to "Unknown" ...\n')
     return normalised_institution_name
 
 
@@ -541,13 +551,13 @@ def insert_institutional_geocoordinates(df, institution_column_name, latitude_co
     return df
 
 
-def get_uk_region(latitude, longitude):
+def get_uk_region(latitude, longitude, institution):
     """
     Lookup UK region given the (latitude, longitude) coordinates.
     """
     if latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
         print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
-            longitude) + ")")
+            longitude) + ") for institution: '" + str(institution) + "'")
         point = Point(longitude, latitude)
         for feature in UK_REGIONS['features']:
             polygon = shape(feature['geometry'])
@@ -567,8 +577,8 @@ def extract_top_level_domain_from_string(domain):
     domain_parts = list(filter(None, re.split("(.+?)\.", domain)))
     if len(domain_parts) >= 3:
         domain_parts = domain_parts[-3:]  # Get the last 3 elements of the list only
-    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
-    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
+    top_level_domain = ''.join((x + '.') for x in domain_parts)  # join parts with '.' in between
+    top_level_domain = top_level_domain[:-1]  # remove the extra '.' at the end after joining
     return top_level_domain
 
 
@@ -580,14 +590,42 @@ def extract_top_level_domain_from_uri(uri):
     :param uri: URI like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
     :return: top level domain like 'earlham.ac.uk'
     """
-    host = list(filter(None, re.split("(.+?)/", uri)))[-1] # Get the host from the URI first
+    host = list(filter(None, re.split("(.+?)/", uri)))[-1]  # Get the host from the URI first
     # Now just get the top level domain of the host
     domain_parts = list(filter(None, re.split("(.+?)\.", host)))
     if len(domain_parts) >= 3:
         domain_parts = domain_parts[-3:]  # Get the past 3 elements of the list only
-    top_level_domain = ''.join((x + '.') for x in domain_parts) # join parts with '.' in between
-    top_level_domain = top_level_domain[:-1]    # remove the extra '.' at the end after joining
+    top_level_domain = ''.join((x + '.') for x in domain_parts)  # join parts with '.' in between
+    top_level_domain = top_level_domain[:-1]  # remove the extra '.' at the end after joining
     return top_level_domain
+
+
+def merge_institution_data():
+    hesa_uk_higher_education_providers = pd.read_csv(HESA_ACADEMIC_PROVIDERS_FILE, encoding="utf-8")
+    hesa_uk_higher_education_providers_region_mapping = dict(
+        hesa_uk_higher_education_providers[['UKPRN', 'Region']].values)  # create a dict for lookup
+
+    uk_academic_institutions = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_FILE,
+                                           encoding="utf-8",
+                                           usecols=['UKPRN','PROVIDER_NAME','VIEW_NAME','WEBSITE_URL',
+                                                    'LONGITUDE','LATITUDE', 'STREET_NAME','TOWN','POSTCODE'])
+    uk_academic_institutions['top_level_web_domain'] = uk_academic_institutions['WEBSITE_URL'].apply(
+        lambda x: tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix)
+    # Join region info for academic provider from HESA data
+    uk_academic_institutions['region'] = uk_academic_institutions['UKPRN'].map(
+        hesa_uk_higher_education_providers_region_mapping, na_action="ignore")
+    uk_academic_institutions.rename(
+        columns={'PROVIDER_NAME': 'normalised_name', 'VIEW_NAME': 'common_name', 'LONGITUDE': 'longitude',
+                 'LATITUDE': 'latitude'}, inplace=True)
+
+    # Get non-academic institutions' data
+    uk_non_academic_institutions = get_uk_non_academic_institutions_from_csv()  # data frame
+
+    all_uk_institutions_data = pd.concat([uk_academic_institutions, uk_non_academic_institutions], ignore_index=True)
+    all_uk_institutions_file = ALL_UK_INSTITUTIONS_CSV
+    all_uk_institutions_data.to_csv(all_uk_institutions_file, encoding="utf-8")
+    print("Merged academic and non-academic institutional data saved to " + all_uk_institutions_file)
+    return all_uk_institutions_data
 
 
 def get_center(df):
@@ -616,15 +654,14 @@ def add_UK_regions_layer(map):
                        }).add_to(map)
         folium.LayerControl().add_to(map)
     except:
-        print ("An error occurred while reading the UK regions file: " + UK_REGIONS_FILE)
+        print("An error occurred while reading the UK regions file: " + UK_REGIONS_FILE)
         print(traceback.format_exc())
 
     return map
 
 
 def generate_heatmap(df):
-
-    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
+    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
     heatmap = folium.Map(
@@ -641,7 +678,7 @@ def generate_heatmap(df):
 
 
 def generate_map_with_circular_markers(df):
-    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
+    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
     map_with_markers = folium.Map(
@@ -671,16 +708,18 @@ def generate_map_with_clustered_markers(df):
     """
     Generates a map with clustered markers of a number of locations given in a dataframe.
     """
-    df.dropna(subset=["latitude","longitude"], how="any", axis=0, inplace=True)
+    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
-    cluster_map = folium.Map(location=center, zoom_start=6, tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
+    cluster_map = folium.Map(location=center, zoom_start=6,
+                             tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     marker_cluster = MarkerCluster(name='workshops').add_to(cluster_map)
 
     for index, row in df.iterrows():
         popup = folium.Popup(str(row['popup']), parse_html=True)
-        folium.CircleMarker(radius=5, location=[row['latitude'], row['longitude']], popup=popup, color='#ff6600', fill=True, fill_color='#ff6600').add_to(marker_cluster)
+        folium.CircleMarker(radius=5, location=[row['latitude'], row['longitude']], popup=popup, color='#ff6600',
+                            fill=True, fill_color='#ff6600').add_to(marker_cluster)
 
     return cluster_map
 

@@ -62,16 +62,16 @@ def main():
         workshops_per_host_analysis(workshops_df, excel_writer)
         workshops_per_host_per_year_analysis(workshops_df, excel_writer)
 
-        attendance_per_year_analysis(workshops_df, excel_writer)
-        attendance_per_type_analysis(workshops_df, excel_writer)
-        attendance_per_type_per_year_analysis(workshops_df, excel_writer)
+        estimated_attendance_per_year_analysis(workshops_df, excel_writer)
+        estimated_attendance_per_type_analysis(workshops_df, excel_writer)
+        estimated_attendance_per_type_per_year_analysis(workshops_df, excel_writer)
 
-        workshops_per_UK_region_analysis(workshops_df, excel_writer)
+        workshops_per_uk_region_analysis(workshops_df, excel_writer)
 
         excel_writer.save()
         print("Analyses of Carpentry workshops complete - results saved to " + workshop_analyses_excel_file + "\n")
     except Exception:
-        print ("An error occurred while creating workshop analyses Excel spreadsheet ...")
+        print("An error occurred while creating workshop analyses Excel spreadsheet ...")
         print(traceback.format_exc())
 
 
@@ -277,19 +277,15 @@ def online_workshop_analysis(df, writer):
 
     return online_vs_inperson_workshops
 
-def attendance_per_year_analysis(df, writer):
-    """
-    Number of workshop attendees per year.
-    """
-    # Calculate average attendance
-    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
-    # Adjust attendance with average where data is missing
-    df["attendance"] = df["attendance"].fillna(average_attendance)
 
-    attendance_per_year = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['year'])['attendance'].sum()}).reset_index()
+def estimated_attendance_per_year_analysis(df, writer):
+    """
+    Number of workshop attendees per year (with estimated 20 attendees per workshop).
+    """
+    estimated_attendance_per_year = pd.core.frame.DataFrame(
+        {'number_of_attendees': df.groupby(['year'])['slug'].count()*20}).reset_index()
 
-    attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
+    estimated_attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
 
     workbook = writer.book
     worksheet = writer.sheets['attendance_per_year']
@@ -297,8 +293,8 @@ def attendance_per_year_analysis(df, writer):
     chart = workbook.add_chart({'type': 'column'})
 
     chart.add_series({
-        'categories': ['attendance_per_year', 1, 0, len(attendance_per_year.index), 0],
-        'values': ['attendance_per_year', 1, 1, len(attendance_per_year.index), 1],
+        'categories': ['attendance_per_year', 1, 0, len(estimated_attendance_per_year.index), 0],
+        'values': ['attendance_per_year', 1, 1, len(estimated_attendance_per_year.index), 1],
         'gap': 2,
     })
 
@@ -306,24 +302,22 @@ def attendance_per_year_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Year'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per year (with estimates for missing data)'})
+    chart.set_title({'name': 'Number of attendees per year (with estimated 20 attendees per workshop)'})
 
     worksheet.insert_chart('I2', chart)
 
-    return attendance_per_year
+    total_attendance = estimated_attendance_per_year['number_of_attendees'].sum()
+    worksheet.write(0, 3, "Total attendees: " + str(total_attendance))
+    return estimated_attendance_per_year
 
 
-def attendance_per_type_analysis(df, writer):
+def estimated_attendance_per_type_analysis(df, writer):
     """
-    Number of attendees for various workshop types.
+    Number of attendees for various workshop types (with estimated 20 attendees per workshop).
     """
-    # Calculate average attendance
-    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
-    # Adjust attendance with average where data is missing
-    df["attendance"] = df["attendance"].fillna(average_attendance)
 
     attendance_per_type = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['workshop_type'])['attendance'].sum()}).reset_index()
+        {'number_of_attendees': df.groupby(['workshop_type'])['slug'].count()*20}).reset_index()
 
     attendance_per_type.to_excel(writer, sheet_name='attendance_per_type', index=False)
 
@@ -342,40 +336,37 @@ def attendance_per_type_analysis(df, writer):
     chart.set_legend({'position': 'none'})
     chart.set_x_axis({'name': 'Workshop type'})
     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
-    chart.set_title({'name': 'Number of attendees per workshop type (with estimates for missing data)'})
+    chart.set_title({'name': 'Number of attendees per workshop type (with estimated 20 attendees per workshop)'})
 
     worksheet.insert_chart('I2', chart)
 
     return attendance_per_type
 
 
-def attendance_per_type_per_year_analysis(df, writer):
+def estimated_attendance_per_type_per_year_analysis(df, writer):
     """
-    Number of attendees per workshop type over years.
+    Number of attendees per workshop type over years (with estimated 20 attendees per workshop).
     """
-    # Calculate average attendance
-    average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
-    # Adjust attendance with average where data is missing
-    df["attendance"] = df["attendance"].fillna(average_attendance)
 
-    attendance_per_type_per_year = df.groupby(['year', 'workshop_type'])[
-        'attendance'].sum().to_frame()
-    attendance_per_type_per_year_pivot = attendance_per_type_per_year.pivot_table(
+    estimated_attendance_per_type_per_year = df.groupby(['year', 'workshop_type'])[
+        'attendance'].count().to_frame()
+    estimated_attendance_per_type_per_year = estimated_attendance_per_type_per_year * 20
+    estimated_attendance_per_type_per_year_pivot = estimated_attendance_per_type_per_year.pivot_table(
         index='year', columns='workshop_type')
 
-    attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='attendance_type_year')
+    estimated_attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='attendance_type_year')
 
     workbook = writer.book
     worksheet = writer.sheets['attendance_type_year']
 
     chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
 
-    for i in range(1, len(attendance_per_type_per_year_pivot.columns) + 1):
+    for i in range(1, len(estimated_attendance_per_type_per_year_pivot.columns) + 1):
         chart.add_series({
             'name': ['attendance_type_year', 1, i],
             'categories': ['attendance_type_year', 3, 0,
-                           len(attendance_per_type_per_year_pivot.index) + 2, 0],
-            'values': ['attendance_type_year', 3, i, len(attendance_per_type_per_year_pivot.index) + 2,
+                           len(estimated_attendance_per_type_per_year_pivot.index) + 2, 0],
+            'values': ['attendance_type_year', 3, i, len(estimated_attendance_per_type_per_year_pivot.index) + 2,
                        i],
             'gap': 2,
         })
@@ -388,10 +379,124 @@ def attendance_per_type_per_year_analysis(df, writer):
 
     worksheet.insert_chart('I2', chart)
 
-    return attendance_per_type_per_year_pivot
+    return estimated_attendance_per_type_per_year_pivot
 
 
-def workshops_per_UK_region_analysis(df, writer):
+# def attendance_per_year_analysis(df, writer):
+#     """
+#     Number of workshop attendees per year.
+#     """
+#     # Calculate average attendance
+#     average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+#     # Adjust attendance with average where data is missing
+#     df["attendance"] = df["attendance"].fillna(average_attendance)
+#
+#     attendance_per_year = pd.core.frame.DataFrame(
+#         {'number_of_attendees': df.groupby(['year'])['attendance'].sum()}).reset_index()
+#
+#     attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
+#
+#     workbook = writer.book
+#     worksheet = writer.sheets['attendance_per_year']
+#
+#     chart = workbook.add_chart({'type': 'column'})
+#
+#     chart.add_series({
+#         'categories': ['attendance_per_year', 1, 0, len(attendance_per_year.index), 0],
+#         'values': ['attendance_per_year', 1, 1, len(attendance_per_year.index), 1],
+#         'gap': 2,
+#     })
+#
+#     chart.set_y_axis({'major_gridlines': {'visible': False}})
+#     chart.set_legend({'position': 'none'})
+#     chart.set_x_axis({'name': 'Year'})
+#     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
+#     chart.set_title({'name': 'Number of attendees per year (with estimates for missing data)'})
+#
+#     worksheet.insert_chart('I2', chart)
+#
+#     return attendance_per_year
+#
+#
+# def attendance_per_type_analysis(df, writer):
+#     """
+#     Number of attendees for various workshop types.
+#     """
+#     # Calculate average attendance
+#     average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+#     # Adjust attendance with average where data is missing
+#     df["attendance"] = df["attendance"].fillna(average_attendance)
+#
+#     attendance_per_type = pd.core.frame.DataFrame(
+#         {'number_of_attendees': df.groupby(['workshop_type'])['attendance'].sum()}).reset_index()
+#
+#     attendance_per_type.to_excel(writer, sheet_name='attendance_per_type', index=False)
+#
+#     workbook = writer.book
+#     worksheet = writer.sheets['attendance_per_type']
+#
+#     chart = workbook.add_chart({'type': 'column'})
+#
+#     chart.add_series({
+#         'categories': ['attendance_per_type', 1, 0, len(attendance_per_type.index), 0],
+#         'values': ['attendance_per_type', 1, 1, len(attendance_per_type.index), 1],
+#         'gap': 2,
+#     })
+#
+#     chart.set_y_axis({'major_gridlines': {'visible': False}})
+#     chart.set_legend({'position': 'none'})
+#     chart.set_x_axis({'name': 'Workshop type'})
+#     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
+#     chart.set_title({'name': 'Number of attendees per workshop type (with estimates for missing data)'})
+#
+#     worksheet.insert_chart('I2', chart)
+#
+#     return attendance_per_type
+#
+#
+# def attendance_per_type_per_year_analysis(df, writer):
+#     """
+#     Number of attendees per workshop type over years.
+#     """
+#     # Calculate average attendance
+#     average_attendance = round(df[df["workshop_type"] != "TTT"]["attendance"].mean())
+#     # Adjust attendance with average where data is missing
+#     df["attendance"] = df["attendance"].fillna(average_attendance)
+#
+#     attendance_per_type_per_year = df.groupby(['year', 'workshop_type'])[
+#         'attendance'].sum().to_frame()
+#     attendance_per_type_per_year_pivot = attendance_per_type_per_year.pivot_table(
+#         index='year', columns='workshop_type')
+#
+#     attendance_per_type_per_year_pivot.to_excel(writer, sheet_name='attendance_type_year')
+#
+#     workbook = writer.book
+#     worksheet = writer.sheets['attendance_type_year']
+#
+#     chart = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
+#
+#     for i in range(1, len(attendance_per_type_per_year_pivot.columns) + 1):
+#         chart.add_series({
+#             'name': ['attendance_type_year', 1, i],
+#             'categories': ['attendance_type_year', 3, 0,
+#                            len(attendance_per_type_per_year_pivot.index) + 2, 0],
+#             'values': ['attendance_type_year', 3, i, len(attendance_per_type_per_year_pivot.index) + 2,
+#                        i],
+#             'gap': 2,
+#         })
+#
+#     chart.set_y_axis({'major_gridlines': {'visible': False}})
+#     chart.set_x_axis({'name': 'Year'})
+#     chart.set_y_axis({'name': 'Number of attendees', 'major_gridlines': {'visible': False}})
+#     chart.set_title(
+#         {'name': 'Number of attendees for different workshop types over years (with estimates for missing data)'})
+#
+#     worksheet.insert_chart('I2', chart)
+#
+#     return attendance_per_type_per_year_pivot
+
+
+def workshops_per_uk_region_analysis(df, writer):
     """
     Number of workshops per UK region.
     """

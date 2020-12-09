@@ -1,0 +1,201 @@
+,UKPRN,normalised_name,common_name,STREET_NAME,TOWN,POSTCODE,WEBSITE_URL,longitude,latitude,top_level_web_domain,region
+0,10008640.0,FALMOUTH UNIVERSITY,University College Falmouth,Woodlane,Falmouth,TR11 4RH,http://www.falmouth.ac.uk/,-5.070901,50.149167999999996,falmouth.ac.uk,South West
+1,10007774.0,UNIVERSITY OF OXFORD,University of Oxford,WELLINGTON SQUARE,OXFORD,OX1 2JD,http://www.ox.ac.uk/,-1.262868,51.757644,ox.ac.uk,South East
+2,10007768.0,UNIVERSITY OF LANCASTER,University of Lancaster,,LANCASTER,LA1 4YW,http://www.lancs.ac.uk/,-2.786905,54.01048,lancs.ac.uk,North West
+3,10000571.0,BATH SPA UNIVERSITY,Bath Spa University,,BATH,BA2 9BN,http://www.bathspa.ac.uk/,-2.4374,51.378739,bathspa.ac.uk,South West
+4,10007814.0,CARDIFF UNIVERSITY,Cardiff University,PARK PLACE,CARDIFF,CF10 3AT,http://www.cardiff.ac.uk/,-3.179907,51.489093,cardiff.ac.uk,Wales
+5,10007158.0,THE UNIVERSITY OF SOUTHAMPTON,The University of Southampton,UNIVERSITY ROAD,SOUTHAMPTON,SO17 1BJ,http://www.southampton.ac.uk/,-1.395675,50.93418,southampton.ac.uk,South East
+6,10007779.0,THE ROYAL VETERINARY COLLEGE,The Royal Veterinary College,ROYAL COLLEGE STREET,LONDON,NW1 0TU,http://www.rvc.ac.uk/,-0.133498,51.536862,rvc.ac.uk,London
+7,10007851.0,UNIVERSITY OF DERBY,University of Derby,KEDLESTON ROAD,DERBY,DE22 1GB,http://www.derby.ac.uk/,-1.496677,52.938545,derby.ac.uk,East Midlands
+8,10000824.0,BOURNEMOUTH UNIVERSITY,Bournemouth University,FERN BARROW,POOLE,BH12 5BB,http://www.bournemouth.ac.uk/,-1.897159,50.742968,bournemouth.ac.uk,South West
+9,10007162.0,"UNIVERSITY OF THE ARTS, LONDON","University of the Arts, London",HIGH HOLBORN,LONDON,WC1V 7EY,http://www.arts.ac.uk/,-0.117099,51.517742,arts.ac.uk,London
+10,10007804.0,UNIVERSITY OF STIRLING,University of Stirling,,STIRLING,FK9 4LA,http://www.stir.ac.uk/,-3.9267870000000005,56.149207,stir.ac.uk,Scotland
+11,10007823.0,EDGE HILL UNIVERSITY,Edge Hill University,ST. HELENS ROAD,ORMSKIRK,L39 4QP,http://www.edgehill.ac.uk/,-2.8733720000000003,53.559906000000005,edgehill.ac.uk,North West
+12,10007160.0,UNIVERSITY OF SURREY,University of Surrey,,GUILDFORD,GU2 7XH,http://www.surrey.ac.uk/,-0.587925,51.242568,surrey.ac.uk,South East
+13,10007791.0,UNIVERSITY OF ESSEX,University of Essex,WIVENHOE PARK,COLCHESTER,CO4 3SQ,http://www.essex.ac.uk/,0.945058,51.876569,essex.ac.uk,Eastern
+14,10003945.0,THE LIVERPOOL INSTITUTE FOR PERFORMING ARTS,The Liverpool Institute for Performing Arts,Mount Street,Liverpool,L1 9HF,http://www.lipa.ac.uk/,-2.972271,53.399674,lipa.ac.uk,North West
+15,10007802.0,UNIVERSITY OF READING,University of Reading,,READING,RG6 6UR,http://www.reading.ac.uk/,-0.9470879999999999,51.440564,reading.ac.uk,South East
+16,10007806.0,UNIVERSITY OF SUSSEX,University of Sussex,SOUTHERN RING ROAD,BRIGHTON,BN1 9RH,http://www.sussex.ac.uk/,-0.087049,50.864464,sussex.ac.uk,South East
+17,10007152.0,UNIVERSITY OF BEDFORDSHIRE,University of Bedfordshire,UNIVERSITY SQUARE,LUTON,LU1 3JU,http://www.beds.ac.uk/,-0.41138199999999997,51.87787,beds.ac.uk,Eastern
+18,10007150.0,UNIVERSITY OF KENT,University of Kent,,CANTERBURY,CT2 7NZ,http://www.kent.ac.uk/,1.070918,51.298491,kent.ac.uk,South East
+19,10007832.0,NEWMAN UNIVERSITY,Newman University College,GENNERS LANE,BIRMINGHAM,B32 3NT,http://www.newman.ac.uk/,-1.995022,52.434137,newman.ac.uk,West Midlands
+20,10007788.0,UNIVERSITY OF CAMBRIDGE,University of Cambridge,TRINITY LANE,CAMBRIDGE,CB2 1TN,http://www.cam.ac.uk/,0.11664200000000001,52.205317,cam.ac.uk,Eastern
+21,10001883.0,DE MONTFORT UNIVERSITY,De Montfort University,THE GATEWAY,LEICESTER,LE1 9BH,http://www.dmu.ac.uk/,-1.139356,52.63183299999999,dmu.ac.uk,East Midlands
+22,10007790.0,UNIVERSITY OF EDINBURGH,University of Edinburgh,CHAMBERS STREET,EDINBURGH,EH1 1HT,http://www.ed.ac.uk/,-3.188111,55.948003,ed.ac.uk,Scotland
+23,10007795.0,UNIVERSITY OF LEEDS,University of Leeds,WOODHOUSE LANE,LEEDS,LS2 9JT,http://www.leeds.ac.uk/,-1.552797,53.808493999999996,leeds.ac.uk,Yorkshire and The Humber
+24,10008816.0,NORTHERN SCHOOL OF CONTEMPORARY DANCE,Northern School of Contemporary Dance,CHAPELTOWN ROAD,LEEDS,LS7 4BH,http://www.nscd.ac.uk/,-1.533291,53.813246,nscd.ac.uk,
+25,10005343.0,QUEEN'S UNIVERSITY OF BELFAST,The Queen's University of Belfast,UNIVERSITY ROAD,BELFAST,BT7 1NN,http://www.qub.ac.uk/,-5.9348,54.5839,qub.ac.uk,Northern Ireland
+26,10003861.0,LEEDS METROPOLITAN UNIVERSITY,Leeds Metropolitan University,,LEEDS,LS1 3HE,http://www.leedsmet.ac.uk/,-1.549143,53.803662,leedsmet.ac.uk,Yorkshire and The Humber
+27,10007772.0,EDINBURGH NAPIER UNIVERSITY,Edinburgh Napier University,SIGHTHILL COURT,EDINBURGH,EH11 4BN,http://www.napier.ac.uk/,-3.28847,55.924071,napier.ac.uk,Scotland
+28,10007854.0,CARDIFF METROPOLITAN UNIVERSITY,Cardiff Metropolitan University,,CARDIFF,CF5 2SG,http://www.cardiffmet.ac.uk/,-3.223617,51.483554999999996,cardiffmet.ac.uk,Wales
+29,10007849.0,UNIVERSITY OF ABERTAY DUNDEE,University of Abertay Dundee,BELL STREET,DUNDEE,DD1 1HG,http://www.abertay.ac.uk/,-2.974381,56.463143,abertay.ac.uk,Scotland
+30,10007164.0,"UNIVERSITY OF THE WEST OF ENGLAND, BRISTOL","University of the West of England, Bristol",COLDHARBOUR LANE,BRISTOL,BS16 1QY,http://www.uwe.ac.uk/,-2.547491,51.500205,uwe.ac.uk,South West
+31,10007761.0,COURTAULD INSTITUTE OF ART,Courtauld Institute of Art,STRAND,LONDON,WC2R 0RN,http://www.courtauld.ac.uk/,-0.11691199999999999,51.510734,courtauld.ac.uk,London
+32,10000961.0,BRUNEL UNIVERSITY,Brunel University,KINGSTON LANE,UXBRIDGE,UB8 3PH,http://www.brunel.ac.uk/,-0.47283500000000006,51.532849,brunel.ac.uk,London
+33,10007778.0,ROYAL COLLEGE OF MUSIC,Royal College of Music,PRINCE CONSORT ROAD,LONDON,SW7 2BS,http://www.rcm.ac.uk/,-0.17688900000000002,51.499280999999996,rcm.ac.uk,London
+34,10004180.0,MANCHESTER METROPOLITAN UNIVERSITY,The Manchester Metropolitan University,GROSVENOR SQUARE,MANCHESTER,M15 6BH,http://www.mmu.ac.uk/,-2.239504,53.470698999999996,mmu.ac.uk,North West
+35,10007811.0,BISHOP GROSSETESTE UNIVERSITY,Bishop Grosseteste University College Lincoln,LONGDALES ROAD,LINCOLN,LN1 3DY,http://www.bishopg.ac.uk/,-0.535716,53.244036,bishopg.ac.uk,East Midlands
+36,10005389.0,RAVENSBOURNE,Ravensbourne Limited,PENROSE WAY,LONDON,SE10 0EW,http://www.rave.ac.uk/,0.005266,51.501478000000006,rave.ac.uk,London
+37,10003678.0,KINGSTON UNIVERSITY,Kingston University,HIGH STREET,KINGSTON UPON THAMES,KT1 1LQ,http://www.kingston.ac.uk/,-0.307824,51.406308,kingston.ac.uk,London
+38,10007166.0,UNIVERSITY OF WOLVERHAMPTON,University of Wolverhampton,WULFRUNA STREET,WOLVERHAMPTON,WV1 1LY,http://www.wlv.ac.uk/,-2.128159,52.588308,wlv.ac.uk,West Midlands
+39,10001478.0,THE CITY UNIVERSITY,The City University,NORTHAMPTON SQUARE,LONDON,EC1V 0HB,http://www.city.ac.uk/,-0.102296,51.527791,city.ac.uk,London
+40,10007781.0,SCHOOL OF PHARMACY UNIVERSITY OF LONDON(THE),School of Pharmacy University of London(The),BRUNSWICK SQUARE,LONDON,WC1N 1AX,http://www.pharmacy.ac.uk/,-0.122432,51.525085,pharmacy.ac.uk,
+41,10006427.0,UNIVERSITY FOR THE CREATIVE ARTS,University for the Creative Arts,FALKNER ROAD,FARNHAM,GU9 7DS,http://www.ucreative.ac.uk/,-0.805496,51.215767,ucreative.ac.uk,South East
+42,10008026.0,ST MARY'S UNIVERSITY COLLEGE,St Mary's University College,FALLS ROAD,BELFAST,BT12 6FE,http://www.stmarys-belfast.ac.uk/,-5.9613,54.592,stmarys-belfast.ac.uk,Northern Ireland
+43,10005500.0,THE ROBERT GORDON UNIVERSITY,The Robert Gordon University,GARTHDEE ROAD,ABERDEEN,AB10 7FY,http://www.rgu.ac.uk/,-2.143673,57.118078000000004,rgu.ac.uk,Scotland
+44,10008017.0,TRINITY LABAN CONSERVATOIRE OF MUSIC AND DANCE LTD,Trinity Laban Conservatoire of Music and Dance Ltd,OLD ROYAL NAVAL COLLEGE KING WILLIAM WALK,LONDON,SE10 9JF,http://www.trinitylaban.ac.uk/,-0.007170999999999999,51.483596,trinitylaban.ac.uk,London
+45,10007114.0,UNIVERSITY OF THE HIGHLANDS AND ISLANDS,University of the Highlands and Islands,Ness Walk,Inverness,IV3 5SQ,http://www.uhi.ac.uk/,-4.230795,57.469675,uhi.ac.uk,Scotland
+46,10007775.0,QUEEN MARY UNIVERSITY OF LONDON,"Queen Mary and Westfield College, University of London",MILE END ROAD,LONDON,E1 4NS,http://www.qmul.ac.uk/,-0.040505,51.523412,qmul.ac.uk,London
+47,10007144.0,UNIVERSITY OF EAST LONDON,University of East London,UNIVERSITY WAY,LONDON,E16 2RD,http://www.uel.ac.uk/,0.06479700000000001,51.507396,uel.ac.uk,London
+48,10002718.0,GOLDSMITHS' COLLEGE,Goldsmiths' College,LEWISHAM WAY,LONDON,SE14 6NW,http://www.gold.ac.uk/,-0.035375,51.474144,gold.ac.uk,London
+49,10007797.0,UNIVERSITY OF LONDON,University of London,MALET STREET,LONDON,WC1E 7HU,http://www.lon.ac.uk/,-0.12781900000000002,51.520998,lon.ac.uk,London
+50,10007161.0,TEESSIDE UNIVERSITY,Teesside University,BOROUGH ROAD,MIDDLESBROUGH,TS1 3BA,http://www.tees.ac.uk/,-1.234709,54.572089,tees.ac.uk,North East
+51,10001282.0,NORTHUMBRIA UNIVERSITY NEWCASTLE,University of Northumbria at Newcastle,ELLISON ROAD,Newcastle Upon Tyne,NE1 8ST,http://www.northumbria.ac.uk/,-1.607512,54.976769,northumbria.ac.uk,North East
+52,10006299.0,STAFFORDSHIRE UNIVERSITY,Staffordshire University,COLLEGE ROAD,STOKE-ON-TRENT,ST4 2DE,http://www.staffs.ac.uk/,-2.182605,53.010096999999995,staffs.ac.uk,West Midlands
+53,10007145.0,UNIVERSITY OF GLOUCESTERSHIRE,University of Gloucestershire,The Park,Cheltenham,GL50 2RH,http://www.glos.ac.uk/,-2.088781,51.887504,glos.ac.uk,South West
+54,10007140.0,BIRMINGHAM CITY UNIVERSITY,Birmingham City University,FRANCHISE STREET,BIRMINGHAM,B42 2SU,http://www.bcu.ac.uk/,-1.897282,52.517286,bcu.ac.uk,West Midlands
+55,10007816.0,THE ROYAL CENTRAL SCHOOL OF SPEECH AND DRAMA,Central School of Speech and Drama(The),ETON AVENUE,LONDON,NW3 3HY,http://www.cssd.ac.uk/,-0.174179,51.544337,cssd.ac.uk,London
+56,10007794.0,UNIVERSITY OF GLASGOW,University of Glasgow,UNIVERSITY AVENUE,GLASGOW,G12 8QQ,http://www.gla.ac.uk/,-4.288345,55.871745999999995,gla.ac.uk,Scotland
+57,10001726.0,COVENTRY UNIVERSITY,Coventry University,PRIORY STREET,COVENTRY,CV1 5FB,http://www.coventry.ac.uk/,-1.5057129999999999,52.408015999999996,coventry.ac.uk,West Midlands
+58,10007155.0,UNIVERSITY OF PORTSMOUTH,University of Portsmouth,WINSTON CHURCHILL AVENUE,PORTSMOUTH,PO1 2UP,http://www.port.ac.uk/,-1.0935709999999998,50.795266,port.ac.uk,South East
+59,10040812.0,HARPER ADAMS UNIVERSITY,Harper Adams University,,Newport,TF10 8NB,http://www.harper-adams.ac.uk/,-2.42538,52.780018999999996,harper-adams.ac.uk,West Midlands
+60,10034449.0,LEEDS COLLEGE OF MUSIC,Leeds College of Music,QUARRY HILL,LEEDS,LS2 7PD,http://www.lcm.ac.uk/,-1.531256,53.798246,lcm.ac.uk,Yorkshire and The Humber
+61,10002681.0,GLASGOW SCHOOL OF ART.,Glasgow School of Art,RENFREW STREET,GLASGOW,G3 6RQ,http://www.gsa.ac.uk/,-4.263391,55.865953000000005,gsa.ac.uk,Scotland
+62,10007856.0,PRIFYSGOL ABERYSTWYTH,Prifysgol Aberystwyth,,ABERYSTWYTH,SY23 2AX,http://www.aber.ac.uk/,-4.043595,52.403488,aber.ac.uk,Wales
+63,10003614.0,UNIVERSITY OF WINCHESTER,University of Winchester,SPARKFORD ROAD,WINCHESTER,SO22 4NR,http://www.winchester.ac.uk/,-1.326928,51.060033000000004,winchester.ac.uk,South East
+64,10007801.0,PLYMOUTH UNIVERSITY,University of Plymouth,DRAKE CIRCUS,PLYMOUTH,PL4 8AA,http://www.plymouth.ac.uk/,-4.138393,50.375186,plymouth.ac.uk,South West
+65,10007789.0,UNIVERSITY OF EAST ANGLIA,University of East Anglia,EARLHAM ROAD,NORWICH,NR4 7TJ,http://www.uea.ac.uk/,1.2414120000000002,52.62239399999999,uea.ac.uk,Eastern
+66,10007786.0,UNIVERSITY OF BRISTOL,University of Bristol,TYNDALL AVENUE,BRISTOL,BS8 1TH,http://www.bristol.ac.uk/,-2.6032919999999997,51.459064,bristol.ac.uk,South West
+67,10007803.0,UNIVERSITY OF ST ANDREWS,University of St Andrews,NORTH STREET,ST. ANDREWS,KY16 9AJ,http://www.st-andrews.ac.uk/,-2.793016,56.341205,st-andrews.ac.uk,Scotland
+68,10006841.0,UNIVERSITY OF BOLTON,The University of Bolton,DEANE ROAD,BOLTON,BL3 5AB,http://www.bolton.ac.uk/,-2.436236,53.573527,bolton.ac.uk,North West
+69,10005337.0,"QUEEN MARGARET UNIVERSITY, EDINBURGH","Queen Margaret University, Edinburgh",QUEEN MARGARET UNIVERSITY DRIVE,MUSSELBURGH,EH21 6UU,http://www.qmu.ac.uk/,-3.0730619999999997,55.931304000000004,qmu.ac.uk,Scotland
+70,10007807.0,UNIVERSITY OF ULSTER,University of Ulster,CROMORE ROAD,COLERAINE,BT52 1SA,http://www.ulster.ac.uk/,-6.6725,55.1468,ulster.ac.uk,Northern Ireland
+71,10007163.0,UNIVERSITY OF WARWICK,University of Warwick,GIBBET HILL ROAD,COVENTRY,CV4 7AL,http://www.warwick.ac.uk/,-1.561687,52.380078999999995,warwick.ac.uk,West Midlands
+72,10007138.0,"UNIVERSITY OF NORTHAMPTON,THE",The University of Northampton,BOUGHTON GREEN ROAD,NORTHAMPTON,NN2 7AL,http://www.northampton.ac.uk/,-0.883074,52.272007,northampton.ac.uk,East Midlands
+73,10007796.0,UNIVERSITY OF LEICESTER,University of Leicester,UNIVERSITY ROAD,LEICESTER,LE1 7RH,http://www.le.ac.uk/,-1.123802,52.621937,le.ac.uk,East Midlands
+74,10000712.0,UNIVERSITY COLLEGE BIRMINGHAM,University College Birmingham,SUMMER ROW,BIRMINGHAM,B3 1JB,http://www.ucb.ac.uk/,-1.905934,52.481855,ucb.ac.uk,West Midlands
+75,10007762.0,GLASGOW CALEDONIAN UNIVERSITY,Glasgow Caledonian University,COWCADDENS ROAD,GLASGOW,G4 0BA,http://www.gcu.ac.uk/,-4.250553,55.866161,gcu.ac.uk,Scotland
+76,10007165.0,THE UNIVERSITY OF WESTMINSTER,The University of Westminster,REGENT STREET,LONDON,W1B 2HW,http://www.westminster.ac.uk/,-0.143341,51.516794,westminster.ac.uk,London
+77,10007148.0,UNIVERSITY OF HUDDERSFIELD,University of Huddersfield,QUEENSGATE,HUDDERSFIELD,HD1 3DH,http://www.hud.ac.uk/,-1.777712,53.643730000000005,hud.ac.uk,Yorkshire and The Humber
+78,10005545.0,ROYAL AGRICULTURAL UNIVERSITY,Royal Agricultural College,Stroud Road,Cirencester,GL7 6JS,http://www.rac.ac.uk/,-1.994995,51.709495000000004,rac.ac.uk,South West
+79,10007765.0,HEYTHROP COLLEGE,Heythrop College,KENSINGTON SQUARE,LONDON,W8 5HN,http://www.heythrop.ac.uk/,-0.190884,51.499884,heythrop.ac.uk,
+80,10007838.0,ROYAL WELSH COLLEGE OF MUSIC AND DRAMA LIMITED,Royal Welsh College of Music and Drama Limited,NORTH ROAD,CARDIFF,CF10 3ER,http://www.rwcmd.ac.uk/,-3.183865,51.485645,rwcmd.ac.uk,
+81,10005523.0,ROSE BRUFORD COLLEGE,Rose Bruford College,Lamorbey Park Burnt Oak Lane,Sidcup,DA15 9DF,http://www.bruford.ac.uk/,0.106805,51.439004,bruford.ac.uk,London
+82,10007156.0,"UNIVERSITY OF SALFORD, THE",University of Salford,CRESCENT,SALFORD,M5 4WT,http://www.salford.ac.uk/,-2.270665,53.483557999999995,salford.ac.uk,North West
+83,10007657.0,WRITTLE COLLEGE,Writtle College,LORDSHIP ROAD,CHELMSFORD,CM1 3RR,http://www.writtle.ac.uk/,0.428134,51.737004,writtle.ac.uk,Eastern
+84,10004063.0,LONDON SCHOOL OF ECONOMICS & POLITICAL SCIENCE,London School of Economics & Political Science,HOUGHTON STREET,LONDON,WC2A 2AE,http://www.lse.ac.uk/,-0.11670699999999999,51.513968,lse.ac.uk,London
+85,10004351.0,MIDDLESEX UNIVERSITY,Middlesex University,THE BURROUGHS,LONDON,NW4 4BT,http://www.mdx.ac.uk/,-0.228415,51.589717,mdx.ac.uk,London
+86,10007773.0,OPEN UNIVERSITY(THE),Open University(The),,MILTON KEYNES,MK7 6AA,http://www.open.ac.uk/,-0.709726,52.024924,open.ac.uk,South East
+87,10006022.0,SOUTHAMPTON SOLENT UNIVERSITY,Southampton Solent University,EAST PARK TERRACE,SOUTHAMPTON,SO14 0YN,http://www.solent.ac.uk/,-1.4001569999999999,50.907738,solent.ac.uk,South East
+88,10000975.0,BUCKINGHAMSHIRE NEW UNIVERSITY,Buckinghamshire New University,QUEEN ALEXANDRA ROAD,HIGH WYCOMBE,HP11 2JZ,http://www.bucks.ac.uk/,-0.752021,51.627518,bucks.ac.uk,South East
+89,10007167.0,UNIVERSITY OF YORK,University of York,,YORK,YO10 5DD,http://www.york.ac.uk/,-1.053553,53.948437,york.ac.uk,Yorkshire and The Humber
+90,10007151.0,UNIVERSITY OF LINCOLN,University of Lincoln,CAMPUS WAY,LINCOLN,LN6 7TS,http://www.lincoln.ac.uk/,-0.549237,53.228855,lincoln.ac.uk,East Midlands
+91,10007784.0,UNIVERSITY COLLEGE LONDON,University College London,GOWER STREET,LONDON,WC1E 6BT,http://www.ucl.ac.uk/,-0.133401,51.524774,ucl.ac.uk,London
+92,10000886.0,UNIVERSITY OF BRIGHTON,University of Brighton,LEWES ROAD,BRIGHTON,BN2 4AT,http://www.brighton.ac.uk/,-0.11914200000000001,50.842448,brighton.ac.uk,South East
+93,10004113.0,LOUGHBOROUGH UNIVERSITY,Loughborough University,,LOUGHBOROUGH,LE11 3TU,http://www.lboro.ac.uk/,-1.229467,52.764892,lboro.ac.uk,East Midlands
+94,10007833.0,GLYNDWR UNIVERSITY,Glyndwr University,MOLD ROAD,WREXHAM,LL11 2AW,http://www.glyndwr.ac.uk/,-3.00564,53.052979,glyndwr.ac.uk,Wales
+95,10007771.0,LONDON SCHOOL OF HYGIENE AND TROPICAL MEDICINE,London School of Hygiene and Tropical Medicine,KEPPEL STREET,LONDON,WC1E 7HT,http://www.lshtm.ac.uk/,-0.130661,51.520927,lshtm.ac.uk,London
+96,10003956.0,LIVERPOOL HOPE UNIVERSITY,Liverpool Hope University,TAGGART AVENUE,LIVERPOOL,L16 9JD,http://www.hope.ac.uk/,-2.891936,53.391491,hope.ac.uk,North West
+97,10007147.0,UNIVERSITY OF HERTFORDSHIRE,University of Hertfordshire,COLLEGE LANE,HATFIELD,AL10 9AB,http://www.herts.ac.uk/,-0.24215,51.752882,herts.ac.uk,Eastern
+98,10007157.0,UNIVERSITY OF SHEFFIELD,University of Sheffield,WESTERN BANK,SHEFFIELD,S10 2TN,http://www.shef.ac.uk/,-1.488709,53.381409,shef.ac.uk,Yorkshire and The Humber
+99,10007143.0,UNIVERSITY OF DURHAM,University of Durham,STOCKTON ROAD,DURHAM,DH1 3LE,http://www.dur.ac.uk/,-1.571868,54.768149,dur.ac.uk,North East
+100,10004797.0,NOTTINGHAM TRENT UNIVERSITY,Nottingham Trent University,BURTON STREET,NOTTINGHAM,NG1 4BU,http://www.ntu.ac.uk/,-1.152002,52.956382999999995,ntu.ac.uk,East Midlands
+101,10007805.0,UNIVERSITY OF STRATHCLYDE,University of Strathclyde,RICHMOND STREET,GLASGOW,G1 1XQ,http://www.strath.ac.uk/,-4.244586,55.861363,strath.ac.uk,Scotland
+102,10007137.0,THE UNIVERSITY OF CHICHESTER,The University of Chichester,COLLEGE LANE,CHICHESTER,PO19 6PE,http://www.chi.ac.uk/,-0.774409,50.844268,chi.ac.uk,South East
+103,10007764.0,HERIOT-WATT UNIVERSITY,Heriot-Watt University,,CURRIE,EH14 4AS,http://www.hw.ac.uk/,-3.320697,55.909397999999996,hw.ac.uk,Scotland
+104,10007769.0,LONDON BUSINESS SCHOOL,London Business School,SUSSEX PLACE,LONDON,NW1 4SA,http://www.london.edu/,-0.161353,51.526583,london.edu,London
+105,10006840.0,UNIVERSITY OF BIRMINGHAM,University of Birmingham,,BIRMINGHAM,B15 2TT,http://www.birmingham.ac.uk/,-1.930855,52.448986,birmingham.ac.uk,West Midlands
+106,10007842.0,THE UNIVERSITY OF CUMBRIA,The University of Cumbria,FUSEHILL STREET,CARLISLE,CA1 2HH,http://www.cumbria.ac.uk/,-2.921482,54.891124,cumbria.ac.uk,North West
+107,10007792.0,UNIVERSITY OF EXETER,University of Exeter,STOCKER ROAD,EXETER,EX4 4PY,http://www.exeter.ac.uk/,-3.5343699999999996,50.735199,exeter.ac.uk,South West
+108,10005790.0,SHEFFIELD HALLAM UNIVERSITY,Sheffield Hallam University,POND STREET,SHEFFIELD,S1 1WB,http://www.shu.ac.uk/,-1.465255,53.379212,shu.ac.uk,Yorkshire and The Humber
+109,10007852.0,UNIVERSITY OF DUNDEE,University of Dundee,PERTH ROAD,DUNDEE,DD1 4HN,http://www.dundee.ac.uk/,-2.97848,56.4572,dundee.ac.uk,Scotland
+110,10005700.0,SRUC,Sruc,KING'S BUILDINGS WEST MAINS ROAD,EDINBURGH,EH9 3JG,http://www.sruc.ac.uk/,-3.176533,55.921606999999995,sruc.ac.uk,Scotland
+111,10007776.0,ROEHAMPTON UNIVERSITY,Roehampton University,ROEHAMPTON LANE,LONDON,SW15 5PJ,http://www.roehampton.ac.uk/,-0.24598299999999998,51.455119,roehampton.ac.uk,London
+112,10007159.0,UNIVERSITY OF SUNDERLAND,University of Sunderland,CHESTER ROAD,SUNDERLAND,SR1 3SD,http://www.sunderland.ac.uk/,-1.391361,54.904502,sunderland.ac.uk,North East
+113,10000291.0,ANGLIA RUSKIN UNIVERSITY,Anglia Ruskin University,BISHOP HALL LANE,CHELMSFORD,CM1 1SQ,http://www.anglia.ac.uk/,0.474311,51.741265999999996,anglia.ac.uk,Eastern
+114,10007766.0,"INSTITUTE OF EDUCATION, UNIVERSITY OF LONDON","Institute of Education, University of London",BEDFORD WAY,LONDON,WC1H 0AL,http://www.ioe.ac.uk/,-0.12848099999999998,51.523472999999996,ioe.ac.uk,
+115,10007855.0,SWANSEA UNIVERSITY,Swansea University,SINGLETON PARK,SWANSEA,SA2 8PP,http://www.swansea.ac.uk/,-3.9806489999999997,51.609621999999995,swansea.ac.uk,Wales
+116,10005553.0,ROYAL HOLLOWAY COLLEGE AND BEDFORD NEW COLLEGE,Royal Holloway College and Bedford New College,EGHAM HILL,EGHAM,TW20 0EX,http://www.rhul.ac.uk/,-0.567199,51.425323,rhul.ac.uk,South East
+117,10007777.0,ROYAL COLLEGE OF ART(THE),Royal College of Art(The),KENSINGTON GORE,LONDON,SW7 2EU,http://www.rca.ac.uk/,-0.178449,51.501355,rca.ac.uk,London
+118,10007822.0,CRANFIELD UNIVERSITY,Cranfield University,COLLEGE ROAD,BEDFORD,MK43 0AL,http://www.cranfield.ac.uk/,-0.628735,52.073929,cranfield.ac.uk,Eastern
+119,10007767.0,UNIVERSITY OF KEELE,University of Keele,,NEWCASTLE,ST5 5BG,http://www.keele.ac.uk/,-2.274598,53.003969,keele.ac.uk,West Midlands
+120,10003863.0,LEEDS TRINITY UNIVERSITY,Leeds Trinity University College,BROWNBERRIE LANE,LEEDS,LS18 5HD,http://www.leedstrinity.ac.uk/,-1.6481,53.848572999999995,leedstrinity.ac.uk,Yorkshire and The Humber
+121,10003645.0,KING'S COLLEGE LONDON,King's College London,STRAND,LONDON,WC2R 2LS,http://www.kcl.ac.uk/,-0.11691199999999999,51.510734,kcl.ac.uk,London
+122,10007782.0,"ST. GEORGE'S, UNIVERSITY OF LONDON",St George's Hospital Medical School,CRANMER TERRACE,LONDON,SW17 0RE,http://www.sgul.ac.uk/,-0.173355,51.427985,sgul.ac.uk,London
+123,10004775.0,NORWICH UNIVERSITY OF THE ARTS,Norwich University College of the Arts,REDWELL STREET,NORWICH,NR2 4SN,http://www.nua.ac.uk/,1.2966,52.630313,nua.ac.uk,Eastern
+124,10003854.0,LEEDS COLLEGE OF ART,Leeds College of Art,BLENHEIM WALK,LEEDS,LS2 9AQ,http://www.leeds-art.ac.uk/,-1.55178,53.808463,leeds-art.ac.uk,Yorkshire and The Humber
+125,10007759.0,ASTON UNIVERSITY,Aston University,THE ASTON TRIANGLE,BIRMINGHAM,B4 7ET,http://www.aston.ac.uk/,-1.8909470000000002,52.486651,aston.ac.uk,West Midlands
+126,10007848.0,UNIVERSITY OF CHESTER,University of Chester,PARKGATE ROAD,CHESTER,CH1 4BJ,http://www.chester.ac.uk/,-2.898063,53.198657,chester.ac.uk,North West
+127,10007783.0,UNIVERSITY OF ABERDEEN,University of Aberdeen,REGENT WALK,ABERDEEN,AB24 3FX,http://www.abdn.ac.uk/,-2.099129,57.165003000000006,abdn.ac.uk,Scotland
+128,10007798.0,THE UNIVERSITY OF MANCHESTER,The University of Manchester,OXFORD ROAD,MANCHESTER,M13 9PL,http://www.manchester.ac.uk/,-2.233222,53.467943000000005,manchester.ac.uk,North West
+129,10005561.0,ROYAL CONSERVATOIRE OF SCOTLAND,Royal Conservatoire of Scotland,RENFREW STREET,GLASGOW,G2 3DB,http://www.rcs.ac.uk/,-4.257632,55.86614,rcs.ac.uk,Scotland
+130,10007154.0,"UNIVERSITY OF NOTTINGHAM, THE",University of Nottingham,UNIVERSITY PARK,NOTTINGHAM,NG7 2RD,http://www.nottingham.ac.uk/,-1.186477,52.94127099999999,nottingham.ac.uk,East Midlands
+131,10008010.0,STRANMILLIS UNIVERSITY COLLEGE,Stranmillis University College,STRANMILLIS ROAD,BELFAST,BT9 5DY,http://www.stran.ac.uk/,-5.9352,54.5733,stran.ac.uk,Northern Ireland
+132,10007799.0,NEWCASTLE UNIVERSITY,University of Newcastle Upon Tyne,CLAREMONT ROAD,NEWCASTLE UPON TYNE,NE1 7RU,http://www.ncl.ac.uk/,-1.6157270000000001,54.980327,ncl.ac.uk,North East
+133,10007857.0,BANGOR UNIVERSITY,Bangor University,COLLEGE ROAD,BANGOR,LL57 2DG,http://www.bangor.ac.uk/,-4.129505,53.229236,bangor.ac.uk,Wales
+134,10037449.0,UNIVERSITY OF ST MARK & ST JOHN,University of St Mark & St John,DERRIFORD ROAD,PLYMOUTH,PL6 8BH,http:///,-4.110286,50.421023,.,South West
+135,10007787.0,THE UNIVERSITY OF BUCKINGHAM,The University of Buckingham,HUNTER STREET,BUCKINGHAM,MK18 1EG,http://www.buckingham.ac.uk/,-0.99182,51.996018,buckingham.ac.uk,South East
+136,10007149.0,UNIVERSITY OF HULL,University of Hull,COTTINGHAM ROAD,HULL,HU6 7RX,http://www.hull.ac.uk/,-0.367171,53.769661,hull.ac.uk,Yorkshire and The Humber
+137,10007793.0,UNIVERSITY OF SOUTH WALES/PRIFYSGOL DE CYMRU,University of Glamorgan / Prifysgol Morgannwg,,PONTYPRIDD,CF37 1DL,http://www.southwales.ac.uk/,-3.325787,51.588739000000004,southwales.ac.uk,Wales
+138,10007835.0,ROYAL ACADEMY OF MUSIC,Royal Academy of Music,MARYLEBONE ROAD,LONDON,NW1 5HT,http://www.ram.ac.uk/,-0.151727,51.523617,ram.ac.uk,London
+139,10004048.0,LONDON METROPOLITAN UNIVERSITY,London Metropolitan University,HOLLOWAY ROAD,LONDON,N7 8DB,http://www.londonmet.ac.uk/,-0.11020999999999999,51.551821999999994,londonmet.ac.uk,London
+140,10007843.0,"ST MARY'S UNIVERSITY, TWICKENHAM","St Mary's University College, Twickenham",WALDEGRAVE ROAD,TWICKENHAM,TW1 4SX,http://www.smuc.ac.uk/,-0.33529200000000003,51.437438,smuc.ac.uk,London
+141,10001143.0,CANTERBURY CHRIST CHURCH UNIVERSITY,Canterbury Christ Church University,ST. GEORGES PLACE,CANTERBURY,CT1 1UT,http://www.canterbury.ac.uk/,1.0856629999999998,51.275760999999996,canterbury.ac.uk,South East
+142,10001653.0,THE CONSERVATOIRE FOR DANCE AND DRAMA,The Conservatoire for Dance and Drama,TAVISTOCK SQUARE,LONDON,WC1H 9JJ,http://www.cdd.ac.uk/,-0.12909,51.526207,cdd.ac.uk,London
+143,10007760.0,BIRKBECK COLLEGE,Birkbeck College,MALET STREET,LONDON,WC1E 7HX,http://www.bbk.ac.uk/,-0.12781900000000002,51.520998,bbk.ac.uk,London
+144,10006842.0,UNIVERSITY OF LIVERPOOL,University of Liverpool,,LIVERPOOL,L69 3BX,http://www.liv.ac.uk/,-2.9755540000000003,53.406416,liv.ac.uk,North West
+145,10003324.0,INSTITUTE OF CANCER RESEARCH: ROYAL CANCER HOSPITAL (THE),Institute of Cancer Research: Royal Cancer Hospital (The),OLD BROMPTON ROAD,LONDON,SW7 3RP,http://www.icr.ac.uk/,-0.181668,51.490713,icr.ac.uk,London
+146,10007146.0,UNIVERSITY OF GREENWICH,University of Greenwich,Park Row,London,SE10 9LS,http://www.greenwich.ac.uk/,-0.0038909999999999995,51.484493,greenwich.ac.uk,London
+147,10007713.0,YORK ST JOHN UNIVERSITY,York St John University,LORD MAYORS WALK,YORK,YO31 7EX,http://www.yorksj.ac.uk/,-1.08029,53.965263,yorksj.ac.uk,Yorkshire and The Humber
+148,10007858.0,UNIVERSITY OF WALES: TRINITY SAINT DAVID,University of Wales: Trinity Saint David,COLLEGE ROAD,CARMARTHEN,SA31 3EP,http://www.trinitysaintdavid.ac.uk/,-4.328723,51.858379,trinitysaintdavid.ac.uk,Wales
+149,10007846.0,SWANSEA METROPOLITAN UNIVERSITY,Swansea Metropolitan University,MOUNT PLEASANT,SWANSEA,SA1 6ED,http://www.smu.ac.uk/,-3.949446,51.624658000000004,smu.ac.uk,
+150,10007825.0,GUILDHALL SCHOOL OF MUSIC & DRAMA,Guildhall School of Music and Drama,SILK STREET BARBICAN,LONDON,EC2Y 8DT,http://www.gsmd.ac.uk/,-0.09240599999999999,51.519502,gsmd.ac.uk,London
+151,10007785.0,UNIVERSITY OF BRADFORD,University of Bradford,RICHMOND ROAD,BRADFORD,BD7 1DP,http://www.bradford.ac.uk/,-1.7621330000000002,53.791716,bradford.ac.uk,Yorkshire and The Humber
+152,10004078.0,LONDON SOUTH BANK UNIVERSITY,London South Bank University,BOROUGH ROAD,LONDON,SE1 0AA,http://www.lsbu.ac.uk/,-0.10163,51.49841,lsbu.ac.uk,London
+153,10014001.0,UNIVERSITY CAMPUS SUFFOLK LTD,University Campus Suffolk Ltd,NEPTUNE QUAY,IPSWICH,IP4 1QJ,http://www.ucs.ac.uk/,1.162554,52.052585,ucs.ac.uk,Eastern
+154,10007800.0,UNIVERSITY OF THE WEST OF SCOTLAND,University of the West of Scotland,HIGH STREET,PAISLEY,PA1 2BE,http://www.uws.ac.uk/,-4.428479,55.84366899999999,uws.ac.uk,Scotland
+155,10003957.0,LIVERPOOL JOHN MOORES UNIVERSITY,Liverpool John Moores University,MOUNT PLEASANT,LIVERPOOL,L3 5UX,http://www.ljmu.ac.uk/,-2.973176,53.403702,ljmu.ac.uk,North West
+156,10007850.0,UNIVERSITY OF BATH (THE),University of Bath (The),,BATH,BA2 7AY,http://www.bath.ac.uk/,-2.3306709999999997,51.380438,bath.ac.uk,South West
+157,10000385.0,"ARTS UNIVERSITY BOURNEMOUTH, THE",The Arts University College at Bournemouth,FERN BARROW,POOLE,BH12 5HH,http://www.aub.ac.uk/,-1.8977,50.741781,aub.ac.uk,South West
+158,10006566.0,UNIVERSITY OF WEST LONDON,The University of West London,ST. MARYS ROAD,LONDON,W5 5RF,http://www.uwl.ac.uk/,-0.30339,51.506609999999995,uwl.ac.uk,London
+159,10004930.0,OXFORD BROOKES UNIVERSITY,Oxford Brookes University,GIPSY LANE,OXFORD,OX3 0BP,http://www.brookes.ac.uk/,-1.2231809999999999,51.754386,brookes.ac.uk,South East
+160,10007780.0,SCHOOL OF ORIENTAL AND AFRICAN STUDIES,School of Oriental and African Studies,THORNHAUGH STREET,LONDON,WC1H 0XG,http://www.soas.ac.uk/,-0.129233,51.522352000000005,soas.ac.uk,London
+161,10007837.0,ROYAL NORTHERN COLLEGE OF MUSIC,Royal Northern College of Music,OXFORD ROAD,MANCHESTER,M13 9RD,http://www.rncm.ac.uk/,-2.236946,53.468582999999995,rncm.ac.uk,North West
+162,10007141.0,UNIVERSITY OF CENTRAL LANCASHIRE,University of Central Lancashire,,PRESTON,PR1 2HE,http://www.uclan.ac.uk/,-2.7073810000000003,53.761354000000004,uclan.ac.uk,North West
+163,10003270.0,"IMPERIAL COLLEGE OF SCIENCE, TECHNOLOGY AND MEDICINE","Imperial College of Science, Technology and Medicine",EXHIBITION ROAD,LONDON,SW7 2AZ,http://www.imperial.ac.uk/,-0.17819400000000002,51.500506,imperial.ac.uk,London
+164,10008574.0,UNIVERSITY OF WALES PRIFYSGOL CYMRU,University of Wales Prifysgol Cymru,KING EDWARD VII AVENUE,CARDIFF,CF10 3NS,http://www.wales.ac.uk/,-3.1810389999999997,51.485538,wales.ac.uk,Wales
+165,10007139.0,"UNIVERSITY OF WORCESTER, THE",University of Worcester,HENWICK GROVE,WORCESTER,WR2 6AJ,http://www.worc.ac.uk/,-2.2430380000000003,52.197568,worc.ac.uk,West Midlands
+166,,Wellcome Trust Sanger Institute,Wellcome Trust Sanger Institute,,,,,0.1855874,52.0797171,sanger.ac.uk,Eastern
+167,,Earlham Institute,Earlham Institute,,,,,1.2189869,52.621740700000004,earlham.ac.uk,Eastern
+168,,Science and Technology Facilities Council,STFC,,,,,-2.636473,53.348725,stfc.ac.uk,South East
+169,,The Genome Analysis Centre,TGAC,,,,,1.2189869,52.621740700000004,tgac.ac.uk,Eastern
+170,,ELIXIR UK,ELIXIR UK,,,,,1.2189869,52.621740700000004,elixir-uk.org,Eastern
+171,,Arriva,Arriva Group,,,,,-1.4335148000000002,54.8635309,arriva.co.uk,London
+172,,Delcam,Delcam Ltd,,,,,-1.8450111,52.462451,delcam.com,East Midlands
+173,,Met Office,Met Office,,,,,-3.4723379999999997,50.727421,metoffice.gov.uk,South West
+174,,Thales,Thales,,,,,-2.1851898,53.3911872,thalesgroup.com,South East
+175,,The John Innes Centre,The John Innes Centre,,,,,1.221381,52.622271,jic.ac.uk,Eastern
+176,,Climate Code Foundation,Climate Code Foundation,,,,,-1.5290013999999998,53.314384200000006,clearclimatecode.org,
+177,,Kew Royal Botanic Gardens,Kew Royal Botanic Gardens,,,,,-0.295573,51.4787438,kew.org,London
+178,,James Hutton Institute,James Hutton Institute,,,,,-2.158366,57.133131000000006,hutton.ac.uk,Scotland
+179,,STFC Daresbury Laboratory,STFC Daresbury Laboratory,,,,,-2.6399343999999996,53.3445812,stfc.ac.uk,North West
+180,,Owen Stephens Consulting,Owen Stephens Consulting,,,,,-1.5200789,52.285190500000006,ostephens.com,
+181,,Public Health England,Public Health England,,,,,-0.1087108,51.5015303,gov.uk,
+182,,IBM,IBM,,,,,-0.1124157,51.507158600000004,ibm.com,
+183,,Media Molecule,Media Molecule,,,,,-0.5756399,51.2355975,mediamolecule.com,
+184,,BBC,BBC,,,,,-0.226846,51.510025,bbc.co.uk,London
+185,,"Culham Centre for Fusion Energy, UK Atomic Energy Authority","Culham Centre for Fusion Energy, UK Atomic Energy Authority",,,,,-1.2305024,51.6588505,ukaea.uk,South East
+186,,Digital Greenwich,Digital Greenwich,,,,,0.0068665,51.500736100000005,digitalgreenwich.com,
+187,,National Oceanography Centre,National Oceanography Centre,,,,,-1.3945246999999998,50.892805100000004,noc.ac.uk,South East
+188,,Natural History Museum,Natural History Museum,,,,,-0.1763672,51.496715,nhm.ac.uk,London
+189,,STFC Rutherford Appleton Laboratory,STFC Rutherford Appleton Laboratory,,,,,-1.3159226000000002,51.5726621,stfc.ac.uk,
+190,,SAP,SAP,,,,,-0.4450222,51.449025,sap.com,
+191,,The Francis Crick Institute,The Francis Crick Institute,,,,,-0.1287561,51.5315844,crick.ac.uk,
+192,,The Sir Alister Hardy Foundation for Ocean Science (SAHFOS),The Sir Alister Hardy Foundation for Ocean Science (SAHFOS),,,,,-4.138946,50.364335,marine.gov.scot,
+193,,Microsoft,Microsoft,,,,,-2.2389650000000003,53.479046999999994,microsoft.com,
+194,,British Library,British Library,,,,,-0.136804,51.584516,bl.uk,London
+195,,The Alan Turing Institute,The Alan Turing Institute,,,,,-0.127673,51.530126,turing.ac.uk,London
+196,,The Sainsbury Laboratory,The Sainsbury Laboratory,,,,,1.222558,52.62461999999999,tsl.ac.uk,
+197,,The Software Sustainability Institute,The Software Sustainability Institute,,,,,-3.1871658610000004,55.94596217,software.ac.uk,Scotland
+198,,Archives and Records Association (UK & Ireland),Archives and Records Association (UK & Ireland),,,,,0.2799,51.4816,archives.org.uk,
+199,,Greenwich Digital Enterprise,"Greenwich Digital Enterprise, London",,,,,0.00663,51.500659999999996,greenwich.gov.uk,
