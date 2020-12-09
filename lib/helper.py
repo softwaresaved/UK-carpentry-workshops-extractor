@@ -19,7 +19,7 @@ UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
 UK_ACADEMIC_INSTITUTIONS_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 HESA_ACADEMIC_PROVIDERS_FILE = CURRENT_DIR + "/HESA_UK_higher_education_providers.csv"
-UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions-geodata.json'
+UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions.json'
 UK_NON_ACADEMIC_INSTITUTIONS_CSV = CURRENT_DIR + '/UK-non-academic-institutions.csv'
 ALL_UK_INSTITUTIONS_CSV = CURRENT_DIR + '/all-institutions.csv' # merged academic and non-academic institutions
 
@@ -298,16 +298,19 @@ def process_workshops(workshops_df):
     all_institutions_df = pd.read_csv(ALL_UK_INSTITUTIONS_CSV, encoding="utf-8")
     all_institutions_regions_dict = dict(all_institutions_df[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
-    # Get region for institution
+    # Get regions for workshops
+    # First try by workshop (latitude, longitude) as workshop (host) location may not match organiser location
     print("Getting regions for host institutions...\n")
     idx = workshops_df.columns.get_loc("country") + 1
-    workshops_df.insert(loc=idx, column='region', value=workshops_df["organiser_top_level_web_domain"])
-    workshops_df['region'] = workshops_df['region'].map(all_institutions_regions_dict, na_action="ignore")
-    # If we cannot find the region by institution, try finding it based on the workshop's geocoordinates
-    print("Getting regions for workshops via (latitude, longitude) for host institutions that we do not have region for.")
+    workshops_df.insert(loc=idx, column='region', value=np.nan)
     workshops_df['region'] = workshops_df.apply(
-        lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude'], institution=x['organiser']) if x['region'] is np.NaN else x[
-            'region'], axis=1)
+        lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude'], institution=x['organiser'])
+        if (pd.notna(x['longitude']) and x['longitude'] not in [0,-1])
+        else np.nan, axis=1
+    )
+    # For all rows where region is null, map by organiser_top_level_web_domain to find region
+    regions_from_institution = workshops_df[workshops_df['region'].isna()]['organiser_top_level_web_domain'].map(all_institutions_regions_dict)
+    workshops_df['region'].update(regions_from_institution) # update regions in place (indexes will match)
 
     # Get normalised (official) and common names for UK academic institutions, if exist
     uk_academic_institutions_normalised_names_dict = dict(
@@ -555,7 +558,7 @@ def get_uk_region(latitude, longitude, institution):
     """
     Lookup UK region given the (latitude, longitude) coordinates.
     """
-    if latitude is not None and latitude is not np.nan and longitude is not None and longitude is not np.nan:
+    if ~pd.isna(latitude) and ~pd.isna(longitude):
         print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
             longitude) + ") for institution: '" + str(institution) + "'")
         point = Point(longitude, latitude)
@@ -564,7 +567,7 @@ def get_uk_region(latitude, longitude, institution):
             if polygon.contains(point):
                 return (feature['properties']['NAME'])
     print("Could no find UK region for location (" + str(latitude) + ", " + str(longitude) + ")")
-    return None
+    return np.nan
 
 
 def extract_top_level_domain_from_string(domain):
