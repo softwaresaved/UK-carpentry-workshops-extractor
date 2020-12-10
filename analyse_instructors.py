@@ -52,6 +52,15 @@ def main():
         instructors_per_institution_analysis(instructors_df, excel_writer)
         instructors_per_UK_region_analysis(instructors_df, excel_writer)
 
+        # Convert list of strings into list of dates for 'taught_workshop_dates' and 'earliest_badge_awarded' columns (turn NaN into [])
+        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].str.split(',')
+        instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), ['taught_workshop_dates']] = \
+        instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), 'taught_workshop_dates'].apply(
+            lambda x: [])
+        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].apply(
+            lambda list_str: [datetime.datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in list_str])
+        active_instructors_analysis(instructors_df, excel_writer)
+
         excel_writer.save()
         print("Analyses of Carpentry instructors complete - results saved to " + instructor_analyses_excel_file + "\n")
     except Exception:
@@ -182,6 +191,56 @@ def instructors_per_UK_region_analysis(df, writer):
     worksheet.insert_chart('D2', chart)
 
     return instructors_per_UK_region
+
+
+def is_active(taught_workshop_dates):
+    """
+    :param taught_workshop_dates: list of workshops taught by an instructor
+    :return:
+    """
+    # Let's define active and inactive instructors
+    # Active = taught in the past 2 years. Inactive = everyone else.
+    if taught_workshop_dates == [] or (datetime.date.today() - max(taught_workshop_dates)).days > 712:
+        return False
+    else:
+        return True
+
+
+def active_instructors_analysis(df, writer):
+    """
+    Number of active vs inactive instructors.
+    """
+    df['is_active'] = df['taught_workshop_dates'].apply(
+        lambda x: is_active(x))
+
+    # How many active and inactive instructors?
+    active_vs_inactive = df['is_active'].value_counts()
+    # print(active_vs_inactive)
+    active_vs_inactive.index = ['inactive', 'active']
+    active_vs_inactive.to_excel(writer,
+                                sheet_name='active_vs_inactive',
+                                index=True)
+
+    workbook = writer.book
+    worksheet = writer.sheets['active_vs_inactive']
+
+    chart = workbook.add_chart({'type': 'column'})
+
+    chart.add_series({
+        'categories': ['active_vs_inactive', 1, 0, len(active_vs_inactive.index), 0],
+        'values': ['active_vs_inactive', 1, 1, len(active_vs_inactive.index), 1],
+        'gap': 2,
+    })
+
+    chart.set_y_axis({'major_gridlines': {'visible': False}})
+    chart.set_legend({'position': 'none'})
+    chart.set_x_axis({'name': 'active_vs_inactive'})
+    chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
+    chart.set_title({'name': 'Number of active vs inactive instructors'})
+
+    worksheet.insert_chart('D2', chart)
+
+    return df
 
 
 if __name__ == '__main__':
