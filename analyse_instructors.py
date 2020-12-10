@@ -1,9 +1,11 @@
 import os
 import re
 import pandas as pd
+import numpy as np
 import sys
 import traceback
 import datetime
+from ast import literal_eval
 
 sys.path.append('/lib')
 import lib.helper as helper
@@ -12,6 +14,8 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = CURRENT_DIR + '/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 ANALYSES_DIR = DATA_DIR + '/analyses'
+
+YEARS = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020']
 
 
 def main():
@@ -38,9 +42,51 @@ def main():
         else:
             instructor_analyses_excel_file = ANALYSES_DIR + '/analysed_' + instructors_file_name_without_extension + '.xlsx'
 
-        excel_writer = helper.create_excel_analyses_spreadsheet(instructor_analyses_excel_file, instructors_df,
-                                                                "carpentry_instructors")
+        # Let's change type of some columns and do some conversions
 
+        instructors_df.loc[~instructors_df['taught_workshops_per_year'].isnull(), ['taught_workshops_per_year']] = \
+        instructors_df.loc[~instructors_df['taught_workshops_per_year'].isnull(), 'taught_workshops_per_year'].apply(
+            lambda x: literal_eval(x))
+        instructors_df.loc[instructors_df['taught_workshops_per_year'].isnull(), ['taught_workshops_per_year']] = \
+        instructors_df.loc[instructors_df['taught_workshops_per_year'].isnull(), 'taught_workshops_per_year'].apply(
+            lambda x: {})
+
+        # Convert list of strings into list of dates for 'taught_workshop_dates' and 'earliest_badge_awarded'
+        # columns (turn NaN into [])
+        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].str.split(',')
+        instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), ['taught_workshop_dates']] = \
+            instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), 'taught_workshop_dates'].apply(
+                lambda x: [])
+        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].apply(
+            lambda list_str: [datetime.datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in list_str])
+
+        # Convert list of strings into list of dates for ' ' column (turn NaN into [])
+        instructors_df['taught_workshops'] = instructors_df['taught_workshops'].str.split(',')
+        instructors_df.loc[instructors_df['taught_workshops'].isnull(), ['taught_workshops']] = instructors_df.loc[
+            instructors_df['taught_workshops'].isnull(), 'taught_workshop_dates'].apply(lambda x: [])
+
+        # Convert 'earliest_badge_awarded' column from strings to datetime
+        instructors_df['earliest_badge_awarded'] = pd.to_datetime(instructors_df['earliest_badge_awarded'],
+                                                                  format="%Y-%m-%d").apply(lambda x: x.date())
+
+        # Get the date of the last taught workshop
+        instructors_df['last_taught_workshop_date'] = instructors_df['taught_workshop_dates'].apply(
+            lambda x: max(x) if (x != []) else None)
+
+        # Extract column for each year containing number of workshops taught that year by instructor
+        for year in YEARS:
+            instructors_df[year] = instructors_df['taught_workshops_per_year'].apply(
+                lambda x: x.get(int(year), 0))
+
+        # Average number of workshop taught across all active years
+        instructors_df['average_taught_workshops_per_year'] = instructors_df[YEARS].replace(0, np.nan).mean(axis=1)
+
+        # Active and inactive instructors
+        instructors_df['is_active'] = instructors_df['taught_workshop_dates'].apply(
+            lambda x: is_active(x))
+
+        excel_writer = helper.create_excel_analyses_spreadsheet(instructor_analyses_excel_file,instructors_df,
+                                                                "carpentry_instructors")
         helper.create_readme_tab(excel_writer,
                                  "Data in sheet 'carpentry_instructors' contains Carpentry workshop data from " +
                                  instructor_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime(
@@ -51,16 +97,7 @@ def main():
         instructors_per_country_analysis(instructors_df, excel_writer)
         instructors_per_institution_analysis(instructors_df, excel_writer)
         instructors_per_UK_region_analysis(instructors_df, excel_writer)
-
-        # Convert list of strings into list of dates for 'taught_workshop_dates' and 'earliest_badge_awarded' columns (turn NaN into [])
-        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].str.split(',')
-        instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), ['taught_workshop_dates']] = \
-        instructors_df.loc[instructors_df['taught_workshop_dates'].isnull(), 'taught_workshop_dates'].apply(
-            lambda x: [])
-        instructors_df['taught_workshop_dates'] = instructors_df['taught_workshop_dates'].apply(
-            lambda list_str: [datetime.datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in list_str])
         active_instructors_analysis(instructors_df, excel_writer)
-
         excel_writer.save()
         print("Analyses of Carpentry instructors complete - results saved to " + instructor_analyses_excel_file + "\n")
     except Exception:
@@ -210,9 +247,6 @@ def active_instructors_analysis(df, writer):
     """
     Number of active vs inactive instructors.
     """
-    df['is_active'] = df['taught_workshop_dates'].apply(
-        lambda x: is_active(x))
-
     # How many active and inactive instructors?
     active_vs_inactive = df['is_active'].value_counts()
     # print(active_vs_inactive)
@@ -238,7 +272,24 @@ def active_instructors_analysis(df, writer):
     chart.set_y_axis({'name': 'Number of instructors', 'major_gridlines': {'visible': False}})
     chart.set_title({'name': 'Number of active vs inactive instructors'})
 
-    worksheet.insert_chart('D2', chart)
+    worksheet.insert_chart('D20', chart)
+
+    # How many instructors taught 0 times?
+    worksheet.write(0, 3, "How many instructors taught 0 times? " +
+                    str(len(df[df['last_taught_workshop_date'].isnull()].index)))
+
+    active = df[df['is_active']==True]
+    inactive = df[df['is_active']==False]
+
+    # Average number of workshops taught across all active years (for all instructors)
+    worksheet.write(0, 3, "Average number of workshops taught across all active years (for all instructors): " +
+                    str((df[YEARS].replace(0, np.NaN).mean(axis=0)).mean()))
+
+    worksheet.write(2, 3, "Average number of workshops taught across all active years (for active instructors): " +
+                     str((active[YEARS].replace(0, np.NaN).mean(axis=0)).mean()))
+
+    worksheet.write(4, 3, "Average number of workshops taught across all active years (for inactive instructors): " +
+                    str((inactive[YEARS].replace(0, np.NaN).mean(axis=0)).mean()))
 
     return df
 
