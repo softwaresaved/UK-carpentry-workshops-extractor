@@ -66,7 +66,7 @@ def main():
         # Drop rows where we do not have longitude and latitude
         instructors_df.dropna(0, 'any', None, ['longitude', 'latitude'],
                               inplace=True)
-        instructors_df.rename(columns={"affiliation" : "institution"},inplace=True)
+        instructors_df.rename(columns={"affiliation": "institution"},inplace=True)
         instructors_df = instructors_df.reset_index(drop=True)
 
         # Add column 'popup' which is used for popups in maps

@@ -112,7 +112,7 @@ def main():
 
     ############################ Extract instructor data from Carpentries Redash ########################
 
-    print("\nExtracting instructor from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
+    print("\nExtracting instructors from: " + REDASH_API_INSTRUCTORS_QUERY_URL)
     # Get instructor data as returned by a predefined query within Carpentries Redash system (cached results are returned
     # from the last time Redash ran the query, currently set to run every 2 weeks)
     instructors_df = get_csv_data_redash(REDASH_API_INSTRUCTORS_QUERY_URL, REDASH_API_KEY)

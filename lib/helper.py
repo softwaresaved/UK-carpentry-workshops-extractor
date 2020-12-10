@@ -14,14 +14,20 @@ import getpass
 import tldextract
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
+
 NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
+NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
+
 UK_ACADEMIC_INSTITUTIONS_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
 HESA_ACADEMIC_PROVIDERS_FILE = CURRENT_DIR + "/HESA_UK_higher_education_providers.csv"
-UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions.json'
+
+#UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions.json'
 UK_NON_ACADEMIC_INSTITUTIONS_CSV = CURRENT_DIR + '/UK-non-academic-institutions.csv'
 ALL_UK_INSTITUTIONS_CSV = CURRENT_DIR + '/all-institutions.csv' # merged academic and non-academic institutions
+ALL_UK_INSTITUTIONS_DF = pd.read_csv(ALL_UK_INSTITUTIONS_CSV, encoding="utf-8")
 
 # UK_AIRPORTS_REGIONS_DF = pd.read_csv(UK_AIRPORTS_REGIONS_FILE, encoding="utf-8")
 UK_REGIONS = json.load(open(UK_REGIONS_FILE), encoding="utf-8")
@@ -52,15 +58,15 @@ def get_countries(countries_file):
 COUNTRIES = get_countries(COUNTRIES_FILE)
 
 
-def get_uk_non_academic_institutions():
-    """
-    Return names and coordinates for UK institutions that are not high education providers
-    (so are not in the official academic institutions list), but appear in data as host institutions or
-     affiliations of UK instructors.
-    This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
-    """
-    non_academic_uk_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_JSON))
-    return pd.DataFrame(non_academic_uk_institutions_coords)
+# def get_uk_non_academic_institutions():
+#     """
+#     Return names and coordinates for UK institutions that are not high education providers
+#     (so are not in the official academic institutions list), but appear in data as host institutions or
+#      affiliations of UK instructors.
+#     This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
+#     """
+#     non_academic_uk_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_JSON))
+#     return pd.DataFrame(non_academic_uk_institutions_coords)
 
 
 def get_uk_non_academic_institutions_from_csv():
@@ -80,9 +86,8 @@ def get_uk_academic_institutions():
     return uk_academic_institutions_df
 
 
-NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
-UK_ACADEMIC_INSTITUTIONS_DF = get_uk_academic_institutions()
-ALL_UK_INSTITUTIONS_DF = UK_ACADEMIC_INSTITUTIONS_DF.append(get_uk_non_academic_institutions())
+# UK_ACADEMIC_INSTITUTIONS_DF = get_uk_academic_institutions()
+# ALL_UK_INSTITUTIONS_DF2 = UK_ACADEMIC_INSTITUTIONS_DF.append(get_uk_non_academic_institutions())
 
 
 def parse_command_line_parameters_amy():
@@ -295,12 +300,11 @@ def process_workshops(workshops_df):
             na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
     # Get data for UK institutions to lookup
-    all_institutions_df = pd.read_csv(ALL_UK_INSTITUTIONS_CSV, encoding="utf-8")
-    all_institutions_regions_dict = dict(all_institutions_df[['top_level_web_domain', 'region']].values)  # create a dict for lookup
+    all_institutions_regions_dict = dict(ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'region']].values)  # create a dict for lookup
 
     # Get regions for workshops
     # First try by workshop (latitude, longitude) as workshop (host) location may not match organiser location
-    print("Getting regions for host institutions...\n")
+    print("Getting regions for host institutions based on polygon data...")
     idx = workshops_df.columns.get_loc("country") + 1
     workshops_df.insert(loc=idx, column='region', value=np.nan)
     workshops_df['region'] = workshops_df.apply(
@@ -309,14 +313,17 @@ def process_workshops(workshops_df):
         else np.nan, axis=1
     )
     # For all rows where region is null, map by organiser_top_level_web_domain to find region
+    print("Getting regions for host institutions based on organiser_top_level_web_domain...")
     regions_from_institution = workshops_df[workshops_df['region'].isna()]['organiser_top_level_web_domain'].map(all_institutions_regions_dict)
     workshops_df['region'].update(regions_from_institution) # update regions in place (indexes will match)
+    print("Workshops with no region: ")
+    print(workshops_df[workshops_df['region'].isna()]['organiser'])
 
     # Get normalised (official) and common names for UK academic institutions, if exist
     uk_academic_institutions_normalised_names_dict = dict(
-        all_institutions_df[['top_level_web_domain', 'normalised_name']].values)  # create a dict for lookup
+        ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'normalised_name']].values)  # create a dict for lookup
     uk_academic_institutions_common_names_mapping = dict(
-        all_institutions_df[['top_level_web_domain', 'common_name']].values)  # create a dict for lookup
+        ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'common_name']].values)  # create a dict for lookup
 
     # Insert normalised (official) name for organiser
     idx = workshops_df.columns.get_loc("organiser_top_level_web_domain") + 1
@@ -349,24 +356,30 @@ def process_instructors(instructors_df):
     # Insert normalised/official names for UK academic institutions
     print("\nInserting normalised name for instructors' affiliations/institutions...\n")
     instructors_df = insert_normalised_institution(instructors_df, "institution")
+    print("Instructors with no normalised institutional name: ")
+    print(instructors_df[instructors_df['normalised_institution'].isna()][['institution', 'normalised_institution']])
 
     # Insert latitude, longitude pairs for instructors' institutions
     print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
     instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude",
                                                          "longitude")
 
-    # Insert UK regional info based on the nearest airport
-    print("\nInserting regions for instructors based on the nearest airport...\n")
-    instructors_df = instructors_df.merge(UK_AIRPORTS[["airport_code", "region"]], how="left")
-    instructors_df.rename(columns={"region": "airport_region"}, inplace=True)
-
-    # Insert UK regional info based on instructors' affiliations
-    print("\nInserting regions for instructors' affiliations/institutions...\n")
-    idx = instructors_df.columns.get_loc("institution") + 1
-    instructors_df.insert(loc=idx, column='institutional_region', value=instructors_df["institution"])
-    instructors_df['institutional_region'] = instructors_df.apply(
-        lambda x: get_uk_region(latitude=x['latitude'], longitude=x['longitude'], institution=x['institution']), axis=1)
-    print("\nGetting regions for institutions took a while but it has finished now.\n")
+    # Get regions for instructors' institutions
+    # First try to lookup by institutions' normalised name, if we have it
+    print("Getting regions for instructors' institutions based on normalised names...")
+    instructors_df = insert_institutional_region(instructors_df)
+    # If we do not have institution normalised name to get the region, see if we have the nearest airport
+    # info and try to get the region like that
+    print("Instructors with no region based on institutional data: ")
+    print(instructors_df[instructors_df['region'].isna()]['institution'])
+    print("Inserting regions for instructors based on the nearest airport...")
+    # For all rows where region is null, map by airport_code to find region
+    uk_airports_dict = dict(UK_AIRPORTS[["airport_code", "region"]].values)
+    regions_from_airport = instructors_df[instructors_df['region'].isna()]['airport_code'].map(
+        uk_airports_dict)
+    instructors_df['region'].update(regions_from_airport)  # update regions in place (indexes will match)
+    print("Instructors with no region: ")
+    print(instructors_df[instructors_df['region'].isna()]['institution'])
 
     # Extract dates when instructors badges were awarded from list
     if "badges_dates" in instructors_df.columns:
@@ -515,29 +528,29 @@ def insert_normalised_institution(df, non_normalised_institution_column):
     # Get the index of column 'venue'/'institution/affiliation' (with non-normalised workshop venue or instructor's
     # institution/affiliation), right to which we want to insert the new column containing normalised institution name
     idx = df.columns.get_loc(non_normalised_institution_column)
-    df.insert(loc=idx + 1, column='normalised_institution',
-              value=df[
-                  non_normalised_institution_column])  # insert to the right of the column 'venue'/'institution/affiliation'
-    df[df["country_code"] == "GB"]["normalised_institution"].map(get_normalised_institution_name, na_action="ignore")
+    df.insert(
+        loc=idx + 1, column='normalised_institution',
+        value=df[non_normalised_institution_column]
+    )  # insert to the right of the column 'venue'/'institution/affiliation'
+    df["normalised_institution"] = df["normalised_institution"].map(
+        get_normalised_institution_name, na_action="ignore"
+    )
     return df
 
 
 def get_normalised_institution_name(non_normalised_institution_name):
-    if non_normalised_institution_name in ALL_UK_INSTITUTIONS_DF['VIEW_NAME'].values:
-        normalised_institution_name = non_normalised_institution_name
-    else:
-        normalised_institution_name = NORMALISED_INSTITUTIONS_DICT.get(non_normalised_institution_name.strip(),
-                                                                       "Unknown")  # Replace with 'Unknown' if you cannot find the mapping
 
-    if normalised_institution_name == "Unknown":
-        print(
-            'For institution "' + non_normalised_institution_name + '" we do not have the normalised name information. ' +
-            'Setting the institution to "Unknown" ...\n')
-    return normalised_institution_name
+    # First look up in normalised names dictionary (for non-academic institutions and odd spellings of
+    # academic institutions or sub-departments that need to be mapped to the top-level institution)
+    normalised_institution_name = NORMALISED_INSTITUTIONS_DICT.get(
+        non_normalised_institution_name,
+        non_normalised_institution_name
+    )  # default to the original name if not found
+    return normalised_institution_name.upper()
 
 
 def insert_institutional_geocoordinates(df, institution_column_name, latitude_column_name, longitude_column_name):
-    # Insert latitude and longitude for institutions, by looking up the all_uk_institutions_coords_df
+    # Insert latitude and longitude for institutions, by looking up the ALL_UK_INSTITUTIONS_DF
     idx = df.columns.get_loc(institution_column_name)  # index of column where (normalised) institution is kept
     df.insert(loc=idx + 1,
               column=latitude_column_name,
@@ -545,12 +558,22 @@ def insert_institutional_geocoordinates(df, institution_column_name, latitude_co
     df.insert(loc=idx + 2,
               column=longitude_column_name,
               value=None)
-    # replace with the affiliation's latitude and longitude coordinates
-    df[latitude_column_name] = df[institution_column_name].map(
-        ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LATITUDE'])
-    df[longitude_column_name] = df[institution_column_name].map(
-        ALL_UK_INSTITUTIONS_DF.set_index("VIEW_NAME")['LONGITUDE'])
+    # replace with the institution's latitude and longitude coordinates
+    df[latitude_column_name] = df[institution_column_name].str.upper().map(
+        ALL_UK_INSTITUTIONS_DF.set_index("normalised_name")['latitude'])
+    df[longitude_column_name] = df[institution_column_name].str.upper().map(
+        ALL_UK_INSTITUTIONS_DF.set_index("normalised_name")['longitude'])
+    return df
 
+
+def insert_institutional_region(df):
+    # Insert region info
+    idx = df.columns.get_loc('country_code')  # index of column where country_code is kept
+    df.insert(loc=idx + 1,
+              column='region',
+              value=np.nan)
+    df["region"] = df["normalised_institution"].str.upper().map(
+        ALL_UK_INSTITUTIONS_DF.set_index("normalised_name")['region'])
     return df
 
 
@@ -559,14 +582,15 @@ def get_uk_region(latitude, longitude, institution):
     Lookup UK region given the (latitude, longitude) coordinates.
     """
     if ~pd.isna(latitude) and ~pd.isna(longitude):
-        print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
-            longitude) + ") for institution: '" + str(institution) + "'")
+        # print("Looking up region for geocoordinates: (" + str(latitude) + ", " + str(
+        #     longitude) + ") for institution: '" + str(institution) + "'")
         point = Point(longitude, latitude)
         for feature in UK_REGIONS['features']:
             polygon = shape(feature['geometry'])
             if polygon.contains(point):
-                return (feature['properties']['NAME'])
-    print("Could no find UK region for location (" + str(latitude) + ", " + str(longitude) + ")")
+                return(feature['properties']['NAME'])
+    print("Could not find UK region for " + str(institution) + " (" + str(latitude) + ", " + str(longitude) +
+          ") from polygon data")
     return np.nan
 
 
@@ -625,6 +649,7 @@ def merge_institution_data():
     uk_non_academic_institutions = get_uk_non_academic_institutions_from_csv()  # data frame
 
     all_uk_institutions_data = pd.concat([uk_academic_institutions, uk_non_academic_institutions], ignore_index=True)
+    all_uk_institutions_data['normalised_name'] = all_uk_institutions_data['normalised_name'].str.upper()
     all_uk_institutions_file = ALL_UK_INSTITUTIONS_CSV
     all_uk_institutions_data.to_csv(all_uk_institutions_file, encoding="utf-8")
     print("Merged academic and non-academic institutional data saved to " + all_uk_institutions_file)

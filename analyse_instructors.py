@@ -169,7 +169,7 @@ def instructors_per_UK_region_analysis(df, writer):
     Number of instructors per UK region.
     """
     instructors_per_UK_region = pd.core.frame.DataFrame(
-        {'number_of_instructors': df.groupby(['institutional_region']).size().sort_values()}).reset_index()
+        {'number_of_instructors': df.groupby(['region']).size().sort_values()}).reset_index()
     instructors_per_UK_region.to_excel(writer,
                           sheet_name='instructors_per_region',
                           index=False)
