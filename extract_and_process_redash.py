@@ -108,7 +108,7 @@ def main():
 
     # Save the processed workshop data
     workshops_df.to_csv(processed_workshops_file, encoding="utf-8", index=False)
-    print("Saved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
+    print("\nSaved processed Carpentry workshop data to "+ processed_workshops_file +"\n")
 
     ############################ Extract instructor data from Carpentries Redash ########################
 
@@ -140,7 +140,7 @@ def main():
 
     # Save the processed instructor data
     instructors_df.to_csv(processed_instructors_file, encoding="utf-8", index=False)
-    print("Saved processed Carpentry instructor data to " + processed_instructors_file + "\n")
+    print("\nSaved processed Carpentry instructor data to " + processed_instructors_file + "\n")
 
 
 def get_csv_data_redash(query_results_url, api_key):

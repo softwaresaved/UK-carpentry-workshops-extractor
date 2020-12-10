@@ -287,9 +287,28 @@ def process_workshops(workshops_df):
             lambda uri: extract_top_level_domain_from_uri(uri),
             na_action="ignore")  # extract host's top-level domain from URIs like 'https://amy.carpentries.org/api/v1/organizations/earlham.ac.uk/'
 
+    # Fix coordinates for workshops with missing geo-coords (use the coords for organiser) and online
+    # workshops that have longitude in [0, -1]
+    all_institutions_longitude_dict = dict(ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'longitude']].values)
+    all_institutions_latitude_dict = dict(ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'latitude']].values)
+    # First lookup latitude as longitude is used to match the dirty rows and it will be overwritten with values
+    workshops_df['latitude'] = workshops_df.apply(
+        lambda x: all_institutions_latitude_dict.get(x['organiser_top_level_web_domain'])
+        if pd.isna(x['longitude']) or x['longitude'] in [0, -1]
+        else x['latitude'], axis=1
+    )
+    workshops_df['longitude'] = workshops_df.apply(
+        lambda x: all_institutions_longitude_dict.get(x['organiser_top_level_web_domain'])
+        if pd.isna(x['longitude']) or x['longitude'] in [0,-1]
+        else x['longitude'], axis=1
+    )
+    print("\nWorkshops with no geo-coordinates: ")
+    print(workshops_df[workshops_df['longitude'].isna()][['slug','organiser']])
+    print("\nWorkshops with 'online' workshop coordinates: ")
+    print(workshops_df[workshops_df['longitude'].isna()][['slug','organiser']])
+
     # Get data for UK institutions to lookup
     all_institutions_regions_dict = dict(ALL_UK_INSTITUTIONS_DF[['top_level_web_domain', 'region']].values)  # create a dict for lookup
-
     # Get regions for workshops
     # First try by workshop (latitude, longitude) as workshop (host) location may not match organiser location
     print("Getting regions for host institutions based on polygon data...")
@@ -301,10 +320,10 @@ def process_workshops(workshops_df):
         else np.nan, axis=1
     )
     # For all rows where region is null, map by organiser_top_level_web_domain to find region
-    print("Getting regions for host institutions based on organiser_top_level_web_domain...")
+    print("\nGetting regions for host institutions based on organiser_top_level_web_domain...")
     regions_from_institution = workshops_df[workshops_df['region'].isna()]['organiser_top_level_web_domain'].map(all_institutions_regions_dict)
     workshops_df['region'].update(regions_from_institution) # update regions in place (indexes will match)
-    print("Workshops with no region: ")
+    print("\nWorkshops with no region: ")
     print(workshops_df[workshops_df['region'].isna()]['organiser'])
 
     # Get normalised (official) and common names for UK academic institutions, if exist
@@ -351,6 +370,8 @@ def process_instructors(instructors_df):
     print("\nInserting geocoordinates for instructors' affiliations/institutions...\n")
     instructors_df = insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude",
                                                          "longitude")
+    print("Instructors with no geo-coordinates: ")
+    print(instructors_df[instructors_df['latitude'].isna()]['institution'])
 
     # Get regions for instructors' institutions
     # First try to lookup by institutions' normalised name, if we have it
