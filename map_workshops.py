@@ -28,14 +28,19 @@ def main():
     print("CSV spreadsheet with Carpentry workshops to be mapped: " + workshops_file + "\n")
 
     try:
-        workshops_df = pd.read_csv(workshops_file, encoding="utf-8", usecols=['venue', 'address', 'latitude',
+        workshops_df = pd.read_csv(workshops_file, encoding="utf-8", usecols=['organiser', 'venue',
+                                                                              'address', 'latitude',
                                                                               'longitude', 'region'])
         # Rename 'venue' column to 'institution' as some of our methods expect that column name
-        workshops_df.rename(columns={"venue": "institution"}, inplace=True)
+        workshops_df.rename(columns={"organiser": "institution"}, inplace=True)
 
+        print(workshops_df.columns)
        # Add column 'popup' which is used in popups in maps
         workshops_df['popup'] = np.where(workshops_df["address"].empty, workshops_df["institution"],
                                                workshops_df["institution"] + ', ' + workshops_df["address"])
+
+        workshops_df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
+
         # print(workshops_df)
         if not os.path.exists(MAPS_DIR):
             os.makedirs(MAPS_DIR)
@@ -50,12 +55,10 @@ def main():
         print("Map 1: Generating a map of workshop venues as clusters of markers")
         print("#####################################################################\n")
         workshops_map = helper.generate_map_with_clustered_markers(workshops_df)
-        if "GB" in workshops_file:  # if the data is for UK workshops - add layer with UK regions to the map
-            workshops_map = helper.add_uk_regions_layer(workshops_map)
         # Save map to a HTML file
         map_file = MAPS_DIR + '/map_clustered_markers_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
-        print('Map of clustered workshop locations saved to HTML file ' + map_file + '\n')
+        print('A map of clustered workshop locations saved to HTML file ' + map_file + '\n')
     except Exception:
         print ("An error occurred while creating the map of workshop locations as clusters of markers.")
         print(traceback.format_exc())
@@ -83,7 +86,7 @@ def main():
         # Save the heat map to an HTML file
         map_file = MAPS_DIR + '/heat_map_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)
-        print("Heat map of workshop venue locations saved to HTML file " + map_file + "\n")
+        print("A heatmap of workshop venue locations saved to HTML file " + map_file + "\n")
     except Exception:
         print ("An error occurred while creating a heat map of workshop venue locations.\n")
         print(traceback.format_exc())

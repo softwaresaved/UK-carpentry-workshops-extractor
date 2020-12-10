@@ -697,7 +697,6 @@ def add_uk_regions_layer(map):
 
 
 def generate_heatmap(df):
-    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
     heatmap = folium.Map(
@@ -714,7 +713,6 @@ def generate_heatmap(df):
 
 
 def generate_map_with_circular_markers(df):
-    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
     map_with_markers = folium.Map(
@@ -723,7 +721,7 @@ def generate_map_with_circular_markers(df):
         tiles='cartodbpositron')  # for a lighter map tiles='Mapbox Bright'
 
     for index, row in df.iterrows():
-        print(str(index) + ": " + str(row['popup']))
+        # print(str(index) + ": " + str(row['popup']))
 
         # iframe = branca.element.IFrame(html=row['description'], width=300, height=200)
         # popup = folium.Popup(iframe, max_width=500)
@@ -744,7 +742,6 @@ def generate_map_with_clustered_markers(df):
     """
     Generates a map with clustered markers of a number of locations given in a dataframe.
     """
-    df.dropna(subset=["latitude", "longitude"], how="any", axis=0, inplace=True)
     center = get_center(df)
 
     cluster_map = folium.Map(location=center, zoom_start=6,

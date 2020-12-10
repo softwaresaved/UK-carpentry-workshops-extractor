@@ -91,7 +91,7 @@ def main():
         # Save map to a HTML file
         map_file = MAPS_DIR + '/map_clustered_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
-        print('Map of instructor affiliations saved to HTML file ' + map_file + '\n')
+        print('A map of instructor affiliations saved to HTML file ' + map_file + '\n')
     except Exception:
         print ("An error occurred while creating the map of instructors affiliations as clusters of markers.")
         print(traceback.format_exc())
@@ -120,7 +120,7 @@ def main():
         # Save the heatmap to an HTML file
         map_file = MAPS_DIR + '/heat_map_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)
-        print("Heatmap of instructors affiliations saved to HTML file " + map_file + "\n")
+        print("A heatmap of instructors affiliations saved to HTML file " + map_file + "\n")
     except Exception:
         print ("An error occurred while creating a heat map of instructors affiliations.\n")
         print(traceback.format_exc())
