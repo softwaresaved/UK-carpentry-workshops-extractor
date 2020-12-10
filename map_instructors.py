@@ -26,12 +26,11 @@ def main():
     Main function
     """
     # The maps only make sense for the data in the UK
+    print(80*"#")
     print(
-        "#########################################################################################################################################################")
-    print(
-        "Note: these maps only make sense to generate with instructors from the UK as it cross references their affiliations with geocoordinates of UK institutions.")
-    print(
-        "#########################################################################################################################################################\n")
+        "Note: these maps only make sense to generate with instructors from the UK as it cross references their "
+        "affiliations with geocoordinates of UK institutions.")
+    print(80*"#" + "\n")
 
     args = helper.parse_command_line_parameters_maps()
     if args.input_file:
@@ -53,20 +52,20 @@ def main():
     print("CSV spreadsheet with UK Carpentry instructors to be mapped: " + instructors_file + "\n")
 
     try:
-        instructors_df = pd.read_csv(instructors_file, encoding="utf-8", usecols=["affiliation", "country_code"])
+        instructors_df = pd.read_csv(instructors_file, encoding="utf-8", usecols=["institution", "country_code"])
         # Drop rows where we do not have affiliation as there is nothing to map there
-        instructors_df.dropna(subset=["affiliation"], inplace=True)
+        instructors_df.dropna(subset=["institution"], inplace=True)
         # Normalise affiliations
-        instructors_df = helper.insert_normalised_institution(instructors_df, "affiliation")
+        instructors_df = helper.insert_normalised_institution(instructors_df, "institution")
         # Insert latitude, longitude pairs for instructor's affiliation
         instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution",
                                                                     "latitude", "longitude")
-        # Insert the UK region that affiliation's geocoordinates fall in
-        instructors_df = helper.insert_uk_region(instructors_df)
+        # # Insert the UK region that affiliation's geocoordinates fall in
+        # instructors_df = helper.insert_uk_region(instructors_df)
         # Drop rows where we do not have longitude and latitude
         instructors_df.dropna(0, 'any', None, ['longitude', 'latitude'],
                               inplace=True)
-        instructors_df.rename(columns={"affiliation": "institution"},inplace=True)
+        # instructors_df.rename(columns={"affiliation": "institution"},inplace=True)
         instructors_df = instructors_df.reset_index(drop=True)
 
         # Add column 'popup' which is used for popups in maps
@@ -88,7 +87,7 @@ def main():
         print("Map 1: Generating a map of instructor affiliations as clusters of markers")
         print("#########################################################################\n")
         instructors_map = helper.generate_map_with_clustered_markers(instructors_df)
-        instructors_map = helper.add_UK_regions_layer(instructors_map)
+        instructors_map = helper.add_uk_regions_layer(instructors_map)
         # Save map to a HTML file
         map_file = MAPS_DIR + '/map_clustered_' + instructors_file_name_without_extension + '.html'
         instructors_map.save(map_file)

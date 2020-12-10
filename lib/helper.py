@@ -18,13 +18,12 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 UK_REGIONS_FILE = CURRENT_DIR + '/UK-regions.json'
 UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/UK-airports_regions.csv'  # Extracted on 2017-10-16 from https://en.wikipedia.org/wiki/List_of_airports_in_the_United_Kingdom_and_the_British_Crown_Dependencies
 
-NORMALISED_INSTITUTIONS_DICT_FILE = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
-NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_FILE))
+NORMALISED_INSTITUTIONS_DICT_JSON = CURRENT_DIR + '/venue-normalised_institutions-dictionary.json'
+NORMALISED_INSTITUTIONS_DICT = json.load(open(NORMALISED_INSTITUTIONS_DICT_JSON))
 
-UK_ACADEMIC_INSTITUTIONS_FILE = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
-HESA_ACADEMIC_PROVIDERS_FILE = CURRENT_DIR + "/HESA_UK_higher_education_providers.csv"
+UK_ACADEMIC_INSTITUTIONS_CSV = CURRENT_DIR + '/UK-academic-institutions.csv'  # Extracted on 2017-10-27 from http://learning-provider.data.ac.uk/
+HESA_ACADEMIC_PROVIDERS_CSV = CURRENT_DIR + "/HESA_UK_higher_education_providers.csv"
 
-#UK_NON_ACADEMIC_INSTITUTIONS_JSON = CURRENT_DIR + '/UK-non-academic-institutions.json'
 UK_NON_ACADEMIC_INSTITUTIONS_CSV = CURRENT_DIR + '/UK-non-academic-institutions.csv'
 ALL_UK_INSTITUTIONS_CSV = CURRENT_DIR + '/all-institutions.csv' # merged academic and non-academic institutions
 ALL_UK_INSTITUTIONS_DF = pd.read_csv(ALL_UK_INSTITUTIONS_CSV, encoding="utf-8")
@@ -58,17 +57,6 @@ def get_countries(countries_file):
 COUNTRIES = get_countries(COUNTRIES_FILE)
 
 
-# def get_uk_non_academic_institutions():
-#     """
-#     Return names and coordinates for UK institutions that are not high education providers
-#     (so are not in the official academic institutions list), but appear in data as host institutions or
-#      affiliations of UK instructors.
-#     This list needs to be periodically updated as more non-academic affiliations appear Carpentries' records.
-#     """
-#     non_academic_uk_institutions_coords = json.load(open(UK_NON_ACADEMIC_INSTITUTIONS_JSON))
-#     return pd.DataFrame(non_academic_uk_institutions_coords)
-
-
 def get_uk_non_academic_institutions_from_csv():
     """
     Return names and coordinates for UK institutions that are not high education providers
@@ -81,8 +69,8 @@ def get_uk_non_academic_institutions_from_csv():
 
 
 def get_uk_academic_institutions():
-    uk_academic_institutions_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_FILE, encoding="utf-8",
-                                                      usecols=['VIEW_NAME', 'LONGITUDE', 'LATITUDE'])
+    uk_academic_institutions_df = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_CSV, encoding="utf-8",
+                                              usecols=['VIEW_NAME', 'LONGITUDE', 'LATITUDE'])
     return uk_academic_institutions_df
 
 
@@ -418,17 +406,16 @@ def process_instructors(instructors_df):
 
 
 def workshops_per_year_dict(taught_workshop_dates):
-    '''
+    """
     Counts number of workshops taught for each year the person was actively teaching.
     :param taught_workshops:
     :param taught_workshop_dates:
     :return: a dictionary like {year : number_taught_workshops_per_year}
-    '''
+    """
     # Create a list of years for a list of dates (passed as one long string)
     if taught_workshop_dates == "" or taught_workshop_dates is None or taught_workshop_dates is np.nan:
         return None
 
-    # taught_workshop_years = [datetime.datetime.strptime(date, '%Y-%m-%d').date().year for date in str(taught_workshop_dates).split(',')]
     taught_workshop_years = []
     for date in str(taught_workshop_dates).split(','):
         try:
@@ -449,10 +436,10 @@ def workshops_per_year_dict(taught_workshop_dates):
 
 
 def earliest_date(dates_string):
-    '''
+    """
     :param dates_string: sting representing a list of dates
     :return:
-    '''
+    """
     if dates_string is None or dates_string is np.nan:
         return None
     dates_string_list = str(dates_string).split(',')
@@ -462,10 +449,10 @@ def earliest_date(dates_string):
 
 
 def latest_date(dates_string):
-    '''
+    """
     :param dates_string: sting representing a list of dates
     :return:
-    '''
+    """
     if dates_string is None or dates_string is np.nan:
         return None
     dates_string_list = str(dates_string).split(',')
@@ -628,11 +615,11 @@ def extract_top_level_domain_from_uri(uri):
 
 
 def merge_institution_data():
-    hesa_uk_higher_education_providers = pd.read_csv(HESA_ACADEMIC_PROVIDERS_FILE, encoding="utf-8")
+    hesa_uk_higher_education_providers = pd.read_csv(HESA_ACADEMIC_PROVIDERS_CSV, encoding="utf-8")
     hesa_uk_higher_education_providers_region_mapping = dict(
         hesa_uk_higher_education_providers[['UKPRN', 'Region']].values)  # create a dict for lookup
 
-    uk_academic_institutions = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_FILE,
+    uk_academic_institutions = pd.read_csv(UK_ACADEMIC_INSTITUTIONS_CSV,
                                            encoding="utf-8",
                                            usecols=['UKPRN','PROVIDER_NAME','VIEW_NAME','WEBSITE_URL',
                                                     'LONGITUDE','LATITUDE', 'STREET_NAME','TOWN','POSTCODE'])
@@ -668,7 +655,7 @@ def get_center(df):
     return center
 
 
-def add_UK_regions_layer(map):
+def add_uk_regions_layer(map):
     # Load UK region information from a json file
     try:
         regions = json.load(open(UK_REGIONS_FILE, encoding='utf-8'))

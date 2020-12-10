@@ -51,7 +51,7 @@ def main():
         print("#####################################################################\n")
         workshops_map = helper.generate_map_with_clustered_markers(workshops_df)
         if "GB" in workshops_file:  # if the data is for UK workshops - add layer with UK regions to the map
-            workshops_map = helper.add_UK_regions_layer(workshops_map)
+            workshops_map = helper.add_uk_regions_layer(workshops_map)
         # Save map to a HTML file
         map_file = MAPS_DIR + '/map_clustered_markers_' + workshops_file_name_without_extension + '.html'
         workshops_map.save(map_file)

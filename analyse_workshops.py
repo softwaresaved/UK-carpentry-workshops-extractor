@@ -7,6 +7,8 @@ import glob
 import sys
 import datetime
 
+ESTIMATED_ATTENDEES_PER_WORKSHOP = 20
+
 sys.path.append('/lib')
 import lib.helper as helper
 
@@ -29,14 +31,7 @@ def main():
 
     try:
         workshops_df = pd.read_csv(workshops_file, encoding="utf-8")
-        # workshops_df.drop(labels=[  # "contact",
-        #     "tasks"], axis=1, inplace=True)
-        # idx = workshops_df.columns.get_loc("longitude")
-        # workshops_df.insert(loc=idx + 1, column='region',
-        #                     value=workshops_df["longitude"])
-        # workshops_df['region'] = workshops_df.apply(
-        #     lambda x: helper.get_uk_region(latitude=x['latitude'],
-        #                                    longitude=x['longitude']), axis=1)
+
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
 
@@ -46,11 +41,13 @@ def main():
         else:
             workshop_analyses_excel_file = ANALYSES_DIR + '/analysed_' + workshops_file_name_without_extension + '.xlsx'
 
-        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,"carpentry_workshops")
+        excel_writer = helper.create_excel_analyses_spreadsheet(workshop_analyses_excel_file, workshops_df,
+                                                                "carpentry_workshops")
 
         helper.create_readme_tab(excel_writer,
                                  "Data in sheet 'carpentry_workshops' contains Carpentry workshop data from " +
-                                 workshop_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") +
+                                 workshop_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime(
+                                     "%Y-%m-%d %H:%M") +
                                  ".")
 
         workshops_per_year_analysis(workshops_df, excel_writer)
@@ -181,7 +178,8 @@ def workshops_per_host_per_year_analysis(df, writer):
 
     workshops_per_host_per_year = pd.core.frame.DataFrame(
         {'number_of_workshops': df.groupby(['organiser_top_level_web_domain', 'year']).size()}).reset_index()
-    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='organiser_top_level_web_domain', columns='year')
+    workshops_per_host_per_year_pivot = workshops_per_host_per_year.pivot_table(index='organiser_top_level_web_domain',
+                                                                                columns='year')
     workshops_per_host_per_year_pivot = workshops_per_host_per_year_pivot.fillna(0).astype('int')
 
     workshops_per_host_per_year_pivot.to_excel(writer, sheet_name='workshops_per_host_per_year')
@@ -283,7 +281,7 @@ def estimated_attendance_per_year_analysis(df, writer):
     Number of workshop attendees per year (with estimated 20 attendees per workshop).
     """
     estimated_attendance_per_year = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['year'])['slug'].count()*20}).reset_index()
+        {'number_of_attendees': df.groupby(['year'])['slug'].count() * ESTIMATED_ATTENDEES_PER_WORKSHOP}).reset_index()
 
     estimated_attendance_per_year.to_excel(writer, sheet_name='attendance_per_year', index=False)
 
@@ -317,7 +315,7 @@ def estimated_attendance_per_type_analysis(df, writer):
     """
 
     attendance_per_type = pd.core.frame.DataFrame(
-        {'number_of_attendees': df.groupby(['workshop_type'])['slug'].count()*20}).reset_index()
+        {'number_of_attendees': df.groupby(['workshop_type'])['slug'].count() * ESTIMATED_ATTENDEES_PER_WORKSHOP}).reset_index()
 
     attendance_per_type.to_excel(writer, sheet_name='attendance_per_type', index=False)
 
@@ -347,10 +345,9 @@ def estimated_attendance_per_type_per_year_analysis(df, writer):
     """
     Number of attendees per workshop type over years (with estimated 20 attendees per workshop).
     """
-
     estimated_attendance_per_type_per_year = df.groupby(['year', 'workshop_type'])[
         'attendance'].count().to_frame()
-    estimated_attendance_per_type_per_year = estimated_attendance_per_type_per_year * 20
+    estimated_attendance_per_type_per_year = estimated_attendance_per_type_per_year * ESTIMATED_ATTENDEES_PER_WORKSHOP
     estimated_attendance_per_type_per_year_pivot = estimated_attendance_per_type_per_year.pivot_table(
         index='year', columns='workshop_type')
 

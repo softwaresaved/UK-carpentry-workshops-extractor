@@ -2,7 +2,6 @@ import os
 import re
 import pandas as pd
 import sys
-import glob
 import traceback
 import datetime
 
@@ -13,8 +12,6 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = CURRENT_DIR + '/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 ANALYSES_DIR = DATA_DIR + '/analyses'
-
-# UK_AIRPORTS_REGIONS_FILE = CURRENT_DIR + '/lib/UK-airports_regions.csv'
 
 
 def main():
@@ -31,16 +28,6 @@ def main():
 
     try:
         instructors_df = pd.read_csv(instructors_file, encoding="utf-8")
-        # instructors_df.drop(labels="email", axis=1, inplace=True) // We do not download personal data any more so nothing to drop here
-
-        # # Insert normalised/official names for institutions (for UK academic institutions)
-        # instructors_df = helper.insert_normalised_institution(instructors_df, "institution")
-        #
-        # # Insert latitude, longitude pairs for instructors' institutions
-        # instructors_df = helper.insert_institutional_geocoordinates(instructors_df, "normalised_institution", "latitude", "longitude")
-        #
-        # # Insert UK regional info based on instructors's affiliations or nearest airport
-        # instructors_df = helper.insert_uk_region(instructors_df)
 
         if not os.path.exists(ANALYSES_DIR):
             os.makedirs(ANALYSES_DIR)
@@ -56,7 +43,8 @@ def main():
 
         helper.create_readme_tab(excel_writer,
                                  "Data in sheet 'carpentry_instructors' contains Carpentry workshop data from " +
-                                 instructor_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") +
+                                 instructor_analyses_excel_file + ". Analyses performed on " + datetime.datetime.now().strftime(
+                                     "%Y-%m-%d %H:%M") +
                                  ".")
 
         instructors_per_year_analysis(instructors_df, excel_writer)
@@ -67,7 +55,7 @@ def main():
         excel_writer.save()
         print("Analyses of Carpentry instructors complete - results saved to " + instructor_analyses_excel_file + "\n")
     except Exception:
-        print ("An error occurred while creating workshop analyses Excel spreadsheet ...")
+        print("An error occurred while creating workshop analyses Excel spreadsheet ...")
         print(traceback.format_exc())
 
 
@@ -171,8 +159,8 @@ def instructors_per_UK_region_analysis(df, writer):
     instructors_per_UK_region = pd.core.frame.DataFrame(
         {'number_of_instructors': df.groupby(['region']).size().sort_values()}).reset_index()
     instructors_per_UK_region.to_excel(writer,
-                          sheet_name='instructors_per_region',
-                          index=False)
+                                       sheet_name='instructors_per_region',
+                                       index=False)
 
     workbook = writer.book
     worksheet = writer.sheets['instructors_per_region']
