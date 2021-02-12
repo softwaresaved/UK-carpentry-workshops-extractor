@@ -26,7 +26,7 @@ if not os.path.exists(PROCESSED_DATA_DIR):
     os.makedirs(PROCESSED_DATA_DIR)
 
 # Carpentries Redash QUERY URLs
-REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/234/results.csv"
+REDASH_API_WORKSHOPS_QUERY_URL = "http://redash.carpentries.org/api/queries/345/results.csv"
 REDASH_API_INSTRUCTORS_QUERY_URL = "http://redash.carpentries.org/api/queries/243/results.csv"
 
 
